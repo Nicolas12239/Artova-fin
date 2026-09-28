@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# artova
+/.captures/
+/.ref/
+/public/uploads/*
+!/public/uploads/.gitkeep
