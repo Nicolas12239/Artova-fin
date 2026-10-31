@@ -1,0 +1,26 @@
+{
+  "appId": "com.artova.app",
+  "appName": "ArTova",
+  "webDir": "www",
+  "server": {
+    "url": "https://artova-fin-production.up.railway.app/?source=ios",
+    "errorPath": "erreur.html",
+    "allowNavigation": ["artova-fin-production.up.railway.app"]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#f6f4ed",
+    "scheme": "ArTova"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#f6f4ed",
+      "showSpinner": false
+    },
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com", "apple.com"]
+    }
+  }
+}

@@ -8,6 +8,7 @@ import type { OeuvreAvecArtiste } from "@/lib/types";
 
 export const metadata = {
   title: "Votre commande",
+  robots: { index: false, follow: false },
 };
 
 export default async function PageCommande({
@@ -25,7 +26,7 @@ export default async function PageCommande({
   const oeuvres = await query<OeuvreAvecArtiste>(
     `SELECT o.*, a.nom AS artiste_nom, a.slug AS artiste_slug, a.theme_primaire, a.theme_accent
      FROM oeuvres o JOIN artistes a ON a.id = o.artiste_id
-     WHERE o.id = ? LIMIT 1`,
+     WHERE o.id = ? AND a.statut = 'publie' LIMIT 1`,
     [id],
   );
   const oeuvre = oeuvres[0];
@@ -37,8 +38,8 @@ export default async function PageCommande({
       <h1 className="mt-3 font-display text-4xl md:text-5xl">Votre commande</h1>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gris">
         Vérifiez l'œuvre puis confirmez : votre commande est transmise par
-        email à l'équipe ArTova avec vos coordonnées de compte ({utilisateur.nom}{" "}
-        — {utilisateur.email}). Nous vous recontactons pour la livraison et le
+        email à l'équipe ArTova avec vos coordonnées de compte ({utilisateur.nom},{" "}
+        {utilisateur.email}). Nous vous recontactons pour la livraison et le
         règlement.
       </p>
 

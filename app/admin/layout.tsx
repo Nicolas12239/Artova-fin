@@ -2,9 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 const ONGLETS = [
   { href: "/admin", label: "Tableau de bord" },
   { href: "/admin/commandes", label: "Commandes" },
+  { href: "/admin/inscrits", label: "Inscrits" },
   { href: "/admin/artistes", label: "Artistes" },
   { href: "/admin/oeuvres", label: "Œuvres" },
 ];

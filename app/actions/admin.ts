@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { execute, query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { saveUpload } from "@/lib/upload";
+import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
+import { destinatairesArtova, envoyerEmail } from "@/lib/email";
+import { envoyerWhatsapp } from "@/lib/whatsapp";
+import { envoyerPush, getSiteUrl } from "@/lib/ntfy";
 import {
   schemaArtiste,
   schemaOeuvre,
@@ -66,7 +69,7 @@ export async function enregistrerArtiste(
   let portrait_url: string | null = null;
   if (portrait && portrait.size > 0) {
     portrait_url = await saveUpload(portrait, "artiste");
-    if (!portrait_url) return { erreur: "Image de portrait invalide (JPEG, PNG ou WebP, 8 Mo max)." };
+    if (!portrait_url) return { erreur: `Portrait : ${MESSAGE_IMAGE_INVALIDE}` };
   }
 
   const parse = schemaArtiste.safeParse({
@@ -148,7 +151,7 @@ export async function enregistrerOeuvre(
   let image_url: string | null = null;
   if (image && image.size > 0) {
     image_url = await saveUpload(image, "oeuvre");
-    if (!image_url) return { erreur: "Image invalide (JPEG, PNG ou WebP, 8 Mo max)." };
+    if (!image_url) return { erreur: `Photo de l'œuvre : ${MESSAGE_IMAGE_INVALIDE}` };
   }
 
   const parse = schemaOeuvre.safeParse({
@@ -219,4 +222,146 @@ export async function enregistrerOeuvre(
   revalidatePath("/admin/oeuvres");
   revalidatePath("/artistes");
   return { succes: "Œuvre enregistrée." };
+}
+
+export async function changerStatutArtiste(
+  artisteId: number,
+  statut: "publie" | "brouillon",
+): Promise<void> {
+  await exigeraAdmin();
+  await execute("UPDATE artistes SET statut = ? WHERE id = ?", [statut, artisteId]);
+  const artistes = await query<{ slug: string }>(
+    "SELECT slug FROM artistes WHERE id = ? LIMIT 1",
+    [artisteId],
+  );
+  revalidatePath("/admin");
+  revalidatePath("/admin/artistes");
+  revalidatePath("/artistes");
+  revalidatePath("/");
+  if (artistes[0]) revalidatePath(`/artistes/${artistes[0].slug}`);
+}
+
+export async function envoyerEmailTest(): Promise<void> {
+  const admin = await exigeraAdmin();
+  let resultat: string;
+  try {
+    const envoye = await envoyerEmail({
+      to: destinatairesArtova(),
+      subject: "[ArTova] Email de test",
+      text: `Test envoyé depuis l'administration ArTova par ${admin.nom}. Si vous lisez ceci, les emails de commande arriveront bien ici.`,
+      html: `<div style="font-family:Georgia,serif;padding:24px"><h1 style="font-size:24px">ArTova</h1><p>Test envoyé depuis l'administration par ${admin.nom.replace(/[<>&"]/g, "")}.</p><p>Si vous lisez ceci, les emails de commande arriveront bien ici.</p></div>`,
+    });
+    resultat = envoye ? "ok" : "non-configure";
+  } catch (erreur) {
+    console.error("[ArTova] Échec de l'email de test :", erreur);
+    resultat = "erreur";
+  }
+  redirect(`/admin?email=${resultat}`);
+}
+
+async function resultatEnvoi(envoi: Promise<boolean>, canal: string): Promise<string> {
+  try {
+    return (await envoi) ? "ok" : "non-configure";
+  } catch (erreur) {
+    console.error(`[ArTova] Échec de la notification ${canal} de test :`, erreur);
+    return "erreur";
+  }
+}
+
+export async function envoyerAlertesTest(): Promise<void> {
+  await exigeraAdmin();
+  const site = getSiteUrl();
+  const [push, whatsapp] = await Promise.all([
+    resultatEnvoi(
+      envoyerPush({
+        titre: "ArTova : notification de test",
+        message: "Vous recevrez une alerte comme celle-ci à chaque nouvelle commande.",
+        lien: site ? `${site}/admin` : undefined,
+        etiquettes: ["white_check_mark"],
+      }),
+      "push",
+    ),
+    resultatEnvoi(
+      envoyerWhatsapp(
+        "*ArTova* : message de test.\nVous recevrez une notification comme celle-ci à chaque nouvelle commande.",
+      ),
+      "WhatsApp",
+    ),
+  ]);
+  redirect(`/admin?push=${push}&whatsapp=${whatsapp}`);
+}
+
+// Supprime une page d'artiste non conforme : page, œuvres, images et compte de
+// connexion. Refusé si des commandes portent sur ses œuvres (historique des
+// ventes) : il faut alors la dépublier.
+export async function supprimerArtiste(artisteId: number): Promise<void> {
+  await exigeraAdmin();
+  const [artiste] = await query<{
+    nom: string;
+    slug: string;
+    utilisateur_id: number | null;
+    portrait_url: string | null;
+    banniere_url: string | null;
+  }>(
+    "SELECT nom, slug, utilisateur_id, portrait_url, banniere_url FROM artistes WHERE id = ? LIMIT 1",
+    [artisteId],
+  );
+  if (!artiste) redirect("/admin/artistes");
+
+  const [ventes] = await query<{ nb: number }>(
+    `SELECT COUNT(*) AS nb FROM commandes c JOIN oeuvres o ON o.id = c.oeuvre_id
+     WHERE o.artiste_id = ?`,
+    [artisteId],
+  );
+  if (Number(ventes?.nb ?? 0) > 0) {
+    redirect(`/admin/artistes?suppression=commandes&nom=${encodeURIComponent(artiste.nom)}`);
+  }
+
+  const oeuvres = await query<{ image_url: string }>(
+    "SELECT image_url FROM oeuvres WHERE artiste_id = ?",
+    [artisteId],
+  );
+  const fichiers = [artiste.portrait_url, artiste.banniere_url, ...oeuvres.map((o) => o.image_url)]
+    .filter((url): url is string => Boolean(url?.startsWith("/fichiers/")))
+    .map((url) => url.slice("/fichiers/".length));
+
+  await execute("DELETE FROM oeuvres WHERE artiste_id = ?", [artisteId]);
+  await execute("DELETE FROM artistes WHERE id = ?", [artisteId]);
+  if (fichiers.length > 0) {
+    await execute(
+      `DELETE FROM fichiers WHERE id IN (${fichiers.map(() => "?").join(",")})`,
+      fichiers,
+    );
+  }
+
+  let compte = "aucun";
+  if (artiste.utilisateur_id) {
+    const [achats] = await query<{ nb: number }>(
+      "SELECT COUNT(*) AS nb FROM commandes WHERE utilisateur_id = ?",
+      [artiste.utilisateur_id],
+    );
+    if (Number(achats?.nb ?? 0) > 0) {
+      // Ses propres achats restent dans l'historique : le compte redevient collectionneur.
+      await execute(
+        "UPDATE utilisateurs SET role = 'client' WHERE id = ? AND role = 'artiste'",
+        [artiste.utilisateur_id],
+      );
+      compte = "conserve";
+    } else {
+      await execute("DELETE FROM utilisateurs WHERE id = ? AND role = 'artiste'", [
+        artiste.utilisateur_id,
+      ]);
+      compte = "supprime";
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/artistes");
+  revalidatePath("/admin/inscrits");
+  revalidatePath("/artistes");
+  revalidatePath(`/artistes/${artiste.slug}`);
+  revalidatePath("/");
+  redirect(
+    `/admin/artistes?suppression=ok&compte=${compte}&nom=${encodeURIComponent(artiste.nom)}`,
+  );
 }

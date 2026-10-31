@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { execute, query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { sendCommandeEmail } from "@/lib/email";
+import { sendCommandeWhatsapp } from "@/lib/whatsapp";
+import { sendCommandePush } from "@/lib/ntfy";
 import { schemaCommande } from "@/lib/validation";
 import type { OeuvreAvecArtiste } from "@/lib/types";
 
@@ -36,7 +38,7 @@ export async function passerCommande(
   const oeuvres = await query<OeuvreAvecArtiste>(
     `SELECT o.*, a.nom AS artiste_nom, a.slug AS artiste_slug, a.theme_primaire, a.theme_accent
      FROM oeuvres o JOIN artistes a ON a.id = o.artiste_id
-     WHERE o.id = ? LIMIT 1`,
+     WHERE o.id = ? AND a.statut = 'publie' LIMIT 1`,
     [oeuvreId],
   );
   const oeuvre = oeuvres[0];
@@ -63,8 +65,10 @@ export async function passerCommande(
     oeuvre.id,
   ]);
 
-  try {
-    await sendCommandeEmail({
+  // Email, push et WhatsApp partent en parallèle : l'échec de l'un n'empêche
+  // ni les autres ni l'enregistrement de la commande.
+  const [email, push, whatsapp] = await Promise.allSettled([
+    sendCommandeEmail({
       reference,
       oeuvreTitre: oeuvre.titre,
       oeuvreType: oeuvre.type,
@@ -76,9 +80,36 @@ export async function passerCommande(
       ville,
       adresse: adresse || null,
       message: message || null,
-    });
-  } catch (erreur) {
-    console.error("[ArTova] Échec d'envoi de l'email de commande :", erreur);
+    }),
+    sendCommandePush({
+      reference,
+      oeuvreTitre: oeuvre.titre,
+      artisteNom: oeuvre.artiste_nom,
+      prixFcfa: oeuvre.prix_fcfa,
+      clientNom: utilisateur.nom,
+      ville,
+    }),
+    sendCommandeWhatsapp({
+      reference,
+      oeuvreTitre: oeuvre.titre,
+      artisteNom: oeuvre.artiste_nom,
+      prixFcfa: oeuvre.prix_fcfa,
+      clientNom: utilisateur.nom,
+      clientEmail: utilisateur.email,
+      telephone,
+      ville,
+      adresse: adresse || null,
+      message: message || null,
+    }),
+  ]);
+  if (email.status === "rejected") {
+    console.error("[ArTova] Échec d'envoi de l'email de commande :", email.reason);
+  }
+  if (push.status === "rejected") {
+    console.error("[ArTova] Échec de la notification push de commande :", push.reason);
+  }
+  if (whatsapp.status === "rejected") {
+    console.error("[ArTova] Échec de la notification WhatsApp de commande :", whatsapp.reason);
   }
 
   redirect(`/commande/confirmation/${reference}`);

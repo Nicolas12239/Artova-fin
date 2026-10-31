@@ -4,7 +4,7 @@ import { query } from "@/lib/db";
 import { formatFcfa } from "@/lib/format";
 import { LIBELLE_STATUT_OEUVRE, type Artiste, type Oeuvre } from "@/lib/types";
 
-export const metadata = { title: "Œuvres — Administration" };
+export const metadata = { title: "Œuvres | Administration" };
 
 export default async function PageAdminOeuvres({
   searchParams,

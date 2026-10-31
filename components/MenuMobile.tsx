@@ -7,9 +7,11 @@ import { deconnecter } from "@/app/actions/auth";
 export function MenuMobile({
   liens,
   connecte = false,
+  contact,
 }: {
   liens: { href: string; label: string }[];
   connecte?: boolean;
+  contact?: { email: string; tiktok: string; instagram: string };
 }) {
   const [ouvert, setOuvert] = useState(false);
   return (
@@ -31,9 +33,9 @@ export function MenuMobile({
       {ouvert && (
         <nav
           aria-label="Navigation mobile"
-          className="fixed inset-x-0 bottom-0 top-14 z-40 overflow-y-auto bg-craie"
+          className="fixed inset-x-0 bottom-0 top-14 z-40 overflow-y-auto overscroll-contain bg-craie"
         >
-          <ul className="flex flex-col px-6 pb-6 pt-12">
+          <ul className="flex flex-col px-6 pb-6 pt-10">
             {liens.map((lien) => (
               <li key={`${lien.href}-${lien.label}`}>
                 <Link
@@ -58,6 +60,17 @@ export function MenuMobile({
               </li>
             )}
           </ul>
+          {contact && (
+            <div className="space-y-3 px-6 pb-10 text-sm text-gris">
+              <a href={`mailto:${contact.email}`} className="block break-all underline underline-offset-4">
+                {contact.email}
+              </a>
+              <div className="flex gap-6 text-[12px] uppercase tracking-[0.16em] text-encre">
+                <a href={contact.tiktok} target="_blank" rel="noopener noreferrer">TikTok ↗</a>
+                <a href={contact.instagram} target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+              </div>
+            </div>
+          )}
         </nav>
       )}
     </div>

@@ -45,3 +45,17 @@ next-env.d.ts
 /.ref/
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# applications mobiles
+/mobile/app/node_modules/
+/mobile/app/ios/App/App/public/
+/mobile/app/ios/App/App/GoogleService-Info.plist
+/mobile/android/.gradle/
+/mobile/android/app/build/
+/mobile/android/build/
+/mobile/android/local.properties
+/mobile/android/*.apk
+/mobile/android/*.aab
+*.jks
+*.keystore
+*.p8

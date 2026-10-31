@@ -1,0 +1,60 @@
+{
+  "packageId": "com.artova.app",
+  "host": "artova-fin-production.up.railway.app",
+  "name": "ArTova",
+  "launcherName": "ArTova",
+  "display": "standalone",
+  "themeColor": "#F6F4ED",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#F6F4ED",
+  "enableNotifications": true,
+  "startUrl": "/?source=android",
+  "iconUrl": "https://artova-fin-production.up.railway.app/icons/icon-512.png",
+  "maskableIconUrl": "https://artova-fin-production.up.railway.app/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/Users/administrateur/Documents/ArTova-cles-mobile/artova-upload.jks",
+    "alias": "artova"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Nos artistes",
+      "shortName": "Nos artistes",
+      "url": "https://artova-fin-production.up.railway.app/artistes?source=app",
+      "chosenIconUrl": "https://artova-fin-production.up.railway.app/icons/raccourci-96.png"
+    },
+    {
+      "name": "Mon compte",
+      "shortName": "Mon compte",
+      "url": "https://artova-fin-production.up.railway.app/compte?source=app",
+      "chosenIconUrl": "https://artova-fin-production.up.railway.app/icons/raccourci-96.png"
+    }
+  ],
+  "generatorApp": "unknown",
+  "webManifestUrl": "https://artova-fin-production.up.railway.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://artova-fin-production.up.railway.app/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 import { formatDateHeureFr, formatFcfa } from "@/lib/format";
 import type { CommandeDetaillee } from "@/lib/types";
 
-export const metadata = { title: "Commandes — Administration" };
+export const metadata = { title: "Commandes | Administration" };
 
 export default async function PageAdminCommandes() {
   const commandes = await query<CommandeDetaillee>(

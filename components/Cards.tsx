@@ -72,3 +72,25 @@ export function ArtistCard({
     </Link>
   );
 }
+
+// Affiché tant qu'aucun artiste n'est publié (ou aucun dans un filtre).
+export function ArtistesBientot({ precision }: { precision?: string }) {
+  return (
+    <div className="flex flex-col items-center border border-dashed border-encre/25 px-6 py-16 text-center md:py-20">
+      <img src="/logo/ArTova_monogramme_AT_bicolore.svg" alt="" className="h-12 w-auto opacity-80" />
+      <p className="mt-6 font-display text-3xl md:text-4xl">
+        {precision ?? "Les premiers artistes arrivent"}
+      </p>
+      <p className="mt-4 max-w-md text-sm leading-relaxed text-gris">
+        Les pages des peintres, plasticiens et sculpteurs ArTova sont en cours de
+        validation par notre équipe. Revenez très vite découvrir leurs univers.
+      </p>
+      <Link
+        href="/inscription?profil=artiste"
+        className="mt-8 inline-block bg-encre px-8 py-4 text-[12px] uppercase tracking-[0.18em] text-craie transition-colors hover:bg-terracotta"
+      >
+        Vous êtes artiste ? Créez votre page ↗
+      </Link>
+    </div>
+  );
+}

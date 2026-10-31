@@ -67,6 +67,28 @@ export const schemaArtiste = z.object({
   motif: z.enum(["pinceau", "collage", "pierre"]),
 });
 
+const texteOptionnel = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
+
+// Page créée par l'artiste lui-même : mêmes champs que l'admin, plus son parcours.
+export const schemaPageArtiste = schemaArtiste.omit({ id: true }).extend({
+  nom: z.string().trim().min(2, "Le nom d'artiste doit faire au moins 2 caractères.").max(120),
+  histoire: z
+    .string()
+    .trim()
+    .min(80, "Racontez votre histoire en au moins 80 caractères.")
+    .max(6000, "Votre histoire ne doit pas dépasser 6 000 caractères."),
+  annee_debut: z.coerce
+    .number()
+    .int()
+    .min(1940, "Année de début invalide.")
+    .max(new Date().getFullYear(), "Année de début invalide.")
+    .optional()
+    .or(z.literal("")),
+  formation: texteOptionnel(255),
+  techniques: texteOptionnel(255),
+  expositions: texteOptionnel(3000),
+});
+
 export const schemaOeuvre = z.object({
   id: z.coerce.number().int().positive().optional(),
   artiste_id: z.coerce.number().int().positive("Artiste requis."),

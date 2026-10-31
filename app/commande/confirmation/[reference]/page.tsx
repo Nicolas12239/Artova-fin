@@ -10,6 +10,7 @@ import {
 
 export const metadata = {
   title: "Commande transmise",
+  robots: { index: false, follow: false },
 };
 
 export default async function PageConfirmation({

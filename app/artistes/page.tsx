@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
-import { ArtistCard } from "@/components/Cards";
+import { ArtistCard, ArtistesBientot } from "@/components/Cards";
 import type { Artiste } from "@/lib/types";
 
 export const metadata = {
@@ -28,8 +28,8 @@ export default async function PageArtistes({
 
   const artistes = await query<Artiste>(
     valide
-      ? "SELECT * FROM artistes WHERE discipline = ? ORDER BY id"
-      : "SELECT * FROM artistes ORDER BY id",
+      ? "SELECT * FROM artistes WHERE statut = 'publie' AND discipline = ? ORDER BY id"
+      : "SELECT * FROM artistes WHERE statut = 'publie' ORDER BY id",
     valide ? [discipline] : [],
   );
 
@@ -38,7 +38,7 @@ export default async function PageArtistes({
       <p className="text-[11px] uppercase tracking-[0.22em] text-gris">
         Découverte
       </p>
-      <h1 className="mt-3 font-display text-5xl md:text-6xl">Nos artistes</h1>
+      <h1 className="mt-3 font-display text-4xl sm:text-5xl md:text-6xl">Nos artistes</h1>
       <p className="mt-5 max-w-xl text-sm leading-relaxed text-gris">
         Peintres, plasticiens et sculpteurs du Togo. Chaque artiste ouvre un
         univers qui lui ressemble : couleurs, matières et meilleure œuvre en
@@ -67,7 +67,7 @@ export default async function PageArtistes({
         </aside>
 
         <div>
-          <div className="mb-6 flex gap-2 overflow-x-auto md:hidden">
+          <div className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 md:hidden">
             {FILTRES.map((filtre) => {
               const actif = filtre.valeur === "" ? !valide : valide && discipline === filtre.valeur;
               return (
@@ -82,14 +82,22 @@ export default async function PageArtistes({
             })}
           </div>
 
-          <p className="text-sm text-gris">
-            {artistes.length} artiste{artistes.length > 1 ? "s" : ""}
-          </p>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {artistes.map((artiste) => (
-              <ArtistCard key={artiste.id} artiste={artiste} />
-            ))}
-          </div>
+          {artistes.length === 0 ? (
+            <ArtistesBientot
+              precision={valide ? "Aucun artiste dans cette catégorie pour le moment" : undefined}
+            />
+          ) : (
+            <>
+              <p className="text-sm text-gris">
+                {artistes.length} artiste{artistes.length > 1 ? "s" : ""}
+              </p>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {artistes.map((artiste) => (
+                  <ArtistCard key={artiste.id} artiste={artiste} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

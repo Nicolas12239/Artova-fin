@@ -45,6 +45,7 @@ export const config = {
     "/artistes/:path*",
     "/oeuvres/:path*",
     "/compte/:path*",
+    "/espace-artiste/:path*",
     "/commande/:path*",
     "/admin/:path*",
   ],

@@ -17,7 +17,8 @@ export function hashPassword(motDePasse: string): string {
   return bcrypt.hashSync(motDePasse, 12);
 }
 
-export function verifyPassword(motDePasse: string, hash: string): boolean {
+export function verifyPassword(motDePasse: string, hash: string | null): boolean {
+  if (!hash) return false;
   return bcrypt.compareSync(motDePasse, hash);
 }
 
@@ -33,21 +34,25 @@ export async function signSession(utilisateur: {
     .sign(secret());
 }
 
+export function optionsCookieSession() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    // En production locale le site est servi en http (localhost ou IP LAN) :
+    // un cookie Secure y serait ignoré par le navigateur et la session perdue.
+    secure: (process.env.SITE_URL ?? "").startsWith("https://"),
+    path: "/",
+    maxAge: SESSION_DUREE_SECONDES,
+  };
+}
+
 export async function openSession(utilisateur: {
   id: number;
   role: string;
 }): Promise<void> {
   const token = await signSession(utilisateur);
   const store = await cookies();
-  store.set(COOKIE_SESSION, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    // En production locale le site est servi en http (localhost ou IP LAN) :
-    // un cookie Secure y serait ignoré par le navigateur et la session perdue.
-    secure: (process.env.SITE_URL ?? "").startsWith("https://"),
-    path: "/",
-    maxAge: SESSION_DUREE_SECONDES,
-  });
+  store.set(COOKIE_SESSION, token, optionsCookieSession());
 }
 
 export async function closeSession(): Promise<void> {

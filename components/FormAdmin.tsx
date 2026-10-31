@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useEnvoiAvecImages } from "./envoiImages";
 import { enregistrerArtiste, enregistrerOeuvre } from "@/app/actions/admin";
 
 const champ =
@@ -23,10 +23,10 @@ export type ArtisteInitial = {
 };
 
 export function FormAdminArtiste({ initial }: { initial?: ArtisteInitial }) {
-  const [etat, action, enCours] = useActionState(enregistrerArtiste, null);
+  const { etat, onSubmit, enCours } = useEnvoiAvecImages(enregistrerArtiste, { viderApresSucces: !initial });
 
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -115,7 +115,7 @@ export function FormAdminArtiste({ initial }: { initial?: ArtisteInitial }) {
           id="portrait"
           name="portrait"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*,.heic,.heif"
           required={!initial}
           className="block w-full text-xs"
         />
@@ -154,10 +154,10 @@ export function FormAdminOeuvre({
   artistes: { id: number; nom: string }[];
   initial?: OeuvreInitiale;
 }) {
-  const [etat, action, enCours] = useActionState(enregistrerOeuvre, null);
+  const { etat, onSubmit, enCours } = useEnvoiAvecImages(enregistrerOeuvre, { viderApresSucces: !initial });
 
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -278,7 +278,7 @@ export function FormAdminOeuvre({
           id="image"
           name="image"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*,.heic,.heif"
           required={!initial}
           className="block w-full text-xs"
         />

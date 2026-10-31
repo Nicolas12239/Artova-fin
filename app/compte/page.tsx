@@ -10,6 +10,7 @@ import {
 
 export const metadata = {
   title: "Mon compte",
+  robots: { index: false, follow: false },
 };
 
 export default async function PageCompte() {
@@ -32,8 +33,8 @@ export default async function PageCompte() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-8 md:py-24">
       <p className="text-[11px] uppercase tracking-[0.22em] text-gris">Mon compte</p>
-      <h1 className="mt-3 font-display text-5xl md:text-6xl">{utilisateur.nom}</h1>
-      <p className="mt-3 text-sm text-gris">
+      <h1 className="mt-3 break-words font-display text-4xl sm:text-5xl md:text-6xl">{utilisateur.nom}</h1>
+      <p className="mt-3 break-all text-sm text-gris">
         {utilisateur.email}
         {utilisateur.telephone ? ` · ${utilisateur.telephone}` : ""}
       </p>
@@ -51,7 +52,7 @@ export default async function PageCompte() {
           {commandes.map((commande) => (
             <li
               key={commande.id}
-              className="grid gap-4 border-t border-fil py-6 sm:grid-cols-[64px_1fr_auto] sm:items-center"
+              className="grid grid-cols-[64px_1fr] gap-4 border-t border-fil py-6 sm:grid-cols-[64px_1fr_auto] sm:items-center"
             >
               <img
                 src={commande.oeuvre_image}
@@ -67,7 +68,7 @@ export default async function PageCompte() {
                 </p>
                 <p className="mt-1 text-xs text-gris">Réf. {commande.reference}</p>
               </div>
-              <div className="flex items-center gap-4 sm:flex-col sm:items-end">
+              <div className="col-span-2 flex items-center justify-between gap-4 sm:col-span-1 sm:flex-col sm:items-end">
                 <p className="font-display text-xl">{formatFcfa(commande.prix_fcfa)}</p>
                 <span className="border border-fil px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-gris">
                   {LIBELLE_STATUT_COMMANDE[commande.statut]}

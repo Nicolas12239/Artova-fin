@@ -1,0 +1,72 @@
+# Compilation et publication de l'application iOS ArTova sur des Mac récents
+# (Xcode à jour), indispensables pour l'App Store : le Mac local (macOS 12,
+# Xcode 14.2) ne peut plus produire de build accepté par Apple.
+#
+# Prérequis dans Codemagic (une seule fois) :
+#  - Teams > Integrations > App Store Connect : clé API nommée « ArTova ASC »
+#  - Code signing identities : certificat de distribution + profil App Store
+#    pour com.artova.app (Codemagic peut les créer automatiquement)
+#  - Groupe de variables « firebase » : GOOGLE_SERVICE_INFO_PLIST = contenu du
+#    fichier GoogleService-Info.plist encodé en base64
+workflows:
+  ios-app-store:
+    name: ArTova iOS · App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: mobile/app
+    integrations:
+      app_store_connect: ArTova ASC
+    environment:
+      groups:
+        - firebase
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.artova.app
+      vars:
+        APP_STORE_APPLE_ID: "" # identifiant numérique de l'app dans App Store Connect
+      node: 22
+      xcode: latest
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "ios-v*"
+    scripts:
+      - name: Dépendances
+        script: npm ci
+      - name: Configuration Firebase (connexion Google / Apple native)
+        script: |
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+          ruby -e '
+            require "xcodeproj"
+            projet = Xcodeproj::Project.open("ios/App/App.xcodeproj")
+            cible = projet.targets.find { |t| t.name == "App" }
+            groupe = projet.main_group["App"]
+            unless groupe.files.any? { |f| f.path == "GoogleService-Info.plist" }
+              cible.add_resources([groupe.new_reference("GoogleService-Info.plist")])
+              projet.save
+            end'
+          # Schéma d'URL de retour exigé par Google Sign-In.
+          REVERSED=$(/usr/libexec/PlistBuddy -c "Print :REVERSED_CLIENT_ID" ios/App/App/GoogleService-Info.plist)
+          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" ios/App/App/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" \
+            -c "Add :CFBundleURLTypes:0 dict" \
+            -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" \
+            -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $REVERSED" \
+            ios/App/App/Info.plist
+      - name: Synchronisation Capacitor
+        script: npx cap sync ios
+      - name: Profils de signature
+        script: xcode-project use-profiles
+      - name: Numéro de build
+        script: |
+          DERNIER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          cd ios/App && agvtool new-version -all $((DERNIER + 1))
+      - name: Compilation de l'IPA
+        script: xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
