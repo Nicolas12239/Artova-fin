@@ -48,7 +48,8 @@ export default async function PageUnivers({
   );
   const artiste = artistes[0];
   if (!artiste) notFound();
-  if (!peutVoirArtiste(artiste, await getCurrentUser())) notFound();
+  const utilisateur = await getCurrentUser();
+  if (!peutVoirArtiste(artiste, utilisateur)) notFound();
 
   const oeuvres = await query<Oeuvre>(
     "SELECT * FROM oeuvres WHERE artiste_id = ? ORDER BY oeuvre_maitre DESC, id",
@@ -150,7 +151,7 @@ export default async function PageUnivers({
                 className="shrink-0 text-[12px] uppercase tracking-[0.14em]"
                 style={{ color: artiste.theme_primaire }}
               >
-                {formatFcfa(maitresse.prix_fcfa)}
+                {utilisateur ? formatFcfa(maitresse.prix_fcfa) : "Prix avec un compte"}
               </span>
             </div>
           </div>
@@ -258,6 +259,7 @@ export default async function PageUnivers({
                 theme_primaire: artiste.theme_primaire,
                 theme_accent: artiste.theme_accent,
               }}
+              afficherPrix={!!utilisateur}
             />
           ))}
         </div>

@@ -41,9 +41,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Les pages artistes et œuvres sont publiques : le prix et la commande
+  // restent réservés aux membres connectés (voir Cards.tsx et les pages).
   matcher: [
-    "/artistes/:path*",
-    "/oeuvres/:path*",
     "/compte/:path*",
     "/espace-artiste/:path*",
     "/commande/:path*",

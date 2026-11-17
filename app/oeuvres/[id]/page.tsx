@@ -40,9 +40,10 @@ export default async function PageOeuvre({
   >(`${SELECT_OEUVRE} WHERE o.id = ? LIMIT 1`, [oeuvreId]);
   const oeuvre = oeuvres[0];
   if (!oeuvre) notFound();
+  const utilisateur = await getCurrentUser();
   const visible = peutVoirArtiste(
     { statut: oeuvre.artiste_statut, utilisateur_id: oeuvre.artiste_utilisateur_id },
-    await getCurrentUser(),
+    utilisateur,
   );
   if (!visible) notFound();
 
@@ -110,9 +111,25 @@ export default async function PageOeuvre({
             </div>
           </dl>
 
-          <p className="mt-8 font-display text-4xl md:text-5xl">
-            {formatFcfa(oeuvre.prix_fcfa)}
-          </p>
+          {utilisateur ? (
+            <p className="mt-8 font-display text-4xl md:text-5xl">
+              {formatFcfa(oeuvre.prix_fcfa)}
+            </p>
+          ) : (
+            <div className="mt-8 border border-fil bg-craie p-5">
+              <p className="font-display text-2xl">Le prix est réservé aux membres.</p>
+              <p className="mt-2 text-sm leading-relaxed text-gris">
+                Créez votre compte ArTova pour voir le prix et commander cette
+                œuvre.
+              </p>
+              <Link
+                href={`/inscription?next=/oeuvres/${oeuvre.id}`}
+                className="mt-4 inline-block font-display text-lg underline underline-offset-4 hover:no-underline"
+              >
+                Créer mon compte ↗
+              </Link>
+            </div>
+          )}
           <div className="mt-8 flex flex-wrap items-center gap-6">
             <CommanderLien oeuvreId={oeuvre.id} statut={oeuvre.statut} />
             <BoutonPartager
@@ -135,7 +152,7 @@ export default async function PageOeuvre({
           </h2>
           <div className="mt-10 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
             {autres.map((autre) => (
-              <ArtworkCard key={autre.id} oeuvre={autre} />
+              <ArtworkCard key={autre.id} oeuvre={autre} afficherPrix={!!utilisateur} />
             ))}
           </div>
         </section>

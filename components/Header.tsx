@@ -10,11 +10,12 @@ export const CONTACT = {
   instagram: "https://www.instagram.com/artova.corp",
 };
 
-function liens(connecte: boolean) {
+// Les pages artistes et œuvres sont publiques : mêmes liens pour tous.
+function liens() {
   return [
     { href: "/", label: "Accueil" },
-    // Les visiteurs non connectés sont dirigés vers l'aperçu public.
-    { href: connecte ? "/artistes" : "/#apercu", label: "Nos artistes" },
+    { href: "/artistes", label: "Nos artistes" },
+    { href: "/#comment-ca-marche", label: "Comment ça marche" },
     { href: "/#mouvement", label: "Le mouvement" },
   ];
 }
@@ -66,7 +67,7 @@ export function Header({
 }: {
   utilisateur: UtilisateurSession | null;
 }) {
-  const LIENS = liens(Boolean(utilisateur));
+  const LIENS = liens();
   return (
     <header className="sticky top-0 z-50">
       <div className="relative">
@@ -192,7 +193,8 @@ export function Footer() {
             Explorer
           </h2>
           <ul className="mt-4 space-y-2 text-encre/80">
-            <li><Link className="hover:underline" href="/#apercu">Nos artistes</Link></li>
+            <li><Link className="hover:underline" href="/artistes">Nos artistes</Link></li>
+            <li><Link className="hover:underline" href="/#comment-ca-marche">Comment ça marche</Link></li>
             <li><Link className="hover:underline" href="/#mouvement">Le mouvement</Link></li>
             <li><Link className="hover:underline" href="/inscription">Rejoindre ArTova</Link></li>
             <li><Link className="hover:underline" href="/inscription?profil=artiste">Vous êtes artiste ?</Link></li>

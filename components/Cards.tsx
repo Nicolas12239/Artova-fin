@@ -5,9 +5,12 @@ import { LIBELLE_DISCIPLINE, type Discipline, type OeuvreAvecArtiste } from "@/l
 export function ArtworkCard({
   oeuvre,
   afficherArtiste,
+  afficherPrix = true,
 }: {
   oeuvre: OeuvreAvecArtiste;
   afficherArtiste?: boolean;
+  // Faux pour les visiteurs non connectés : le prix est réservé aux membres.
+  afficherPrix?: boolean;
 }) {
   return (
     <Link href={`/oeuvres/${oeuvre.id}`} className="group block">
@@ -28,7 +31,11 @@ export function ArtworkCard({
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <h3 className="text-[12px] uppercase tracking-[0.16em]">{oeuvre.titre}</h3>
-        <span className="shrink-0 text-sm text-gris">{formatFcfa(oeuvre.prix_fcfa)}</span>
+        {afficherPrix ? (
+          <span className="shrink-0 text-sm text-gris">{formatFcfa(oeuvre.prix_fcfa)}</span>
+        ) : (
+          <span className="shrink-0 text-[12px] text-gris">Prix avec un compte</span>
+        )}
       </div>
       {afficherArtiste && (
         <p className="mt-1 text-xs text-gris">
