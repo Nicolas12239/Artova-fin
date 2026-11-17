@@ -31,10 +31,8 @@ export function ArtworkCard({
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <h3 className="text-[12px] uppercase tracking-[0.16em]">{oeuvre.titre}</h3>
-        {afficherPrix ? (
+        {afficherPrix && (
           <span className="shrink-0 text-sm text-gris">{formatFcfa(oeuvre.prix_fcfa)}</span>
-        ) : (
-          <span className="shrink-0 text-[12px] text-gris">Prix avec un compte</span>
         )}
       </div>
       {afficherArtiste && (
@@ -42,6 +40,7 @@ export function ArtworkCard({
           {oeuvre.artiste_nom} · {oeuvre.type}
         </p>
       )}
+      {!afficherPrix && <p className="mt-1 text-xs text-gris">Prix avec un compte</p>}
     </Link>
   );
 }
