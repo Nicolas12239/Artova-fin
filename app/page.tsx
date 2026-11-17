@@ -37,12 +37,10 @@ const ETAPES = [
 
 export default async function Accueil() {
   const utilisateur = await getCurrentUser();
-  const [vedettes, oeuvres, artistes] = await Promise.all([
-    query<OeuvreAvecArtiste>(`${SELECT_OEUVRES} ORDER BY o.oeuvre_maitre DESC, o.id DESC LIMIT 1`),
+  const [oeuvres, artistes] = await Promise.all([
     query<OeuvreAvecArtiste>(`${SELECT_OEUVRES} ORDER BY o.id DESC LIMIT 8`),
     query<Artiste>("SELECT * FROM artistes WHERE statut = 'publie' ORDER BY id"),
   ]);
-  const vedette = vedettes[0];
 
   const site = process.env.SITE_URL || "https://artova-fin-production.up.railway.app";
   const donneesStructurees = {
@@ -79,75 +77,40 @@ export default async function Accueil() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
       />
 
-      {/* Premier écran : une vraie œuvre ArTova, une action claire */}
-      <section className="border-b border-fil bg-creme">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 md:grid-cols-[1.05fr_1fr] md:gap-16 md:px-8 md:py-20">
-          <div>
-            <p className="text-[12px] uppercase tracking-[0.22em] text-terracotta">
-              Peintres, plasticiens et sculpteurs du Togo
-            </p>
-            <h1 className="mt-5 font-display text-5xl leading-[1.02] sm:text-6xl md:text-7xl">
-              L’art togolais,
-              <br />
-              maintenant.
-            </h1>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-encre/80">
-              Découvrez les toiles et les sculptures des artistes du Togo, puis
-              commandez celle qui vous parle.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="#oeuvres"
-                className="inline-flex min-h-12 items-center justify-center bg-terracotta px-8 text-[13px] uppercase tracking-[0.16em] text-craie transition-colors hover:bg-encre"
-              >
-                Voir les œuvres ↗
-              </Link>
-              <Link
-                href="#comment-ca-marche"
-                className="inline-flex min-h-12 items-center justify-center border border-encre px-8 text-[13px] uppercase tracking-[0.16em] transition-colors hover:bg-encre hover:text-craie"
-              >
-                Comment ça marche
-              </Link>
-            </div>
-            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre/75">
-              <li>
-                <span className="text-terracotta">—</span> Artistes de Lomé et du Togo
-              </li>
-              <li>
-                <span className="text-terracotta">—</span> {PART_ARTISTE} % du prix à l’artiste
-              </li>
-              <li>
-                <span className="text-terracotta">—</span> Commande en ligne
-              </li>
-            </ul>
-          </div>
+      {/* Premier écran : la galerie en plein cadre, le titre posé sur la photo */}
+      <section className="relative flex min-h-[560px] flex-col justify-end overflow-hidden bg-encre md:h-[calc(92svh-4rem)] md:max-h-[860px] md:justify-center">
+        <img
+          src="/images/hero.jpg"
+          alt="Toiles d'artistes togolais accrochées dans une galerie baignée de lumière"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-[62%_center] md:object-center"
+        />
+        {/* Assombrit légèrement le bas sur mobile pour détacher le panneau */}
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-encre/45 via-transparent to-transparent md:hidden" />
 
-          {vedette ? (
-            <Link href={`/oeuvres/${vedette.id}`} className="group mx-auto block w-full max-w-[420px]">
-              <div className="bg-white p-3 shadow-[0_28px_60px_rgba(70,45,30,0.25)] sm:p-4">
-                <img
-                  src={vedette.image_url}
-                  alt={`${vedette.titre}, ${vedette.artiste_nom}`}
-                  fetchPriority="high"
-                  className="block max-h-[62svh] w-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
-                />
-              </div>
-              <div className="mt-4 flex items-baseline justify-between gap-4">
-                <span className="font-display text-2xl">{vedette.titre}</span>
-                <span className="shrink-0 text-[13px] text-gris">
-                  {vedette.artiste_nom}
-                  {vedette.dimensions ? ` · ${vedette.dimensions}` : ""}
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <img
-              src="/images/hero.jpg"
-              alt="Œuvres d'artistes togolais exposées par ArTova"
-              fetchPriority="high"
-              className="aspect-[4/5] w-full object-cover"
-            />
-          )}
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-stretch gap-3 px-4 pb-6 pt-40 sm:px-6 md:items-end md:px-8 md:py-0">
+          <div className="w-full bg-craie/88 p-6 shadow-[0_24px_60px_rgba(27,26,23,0.18)] backdrop-blur-sm sm:p-8 md:max-w-[460px] md:p-10">
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="font-display text-[2.6rem] leading-[1.02] sm:text-5xl md:text-[3.6rem]">
+                L’art togolais,
+                <br />
+                maintenant.
+              </h1>
+              <span className="mt-2 shrink-0 text-[10px] uppercase tracking-[0.22em] text-gris">
+                Lomé
+              </span>
+            </div>
+            <p className="mt-5 max-w-sm text-[12px] uppercase leading-relaxed tracking-[0.22em] text-encre/75">
+              Révèle les peintres, plasticiens et sculpteurs du Togo
+            </p>
+          </div>
+          <Link
+            href="#oeuvres"
+            className="group flex min-h-14 w-full items-center justify-between gap-6 bg-craie/88 px-6 font-display text-lg backdrop-blur-sm transition-colors hover:bg-encre hover:text-craie sm:px-8 md:max-w-[460px] md:px-10"
+          >
+            Aperçu de nos œuvres
+            <span aria-hidden="true" className="h-4 w-1 bg-encre transition-colors group-hover:bg-terracotta" />
+          </Link>
         </div>
       </section>
 
