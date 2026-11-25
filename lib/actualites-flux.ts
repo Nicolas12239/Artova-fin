@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
-import type { Categorie } from "./actualites-commun";
+import { lireVideo, type Categorie } from "./actualites-commun";
 import type { Portee } from "./actualites-sources";
 
 export interface EntreeFlux {
@@ -356,4 +356,103 @@ export function devinerCategorie(texte: string): Categorie {
   if (/(portrait|interview|entretien|deces|mort de|hommage|laureat|lauréat|prix|award|nomm|artiste)/.test(t)) return "artistes";
   if (/(nouvelle œuvre|nouvelle oeuvre|installation|sculpture|peinture|painting|mural|fresque|street art)/.test(t)) return "creation";
   return "general";
+}
+
+// ─── Lecture d'une page d'article : texte, photos, vidéos ────────────────────
+
+export interface PageArticle {
+  // Texte principal (paragraphes séparés par une ligne vide) : sert de matière
+  // à l'IA, jamais publié tel quel.
+  texte: string;
+  // Photos de l'article (hors couverture), adresses https.
+  images: string[];
+  // Adresses de vidéos TikTok, Instagram ou YouTube trouvées dans la page.
+  videos: string[];
+  // Image de couverture annoncée par la page (Open Graph), si elle existe.
+  couverture: string | null;
+}
+
+const ZONES_ARTICLE = [
+  /<article\b[^>]*>([\s\S]*?)<\/article>/i,
+  /<div[^>]+class="[^"]*(?:entry-content|post-content|td-post-content|article-content|article__body|single-content|post-body|content-inner)[^"]*"[^>]*>([\s\S]{200,120000})/i,
+  /<main\b[^>]*>([\s\S]*?)<\/main>/i,
+];
+
+const PARASITES = /(lire aussi|à lire aussi|partager sur|suivez-nous|abonnez-vous|newsletter|tous droits réservés|cookies|publicité|commentaires? \(|share on|follow us|subscribe|advertisement)/i;
+
+function cleImage(url: string): string {
+  return url.replace(/[?#].*$/, "").replace(/-\d{2,4}x\d{2,4}(?=\.\w+$)/, "").replace(/\/(thumb|small|medium)\//, "/");
+}
+
+export async function lirePageArticle(url: string): Promise<PageArticle | null> {
+  let html: string;
+  try {
+    html = await telecharger(url, { delaiMs: 6000, maxOctets: 700_000 });
+  } catch {
+    return null;
+  }
+  const sansScripts = html.replace(/<(script|style|noscript|nav|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ");
+  let zone = sansScripts;
+  for (const motif of ZONES_ARTICLE) {
+    const m = motif.exec(sansScripts);
+    if (m && m[1].length > 300) {
+      zone = m[1];
+      break;
+    }
+  }
+
+  const paragraphes: string[] = [];
+  for (const m of zone.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const t = nettoyerHtml(m[1]);
+    if (t.length >= 50 && !PARASITES.test(t) && !paragraphes.includes(t)) paragraphes.push(t);
+  }
+  const texte = tronquer(paragraphes.join("\n\n"), 6000);
+
+  const vues = new Set<string>();
+  const images: string[] = [];
+  for (const m of zone.matchAll(/<img\b[^>]*>/gi)) {
+    const balise = m[0];
+    const candidats = [
+      /data-orig-file=["']([^"']+)["']/i.exec(balise)?.[1],
+      /data-large-file=["']([^"']+)["']/i.exec(balise)?.[1],
+      /data-(?:lazy-)?src=["']([^"']+)["']/i.exec(balise)?.[1],
+      /\ssrc=["']([^"']+)["']/i.exec(balise)?.[1],
+    ];
+    const brut = candidats.find((c) => c && !c.startsWith("data:"));
+    const u = urlImageValide(brut, url);
+    if (!u) continue;
+    const cle = cleImage(u);
+    if (vues.has(cle)) continue;
+    vues.add(cle);
+    images.push(u);
+    if (images.length >= 6) break;
+  }
+
+  const videos: string[] = [];
+  for (const m of sansScripts.matchAll(/(?:src|href|data-src)=["'](https?:[^"']+)["']/gi)) {
+    const adresse = decoderEntites(m[1]);
+    const v = lireVideoAdresse(adresse);
+    if (v && !videos.includes(v)) videos.push(v);
+    if (videos.length >= 3) break;
+  }
+  return { texte, images, videos, couverture: couvertureDe(html, url) };
+}
+
+// Image Open Graph ou Twitter d'une page.
+function couvertureDe(html: string, url: string): string | null {
+  const metas = html.match(/<meta[^>]+>/gi) ?? [];
+  for (const cle of ["og:image:secure_url", "og:image", "twitter:image"]) {
+    for (const meta of metas) {
+      const propriete = /(?:property|name)=["']([^"']+)["']/i.exec(meta)?.[1]?.toLowerCase();
+      if (propriete !== cle) continue;
+      const valide = urlImageValide(/content=["']([^"']+)["']/i.exec(meta)?.[1], url);
+      if (valide) return valide;
+    }
+  }
+  return null;
+}
+
+// Adresse de vidéo TikTok / Instagram / YouTube reconnue, sinon null.
+function lireVideoAdresse(adresse: string): string | null {
+  return lireVideo(adresse) ? adresse : null;
 }

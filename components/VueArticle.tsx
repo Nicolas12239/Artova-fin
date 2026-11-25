@@ -4,6 +4,7 @@ import { CarteActualite, Rubrique } from "./ActualiteCards";
 import { CouvertureActualite } from "./CouvertureActualite";
 import { FormCommentaire } from "./FormCommentaire";
 import { GalerieActualite } from "./GalerieActualite";
+import { NomsCites, type PersonneAffichee } from "./NomsCites";
 import { SelecteurLangue } from "./SelecteurLangue";
 import { VideosActualite } from "./VideosActualite";
 import { retirerCommentaire } from "@/app/actions/actualites";
@@ -31,6 +32,7 @@ export function VueArticle({
   liees,
   aime,
   artiste,
+  personnes = [],
 }: {
   a: Actualite;
   langue?: Langue;
@@ -41,6 +43,7 @@ export function VueArticle({
   liees: Actualite[];
   aime: boolean;
   artiste?: { slug: string; nom: string; discipline: string; portrait_url: string | null } | null;
+  personnes?: PersonneAffichee[];
 }) {
   const t = TEXTES[langue];
   const c = contenuLangue(a, langue);
@@ -122,6 +125,8 @@ export function VueArticle({
           </p>
         ))}
         {a.image_url && !a.images && <p className="mt-8 text-xs text-gris">{fmt(t.image, { source: credit })}</p>}
+
+        <NomsCites personnes={personnes} langue={langue} />
 
         <GalerieActualite images={a.images} titre={c.titre} credit={credit} langue={langue} />
 

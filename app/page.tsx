@@ -4,7 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { ArtworkCard, ArtistCard, ArtistesBientot } from "@/components/Cards";
 import { CONTACT } from "@/components/Header";
 import { VideoExplication } from "@/components/VideoExplication";
+import { after } from "next/server";
 import { CarteActualite } from "@/components/ActualiteCards";
+import { actualiserSiBesoin } from "@/lib/actualites-actualiser";
 import { SITE_URL } from "@/lib/site";
 import { actualiteALaUne, listerActualites } from "@/lib/actualites";
 import { COMMISSION_ARTOVA, type Artiste, type OeuvreAvecArtiste } from "@/lib/types";
@@ -38,8 +40,12 @@ const ETAPES = [
   },
 ];
 
+// La collecte lancée en arrière-plan après la réponse peut durer jusqu'à une minute.
+export const maxDuration = 60;
+
 export default async function Accueil() {
   const utilisateur = await getCurrentUser();
+  after(() => actualiserSiBesoin());
   const [oeuvres, artistes, vedetteActu] = await Promise.all([
     query<OeuvreAvecArtiste>(`${SELECT_OEUVRES} ORDER BY o.id DESC LIMIT 8`),
     query<Artiste>("SELECT * FROM artistes WHERE statut = 'publie' ORDER BY id"),

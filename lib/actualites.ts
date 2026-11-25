@@ -13,7 +13,7 @@ const SCORE = `(a.importance + CASE a.portee WHEN 'togo' THEN 2 WHEN 'afrique' T
 const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom, a.image_url,
   a.portee, a.categorie, a.importance, a.a_la_une, a.statut, a.origine, a.publie_le,
   DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut,
-  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.traductions,
+  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.personnes, a.traductions,
   (SELECT COUNT(*) FROM actualites_likes l WHERE l.actualite_id = a.id) AS nb_likes,
   (SELECT COUNT(*) FROM actualites_commentaires c WHERE c.actualite_id = a.id AND c.statut = 'publie') AS nb_commentaires`;
 
@@ -186,4 +186,17 @@ export async function artisteLie(slug: string | null): Promise<ArtisteLie | null
     [slug],
   );
   return rows[0] ?? null;
+}
+
+// Portraits des artistes ArTova cités dans un article, par identifiant de page.
+export async function portraitsArtistes(slugs: string[]): Promise<Map<string, string | null>> {
+  const uniques = [...new Set(slugs)].slice(0, 20);
+  const resultat = new Map<string, string | null>();
+  if (uniques.length === 0) return resultat;
+  const rows = await query<{ slug: string; portrait_url: string | null }>(
+    `SELECT slug, portrait_url FROM artistes WHERE statut = 'publie' AND slug IN (${uniques.map(() => "?").join(",")})`,
+    uniques,
+  );
+  for (const r of rows) resultat.set(r.slug, r.portrait_url);
+  return resultat;
 }

@@ -58,6 +58,8 @@ export interface Actualite {
   // Photos supplémentaires (une adresse par ligne) et crédit de l'image.
   images: string | null;
   credit_image: string | null;
+  // Personnes citées (JSON : [{ nom, slug }]).
+  personnes: string | null;
   // Traductions anglaise et allemande (JSON : { en: {titre, resume, contenu}, de: … }).
   traductions: string | null;
   nb_likes: number;
@@ -244,4 +246,26 @@ export function lireVideos(texte: string | null | undefined): VideoIntegree[] {
     }
   }
   return videos.slice(0, 6);
+}
+
+// ─── Personnes citées ────────────────────────────────────────────────────────
+
+export interface PersonneCitee {
+  nom: string;
+  // Page de l'artiste sur ArTova, quand elle existe.
+  slug: string | null;
+}
+
+export function lirePersonnes(brut: string | null | undefined): PersonneCitee[] {
+  if (!brut) return [];
+  try {
+    const v = JSON.parse(brut) as unknown;
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter((x): x is { nom: string; slug?: string | null } => Boolean(x) && typeof (x as { nom?: unknown }).nom === "string")
+      .map((x) => ({ nom: x.nom.slice(0, 80), slug: typeof x.slug === "string" ? x.slug : null }))
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
 }

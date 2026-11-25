@@ -154,6 +154,7 @@ async function migrerActualites(): Promise<void> {
      artiste_slug VARCHAR(120) DEFAULT NULL,
      images TEXT DEFAULT NULL,
      credit_image VARCHAR(160) DEFAULT NULL,
+     personnes TEXT DEFAULT NULL,
      traductions MEDIUMTEXT DEFAULT NULL,
      revision SMALLINT UNSIGNED NOT NULL DEFAULT 0,
      PRIMARY KEY (id),
@@ -194,6 +195,7 @@ async function migrerActualites(): Promise<void> {
     ["artiste_slug", "VARCHAR(120) DEFAULT NULL"],
     ["images", "TEXT DEFAULT NULL"],
     ["credit_image", "VARCHAR(160) DEFAULT NULL"],
+    ["personnes", "TEXT DEFAULT NULL"],
     ["traductions", "MEDIUMTEXT DEFAULT NULL"],
     ["revision", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"],
   ] as const) {
@@ -243,6 +245,7 @@ async function migrerActualites(): Promise<void> {
       a.portee, a.categorie, a.importance, a.a_la_une ? 1 : 0, new Date(a.publie_le),
       a.evenement_debut ?? null, a.evenement_fin ?? null, a.lieu ?? null, a.videos ?? null,
       a.artiste_slug ?? null, a.images ?? null, a.credit_image ?? null,
+      a.personnes ? JSON.stringify(a.personnes) : null,
       a.traductions ? JSON.stringify(a.traductions) : null, a.revision,
     ];
     const [existant] = await pool.query("SELECT id, revision FROM actualites WHERE empreinte = ? LIMIT 1", [empreinte]);
@@ -252,7 +255,7 @@ async function migrerActualites(): Promise<void> {
         await pool.query(
           `UPDATE actualites SET titre=?, resume=?, contenu=?, url_source=?, source_nom=?, image_url=?, portee=?,
            categorie=?, importance=?, a_la_une=?, publie_le=?, evenement_debut=?, evenement_fin=?, lieu=?,
-           videos=?, artiste_slug=?, images=?, credit_image=?, traductions=?, revision=? WHERE id=?`,
+           videos=?, artiste_slug=?, images=?, credit_image=?, personnes=?, traductions=?, revision=? WHERE id=?`,
           [...champs, ligne.id],
         );
       }
@@ -263,8 +266,8 @@ async function migrerActualites(): Promise<void> {
       `INSERT IGNORE INTO actualites
        (empreinte, titre, resume, contenu, url_source, source_nom, image_url, portee, categorie, importance,
         a_la_une, publie_le, evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image,
-        traductions, revision, origine)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
+        personnes, traductions, revision, origine)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
       [empreinte, ...champs],
     );
     await marquer(empreinte);

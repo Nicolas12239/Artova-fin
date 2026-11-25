@@ -27,6 +27,8 @@ export interface ArticleRedaction {
   // Photos supplémentaires (une adresse par ligne) et crédit de l'image de couverture.
   images?: string;
   credit_image?: string;
+  // Personnes citées (nom et, si elle existe, page de l'artiste sur ArTova).
+  personnes?: { nom: string; slug?: string | null }[];
   // Textes en anglais et en allemand ; le français est le texte de base.
   traductions?: Partial<Record<"en" | "de", { titre: string; resume: string; contenu?: string }>>;
   // À augmenter pour réécrire la fiche déjà publiée (voir lib/db.ts).
@@ -77,7 +79,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     categorie: "expositions",
     importance: 9,
     publie_le: "2026-11-24T10:00:00Z",
-    revision: 3,
+    revision: 4,
+    personnes: [{ nom: "Amegne Blibo" }, { nom: "Missoh Kossi David" }, { nom: "Amouzou Art-Ayi" }, { nom: "Alvine La Plume Divine" }, { nom: "Julien Art Creation" }, { nom: "Johnford" }, { nom: "Professeur Jacques" }, { nom: "Christofort" }, { nom: "Miss Flora" }, { nom: "Wayiii" }, { nom: "Kim Pillar" }, { nom: "C. Koudakpo" }, { nom: "Marie C. Eusebio" }, { nom: "Robosso" }, { nom: "Al Bayan Kierfel" }, { nom: "Eli Dush" }],
     evenement_debut: "2026-11-23",
     evenement_fin: "2026-11-29",
     lieu: "Nutafe Togo, Hédzranawoé Tingamé, Lomé",
@@ -128,7 +131,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     categorie: "expositions",
     importance: 8,
     publie_le: "2026-11-25T08:00:00Z",
-    revision: 2,
+    revision: 3,
+    personnes: [{ nom: "Laka" }, { nom: "Jean-Daniel Rohrer" }],
     evenement_debut: "2026-11-13",
     evenement_fin: "2026-11-25",
     lieu: "Galerie ARTEMIS, Lomé",
@@ -174,7 +178,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     importance: 8,
     publie_le: "2026-11-25T09:00:00Z",
     lieu: "Musée Paul Ahyi, Agnassan, Lomé",
-    revision: 3,
+    revision: 4,
+    personnes: [{ nom: "Barreso'o Ebene" }],
     traductions: {
       en: {
         titre: "Barreso'o Ebene, Cameroonian hyperrealist painter, exhibits at the Paul Ahyi Museum",
@@ -221,7 +226,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     evenement_debut: "2026-11-27",
     lieu: "Lomé",
     artiste_slug: "a-sika",
-    revision: 3,
+    revision: 4,
+    personnes: [{ nom: "A. Sika", slug: "a-sika" }],
     traductions: {
       en: {
         titre: "A. Sika: a group exhibition this Friday in Lomé",

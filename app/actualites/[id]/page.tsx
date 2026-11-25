@@ -9,10 +9,11 @@ import {
   actualitesLiees,
   artisteLie,
   commentairesActualite,
+  portraitsArtistes,
   idDepuisLien,
   lienActualite,
 } from "@/lib/actualites";
-import { contenuLangue } from "@/lib/actualites-commun";
+import { contenuLangue, lirePersonnes } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, langueDe } from "@/lib/actualites-i18n";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ lang?: string }> };
@@ -63,6 +64,13 @@ export default async function PageActualite({ params, searchParams }: Props) {
     artisteLie(a.artiste_slug),
   ]);
 
+  const personnesBrutes = lirePersonnes(a.personnes);
+  const portraits = await portraitsArtistes(personnesBrutes.flatMap((p) => (p.slug ? [p.slug] : [])));
+  const personnes = personnesBrutes.map((p) => ({
+    nom: p.nom,
+    slug: p.slug && portraits.has(p.slug) ? p.slug : null,
+    portrait_url: p.slug ? (portraits.get(p.slug) ?? null) : null,
+  }));
   const site = SITE_URL;
   const c = contenuLangue(a, langue);
   const image = a.image_url ? urlAbsolue(a.image_url) : undefined;
@@ -96,6 +104,11 @@ export default async function PageActualite({ params, searchParams }: Props) {
     mainEntityOfPage: `${site}${chemin}`,
     image: image ? [image] : undefined,
     inLanguage: langue,
+    mentions: personnes.map((p) => ({
+      "@type": "Person",
+      name: p.nom,
+      url: p.slug ? `${SITE_URL}/artistes/${p.slug}` : undefined,
+    })),
     publisher: { "@type": "Organization", name: "ArTova", url: site },
     ...(a.url_source ? { isBasedOn: a.url_source, sourceOrganization: { "@type": "Organization", name: a.source_nom } } : {}),
   };
@@ -121,6 +134,7 @@ export default async function PageActualite({ params, searchParams }: Props) {
         liees={liees}
         aime={aime}
         artiste={artiste}
+        personnes={personnes}
       />
     </>
   );

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { after } from "next/server";
+import { actualiserSiBesoin } from "@/lib/actualites-actualiser";
 import Link from "next/link";
 import { CarteAgenda } from "@/components/ActualiteCards";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -61,9 +63,13 @@ function Bloc({ titre, liste, id, langue }: { titre: string; liste: Actualite[];
   );
 }
 
+// Durée maximale de la collecte lancée en arrière-plan après la réponse.
+export const maxDuration = 60;
+
 export default async function PageAgenda({ searchParams }: Props) {
   const langue = langueDe((await searchParams).lang);
   const t = TEXTES[langue];
+  after(() => actualiserSiBesoin());
   const evenements = await agendaComplet().catch(() => []);
   const etat = (a: Actualite) => etatEvenement(a.evenement_debut as string, a.evenement_fin).ton;
   const enCours = evenements.filter((a) => etat(a) === "en_cours");
