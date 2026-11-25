@@ -41,6 +41,10 @@ export function empreinteRedaction(a: ArticleRedaction): string {
     : createHash("sha1").update(`redaction:${a.cle}`).digest("hex");
 }
 
+// Identifiants d'articles de la rédaction qui ont été renommés : leur ancienne
+// fiche est supprimée au démarrage pour éviter les doublons.
+export const CLES_OBSOLETES = ["a-sika-exposition-vendredi"];
+
 // Les rendez-vous de l'art à Lomé, fin novembre 2026, rédigés en français (texte
 // de base) avec leurs traductions anglaise et allemande. Chaque fiche cite ses
 // sources. Les vidéos Instagram de Nutafe et d'ArTova, comme les images d'Ebene,

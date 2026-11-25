@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import mysql from "mysql2/promise";
 import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
-import { ARTICLES_REDACTION, empreinteRedaction } from "./actualites-redaction";
+import { ARTICLES_REDACTION, CLES_OBSOLETES, empreinteRedaction } from "./actualites-redaction";
 
 export type Param = string | number | boolean | Date | Buffer | null;
 
@@ -225,6 +225,17 @@ async function migrerActualites(): Promise<void> {
   // supprimables depuis l'administration (un article supprimé ne revient pas).
   // Quand le code augmente le numéro de révision d'un article, sa fiche est
   // réécrite : c'est la seule façon de remplacer une modification de l'admin.
+  for (const cle of CLES_OBSOLETES) {
+    const empreinte = createHash("sha1").update(`redaction:${cle}`).digest("hex");
+    const [anciens] = await pool.query("SELECT id FROM actualites WHERE empreinte = ? AND origine = 'manuel'", [empreinte]);
+    for (const { id } of anciens as { id: number }[]) {
+      await pool.query("DELETE FROM actualites_likes WHERE actualite_id = ?", [id]);
+      await pool.query("DELETE FROM actualites_commentaires WHERE actualite_id = ?", [id]);
+      await pool.query("DELETE FROM actualites WHERE id = ?", [id]);
+    }
+    await marquer(empreinte);
+  }
+
   for (const a of ARTICLES_REDACTION) {
     const empreinte = empreinteRedaction(a);
     const champs = [
