@@ -53,6 +53,8 @@ export async function actualiteALaUne(filtre: FiltreActualites = {}): Promise<Ac
   return recent[0] ?? null;
 }
 
+// Du plus récent au plus ancien, jour par jour ; dans une même journée, l'actualité
+// togolaise passe avant le reste du monde.
 export async function listerActualites(
   filtre: FiltreActualites,
   { limite, decalage = 0, sauf }: { limite: number; decalage?: number; sauf?: number },
@@ -67,7 +69,7 @@ export async function listerActualites(
   return query<Actualite>(
     `SELECT ${COLONNES} FROM actualites a
      WHERE ${sql} ${exclusion}
-     ORDER BY a.publie_le DESC, a.id DESC LIMIT ${l} OFFSET ${d}`,
+     ORDER BY DATE(a.publie_le) DESC, (a.portee = 'togo') DESC, a.publie_le DESC, a.id DESC LIMIT ${l} OFFSET ${d}`,
     valeurs,
   );
 }
