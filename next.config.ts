@@ -17,7 +17,7 @@ const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https:",
   "font-src 'self'",
   `connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com${emulateurFirebase}`,
   `frame-src https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://appleid.apple.com${emulateurFirebase}`,

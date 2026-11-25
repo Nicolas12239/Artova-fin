@@ -586,12 +586,12 @@ export function FormInscriptionArtiste({ avecCompte = true }: { avecCompte?: boo
           <div className="grid gap-7 sm:grid-cols-2">
             <div>
               <label htmlFor="mot_de_passe" className={libelle}>Mot de passe</label>
-              <input id="mot_de_passe" name="mot_de_passe" type="password" autoComplete="new-password" minLength={8} required className={champ} />
-              <p className={aide}>8 caractères min., avec une lettre et un chiffre.</p>
+              <input id="mot_de_passe" name="mot_de_passe" type="password" autoComplete="new-password" minLength={6} required className={champ} />
+              <p className={aide}>6 caractères minimum, ce que vous voulez.</p>
             </div>
             <div>
               <label htmlFor="confirmation" className={libelle}>Confirmation</label>
-              <input id="confirmation" name="confirmation" type="password" autoComplete="new-password" minLength={8} required className={champ} />
+              <input id="confirmation" name="confirmation" type="password" autoComplete="new-password" minLength={6} required className={champ} />
             </div>
           </div>
         )}

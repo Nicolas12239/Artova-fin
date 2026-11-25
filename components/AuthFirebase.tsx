@@ -91,7 +91,7 @@ const MESSAGES_FIREBASE: Record<string, string> = {
   "auth/missing-email": "Saisissez votre adresse e-mail.",
   "auth/email-already-in-use":
     "Un compte existe déjà avec cette adresse : connectez-vous ou recevez un lien de connexion.",
-  "auth/weak-password": "Mot de passe trop court : 8 caractères minimum.",
+  "auth/weak-password": "Mot de passe trop court : 6 caractères minimum.",
   "auth/popup-closed-by-user": "La fenêtre de connexion a été fermée.",
   "auth/cancelled-popup-request": "La fenêtre de connexion a été fermée.",
   "auth/popup-blocked":
@@ -376,13 +376,13 @@ export function AuthFirebase({
         {avecMotDePasse && (
           <div>
             <label htmlFor="fb-mdp" className={libelle}>
-              {inscription ? "Choisissez un mot de passe (8 caractères min.)" : "Mot de passe"}
+              {inscription ? "Choisissez un mot de passe (6 caractères min.)" : "Mot de passe"}
             </label>
             <input
               id="fb-mdp"
               type="password"
               autoComplete={inscription ? "new-password" : "current-password"}
-              minLength={inscription ? 8 : undefined}
+              minLength={inscription ? 6 : undefined}
               required
               value={motDePasse}
               onChange={(e) => setMotDePasse(e.target.value)}

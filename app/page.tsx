@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { ArtworkCard, ArtistCard, ArtistesBientot } from "@/components/Cards";
 import { CONTACT } from "@/components/Header";
 import { VideoExplication } from "@/components/VideoExplication";
+import { CarteActualite } from "@/components/ActualiteCards";
+import { actualiteALaUne, listerActualites } from "@/lib/actualites";
 import { COMMISSION_ARTOVA, type Artiste, type OeuvreAvecArtiste } from "@/lib/types";
 
 export const metadata = {
@@ -37,10 +39,14 @@ const ETAPES = [
 
 export default async function Accueil() {
   const utilisateur = await getCurrentUser();
-  const [oeuvres, artistes] = await Promise.all([
+  const [oeuvres, artistes, vedetteActu] = await Promise.all([
     query<OeuvreAvecArtiste>(`${SELECT_OEUVRES} ORDER BY o.id DESC LIMIT 8`),
     query<Artiste>("SELECT * FROM artistes WHERE statut = 'publie' ORDER BY id"),
+    actualiteALaUne().catch(() => null),
   ]);
+  const autresActu = vedetteActu
+    ? await listerActualites({}, { limite: 2, sauf: vedetteActu.id }).catch(() => [])
+    : [];
 
   const site = process.env.SITE_URL || "https://artova-fin-production.up.railway.app";
   const donneesStructurees = {
@@ -167,6 +173,31 @@ export default async function Accueil() {
           </p>
         )}
       </section>
+
+      {/* L'actualité de l'art : lecture libre, mise à jour chaque matin */}
+      {vedetteActu && (
+        <section className="border-y border-fil bg-craie">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <h2 className="font-display text-4xl md:text-5xl">L&apos;actualité de l&apos;art</h2>
+              <Link
+                href="/actualites"
+                className="text-[13px] uppercase tracking-[0.16em] underline underline-offset-4 hover:no-underline"
+              >
+                Toute l&apos;actualité ↗
+              </Link>
+            </div>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-gris">
+              Le Togo, l&apos;Afrique et le monde de l&apos;art, trié chaque matin. Sans compte.
+            </p>
+            <div className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {[vedetteActu, ...autresActu].map((a) => (
+                <CarteActualite key={a.id} a={a} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Motion design : comment utiliser la plateforme */}
       <section id="comment-ca-marche" className="scroll-mt-20 border-y border-fil bg-panel">

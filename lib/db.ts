@@ -1,4 +1,6 @@
 import mysql from "mysql2/promise";
+import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
+import { ARTICLES_REDACTION, empreinteRedaction } from "./actualites-redaction";
 
 export type Param = string | number | boolean | Date | Buffer | null;
 
@@ -93,6 +95,123 @@ async function migrer(): Promise<void> {
       u.cree_le AS inscrit_le
     FROM utilisateurs u
     LEFT JOIN artistes a ON a.utilisateur_id = u.id`);
+
+  // Les actualités sont un module à part : si leur migration échoue, le reste du
+  // site (œuvres, commandes, comptes) doit continuer à fonctionner.
+  try {
+    await migrerActualites();
+  } catch (erreur) {
+    console.error("[ArTova] Migration des actualités :", erreur);
+  }
+}
+
+// Actualités de l'art : sources suivies, publications, « j'aime » et commentaires.
+async function migrerActualites(): Promise<void> {
+  const table = (nom: string, corps: string) =>
+    pool.query(
+      `CREATE TABLE IF NOT EXISTS ${nom} (${corps}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+    );
+
+  await table(
+    "sources_actualites",
+    `id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+     nom VARCHAR(120) NOT NULL,
+     url_flux VARCHAR(255) NOT NULL,
+     portee ENUM('togo','afrique','monde') NOT NULL DEFAULT 'monde',
+     langue VARCHAR(5) NOT NULL DEFAULT 'fr',
+     filtrer TINYINT(1) NOT NULL DEFAULT 1,
+     actif TINYINT(1) NOT NULL DEFAULT 1,
+     derniere_collecte TIMESTAMP NULL DEFAULT NULL,
+     derniere_erreur VARCHAR(255) DEFAULT NULL,
+     nb_articles INT UNSIGNED NOT NULL DEFAULT 0,
+     PRIMARY KEY (id),
+     UNIQUE KEY uq_sources_actualites_url (url_flux)`,
+  );
+  await table(
+    "actualites",
+    `id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+     empreinte CHAR(40) NOT NULL,
+     titre VARCHAR(300) NOT NULL,
+     resume TEXT NOT NULL,
+     contenu MEDIUMTEXT DEFAULT NULL,
+     url_source VARCHAR(1000) DEFAULT NULL,
+     source_nom VARCHAR(120) NOT NULL,
+     image_url VARCHAR(1000) DEFAULT NULL,
+     portee ENUM('togo','afrique','monde') NOT NULL DEFAULT 'monde',
+     categorie VARCHAR(30) NOT NULL DEFAULT 'general',
+     importance TINYINT UNSIGNED NOT NULL DEFAULT 5,
+     a_la_une TINYINT(1) NOT NULL DEFAULT 0,
+     statut ENUM('publie','masque') NOT NULL DEFAULT 'publie',
+     origine ENUM('auto','manuel') NOT NULL DEFAULT 'auto',
+     source_id INT UNSIGNED DEFAULT NULL,
+     publie_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     cree_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     evenement_debut DATE DEFAULT NULL,
+     evenement_fin DATE DEFAULT NULL,
+     lieu VARCHAR(160) DEFAULT NULL,
+     PRIMARY KEY (id),
+     UNIQUE KEY uq_actualites_empreinte (empreinte),
+     KEY idx_actualites_liste (statut, publie_le),
+     KEY idx_actualites_evenement (evenement_debut)`,
+  );
+  // Mémoire des publications déjà examinées, publiées ou écartées : l'IA ne
+  // repasse jamais deux fois sur la même.
+  await table(
+    "actualites_vues",
+    `empreinte CHAR(40) NOT NULL,
+     vu_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     PRIMARY KEY (empreinte)`,
+  );
+  await table(
+    "actualites_likes",
+    `actualite_id INT UNSIGNED NOT NULL,
+     utilisateur_id INT UNSIGNED NOT NULL,
+     cree_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     PRIMARY KEY (actualite_id, utilisateur_id)`,
+  );
+  await table(
+    "actualites_commentaires",
+    `id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+     actualite_id INT UNSIGNED NOT NULL,
+     utilisateur_id INT UNSIGNED NOT NULL,
+     texte VARCHAR(1000) NOT NULL,
+     statut ENUM('publie','masque') NOT NULL DEFAULT 'publie',
+     cree_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     PRIMARY KEY (id),
+     KEY idx_actualites_commentaires (actualite_id, cree_le)`,
+  );
+
+  // Sources de départ, posées une seule fois : ensuite l'administration décide.
+  const [compte] = await pool.query("SELECT COUNT(*) AS n FROM sources_actualites");
+  if (Number((compte as { n: number }[])[0]?.n ?? 0) === 0) {
+    for (const s of SOURCES_PAR_DEFAUT) {
+      await pool.query(
+        "INSERT IGNORE INTO sources_actualites (nom, url_flux, portee, langue, filtrer) VALUES (?, ?, ?, ?, ?)",
+        [s.nom, s.url_flux, s.portee, s.langue, s.filtrer ? 1 : 0],
+      );
+    }
+  }
+
+  // Articles de la rédaction ArTova : posés une fois, puis modifiables ou
+  // supprimables depuis l'administration (l'empreinte reste en mémoire, un
+  // article supprimé ne revient pas).
+  for (const a of ARTICLES_REDACTION) {
+    const empreinte = empreinteRedaction(a);
+    const [deja] = await pool.query("SELECT 1 FROM actualites_vues WHERE empreinte = ? LIMIT 1", [empreinte]);
+    if ((deja as unknown[]).length > 0) continue;
+    await pool.query(
+      `INSERT IGNORE INTO actualites
+       (empreinte, titre, resume, contenu, url_source, source_nom, image_url, portee, categorie, importance,
+        a_la_une, origine, publie_le, evenement_debut, evenement_fin, lieu)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel', ?, ?, ?, ?)`,
+      [
+        empreinte, a.titre, a.resume, a.contenu ?? null, a.url_source ?? null, a.source_nom, a.image_url ?? null,
+        a.portee, a.categorie, a.importance, a.a_la_une ? 1 : 0, new Date(a.publie_le),
+        a.evenement_debut ?? null, a.evenement_fin ?? null, a.lieu ?? null,
+      ],
+    );
+    await pool.query("INSERT IGNORE INTO actualites_vues (empreinte) VALUES (?)", [empreinte]);
+  }
 }
 
 let migration: Promise<void> | null = null;

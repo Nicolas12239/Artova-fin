@@ -12,6 +12,7 @@ const COTE_MAX: Record<string, number> = {
   banniere: 2400,
   artiste: 1600,
   oeuvre: 2000,
+  actualite: 1600,
 };
 
 const EXTENSIONS_IMAGES = /\.(jpe?g|png|webp|heic|heif|avif|gif|tiff?|bmp)$/i;

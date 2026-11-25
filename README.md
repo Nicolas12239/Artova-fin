@@ -33,6 +33,31 @@ ajouté ou modifié ces variables, redéployez l'application. Dans l'administrat
 le bouton « Envoyer une alerte de test » permet de vérifier la réception ; en cas
 d'échec, consultez les journaux de la fonction Vercel.
 
+## Actualités de l'art
+
+La page publique `/actualites` (lecture libre, sans compte) présente chaque jour
+l'actualité des arts visuels au Togo, en Afrique et dans le monde. La collecte
+est automatique : `vercel.json` déclenche chaque matin à 5 h 30 la route
+`/api/cron/actualites`, qui lit les flux RSS déclarés dans
+Administration › Actualités, écarte les doublons et le hors-sujet, puis publie
+un titre, un résumé court et le lien vers l'article d'origine (la source est
+toujours citée).
+
+- `CRON_SECRET` (obligatoire en production) : chaîne aléatoire d'au moins 32
+  caractères. Vercel la joint automatiquement à l'appel du cron ; sans elle, la
+  route répond 401 et seul le bouton « Lancer la collecte maintenant » fonctionne.
+- `ANTHROPIC_API_KEY` (facultative) : active le tri par l'IA, des résumés
+  réécrits en français et un classement par importance. Sans elle, le tri se fait
+  par mots-clés et l'extrait d'origine est repris. `ACTUALITES_MODELE` choisit le
+  modèle (par défaut `claude-opus-5-5` ; `claude-haiku-5-5` coûte nettement moins)
+  et `ACTUALITES_MAX_PAR_COLLECTE` plafonne le nombre de publications analysées
+  par jour (40 par défaut).
+- Instagram et TikTok n'offrent pas de flux public exploitable : leurs
+  informations arrivent par les médias qui les relaient, ou par la publication
+  manuelle de l'administration (lien de la source, image, deux phrases).
+- Les lecteurs connectés peuvent aimer, commenter et partager ; l'administration
+  peut masquer, mettre à la une, supprimer, ajouter des sources et modérer.
+
 Avant le premier démarrage, reliez ce dépôt au bon projet Vercel et initialisez
 le schéma vide depuis ce dépôt. Dans un terminal interactif à la racine du
 projet, utilisez la commande ci-dessous : elle transmet les variables de

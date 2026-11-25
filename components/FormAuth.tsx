@@ -69,13 +69,13 @@ export function FormInscription({ next }: { next?: string }) {
         <input id="telephone" name="telephone" type="tel" autoComplete="tel" className={champ} />
       </div>
       <div>
-        <label htmlFor="mot_de_passe" className={libelle}>Mot de passe (8 caractères min.)</label>
+        <label htmlFor="mot_de_passe" className={libelle}>Mot de passe (6 caractères min.)</label>
         <input
           id="mot_de_passe"
           name="mot_de_passe"
           type="password"
           autoComplete="new-password"
-          minLength={8}
+          minLength={6}
           required
           className={champ}
         />
@@ -87,7 +87,7 @@ export function FormInscription({ next }: { next?: string }) {
           name="confirmation"
           type="password"
           autoComplete="new-password"
-          minLength={8}
+          minLength={6}
           required
           className={champ}
         />

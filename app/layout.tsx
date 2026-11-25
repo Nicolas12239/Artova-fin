@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Barlow_Condensed, Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/Header";
 import { getCurrentUser } from "@/lib/auth";
@@ -10,6 +10,14 @@ const cormorant = Cormorant_Garamond({
   style: ["normal", "italic"],
   weight: ["400", "500", "600"],
   variable: "--font-cormorant",
+  display: "swap",
+});
+
+// Caractères condensés des rubriques de l'actualité (façon presse quotidienne).
+const barlow = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-barlow",
   display: "swap",
 });
 
@@ -84,7 +92,7 @@ export default async function RootLayout({
   const utilisateur = await getCurrentUser();
 
   return (
-    <html lang="fr" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="fr" className={`${cormorant.variable} ${inter.variable} ${barlow.variable}`}>
       <body className="bg-creme text-encre">
         <Header utilisateur={utilisateur} />
         <main>{children}</main>

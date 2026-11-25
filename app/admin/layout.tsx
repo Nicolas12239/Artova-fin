@@ -12,6 +12,7 @@ const ONGLETS = [
   { href: "/admin/inscrits", label: "Inscrits" },
   { href: "/admin/artistes", label: "Artistes" },
   { href: "/admin/oeuvres", label: "Œuvres" },
+  { href: "/admin/actualites", label: "Actualités" },
 ];
 
 export default async function LayoutAdmin({

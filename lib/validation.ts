@@ -11,13 +11,12 @@ export const schemaInscription = z
       .regex(/^([+0-9 ().\-]+)?$/, "Numéro de téléphone invalide.")
       .optional()
       .or(z.literal("")),
+    // Aucune règle de composition (lettre, chiffre, symbole) : tout caractère est
+    // accepté. 6 est le minimum imposé par Firebase, on s'aligne dessus.
     motDePasse: z
       .string()
-      .min(8, "Le mot de passe doit faire au moins 8 caractères.")
-      .max(120)
-      .refine((v) => /[A-Za-z]/.test(v) && /[0-9]/.test(v), {
-        message: "Le mot de passe doit contenir au moins une lettre et un chiffre.",
-      }),
+      .min(6, "Le mot de passe doit faire au moins 6 caractères.")
+      .max(120),
     confirmation: z.string(),
   })
   .refine((d) => d.motDePasse === d.confirmation, {

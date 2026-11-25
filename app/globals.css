@@ -3,6 +3,7 @@
 @theme inline {
   --font-display: var(--font-cormorant), "Cormorant Garamond", "Times New Roman", serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-condense: var(--font-barlow), "Arial Narrow", "Helvetica Neue", sans-serif;
 }
 
 @theme {
