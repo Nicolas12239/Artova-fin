@@ -200,3 +200,14 @@ export async function portraitsArtistes(slugs: string[]): Promise<Map<string, st
   for (const r of rows) resultat.set(r.slug, r.portrait_url);
   return resultat;
 }
+
+// Actualités qui parlent d'un artiste de la plateforme (articles liés à sa page).
+export async function actualitesDeLArtiste(slug: string, limite = 3): Promise<Actualite[]> {
+  const l = Math.max(1, Math.min(12, Math.floor(limite)));
+  return query<Actualite>(
+    `SELECT ${COLONNES} FROM actualites a
+     WHERE a.statut = 'publie' AND a.artiste_slug = ?
+     ORDER BY a.publie_le DESC, a.id DESC LIMIT ${l}`,
+    [slug],
+  );
+}

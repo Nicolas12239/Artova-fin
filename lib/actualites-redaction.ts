@@ -298,4 +298,98 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
       },
     },
   },
+  {
+    cle: "portrait-a-sika",
+    titre: "A. Sika, portrait d'une plasticienne autodidacte de Lomé",
+    resume:
+      "Atelier à Wognomé, masterclass avec Kossi Assou en 2024, rencontre à Lomé Accueil en 2026 : retour sur le parcours de l'artiste plasticienne A. Sika, qui expose ce vendredi.",
+    contenu: [
+      "En 2018, la presse togolaise (Togotopnews, repris par Habari RDC) la rencontrait à Wognomé, en banlieue de Lomé, dans une grande maison transformée en atelier d'art plastique, où les traces d'encre gagnent le salon, la cuisine, les chambres et la terrasse. Plasticienne depuis sept ans à l'époque, elle y travaillait avec minutie, nuit et jour.",
+      "Autodidacte, elle a poursuivi sa formation au fil des ateliers. Le 5 octobre 2024, elle figurait parmi les six artistes réunis par Kossi Assou, formateur et « trésor humain vivant » désigné par le ministère togolais de la Culture, pour une masterclass de suivi et d'évaluation à Djassémé, dans le cadre du soutien de l'ICESCO aux artistes plasticiens du Togo. Chacun y a présenté une toile en lien avec les exigences de l'exercice.",
+      "Le 15 janvier 2026, l'association Lomé Accueil l'invitait, avec l'artiste Tessi Kodjovi, à ses rencontres avec les artistes togolais dans leur lieu de créativité : un jardin-musée où leurs créations deviennent des actes thérapeutiques (rencontre réservée aux membres de l'association).",
+      "Sur Instagram (@ablasikaakpaloo), elle résume sa démarche : « L'art est mon langage, la matière mon expression. Des créations qui interrogent, racontent et transmettent. » Elle participe ce vendredi 27 novembre 2026 à une exposition collective à Lomé (voir notre article). Ses œuvres sont à découvrir sur sa page ArTova.",
+    ].join("\n\n"),
+    source_nom: "ArTova",
+    url_source: "https://lenouveaureporter.com/une-masterclass-de-suivi-evaluation-au-benefice-de-six-artistes-plasticiens-du-togo-organisee-et-animee-par-lartiste-kossi-assou-a-djasseme/",
+    image_url: "/fichiers/bf64d461a14b4193a2c500d937f099c7",
+    images: ["/fichiers/a1dd01fe27bc48aabd91278345ef17dc", "/fichiers/bb20bee787074fd3b18c3ce0711749dc"].join("\n"),
+    credit_image: "A. Sika / ArTova",
+    portee: "togo",
+    categorie: "artistes",
+    importance: 7,
+    publie_le: "2026-11-25T13:00:00Z",
+    artiste_slug: "a-sika",
+    personnes: [{ nom: "A. Sika", slug: "a-sika" }, { nom: "Kossi Assou" }, { nom: "Tessi Kodjovi" }],
+    revision: 1,
+    traductions: {
+      en: {
+        titre: "A. Sika, portrait of a self-taught visual artist from Lomé",
+        resume:
+          "A studio in Wognomé, a masterclass with Kossi Assou in 2024, a meeting at Lomé Accueil in 2026: a look back at the career of visual artist A. Sika, who exhibits this Friday.",
+        contenu: [
+          "In 2018, the Togolese press (Togotopnews, republished by Habari RDC) met her in Wognomé, on the outskirts of Lomé, in a large house turned into a visual arts studio, where ink traces spread through the living room, the kitchen, the bedrooms and the terrace. A visual artist for seven years at the time, she worked there meticulously, day and night.",
+          "Self-taught, she has continued to train through workshops. On 5 October 2024 she was one of six artists gathered by Kossi Assou, a trainer and “living human treasure” named by Togo’s Ministry of Culture, for a follow-up and evaluation masterclass in Djassémé, as part of ICESCO’s support for visual artists in Togo. Each of them presented a canvas related to the requirements of the exercise.",
+          "On 15 January 2026, the Lomé Accueil association invited her, with artist Tessi Kodjovi, to its meetings with Togolese artists in their creative spaces: a garden-museum where their creations become therapeutic acts (a meeting reserved for the association’s members).",
+          "On Instagram (@ablasikaakpaloo) she sums up her approach: “Art is my language, matter my expression. Creations that question, tell and pass on.” She takes part this Friday, 27 November 2026, in a group exhibition in Lomé (see our article). Her works can be discovered on her ArTova page.",
+        ].join("\n\n"),
+      },
+      de: {
+        titre: "A. Sika, Porträt einer autodidaktischen Künstlerin aus Lomé",
+        resume:
+          "Ein Atelier in Wognomé, 2024 eine Masterclass bei Kossi Assou, 2026 ein Treffen bei Lomé Accueil: ein Rückblick auf den Werdegang der bildenden Künstlerin A. Sika, die an diesem Freitag ausstellt.",
+        contenu: [
+          "2018 traf die togoische Presse (Togotopnews, von Habari RDC übernommen) sie in Wognomé, am Stadtrand von Lomé, in einem großen Haus, das zu einem Atelier für bildende Kunst umgebaut worden war und in dem sich die Tintenspuren durch Wohnzimmer, Küche, Schlafzimmer und Terrasse ziehen. Damals seit sieben Jahren als Künstlerin tätig, arbeitete sie dort sorgfältig, Tag und Nacht.",
+          "Als Autodidaktin bildet sie sich in Workshops weiter. Am 5. Oktober 2024 gehörte sie zu den sechs Künstlern, die Kossi Assou, Ausbilder und vom togoischen Kulturministerium ernannter „lebender menschlicher Schatz“, in Djassémé zu einer Masterclass zur Nachverfolgung und Auswertung versammelte, im Rahmen der Unterstützung der ICESCO für bildende Künstler in Togo. Jeder stellte eine Leinwand passend zu den Anforderungen der Übung vor.",
+          "Am 15. Januar 2026 lud der Verein Lomé Accueil sie gemeinsam mit dem Künstler Tessi Kodjovi zu seinen Begegnungen mit togoischen Künstlern an ihren Schaffensorten ein: ein Garten-Museum, in dem ihre Werke zu therapeutischen Handlungen werden (Treffen nur für Vereinsmitglieder).",
+          "Auf Instagram (@ablasikaakpaloo) fasst sie ihre Haltung zusammen: „Kunst ist meine Sprache, Materie mein Ausdruck. Werke, die hinterfragen, erzählen und weitergeben.“ An diesem Freitag, dem 27. November 2026, nimmt sie an einer Gruppenausstellung in Lomé teil (siehe unseren Artikel). Ihre Werke sind auf ihrer ArTova-Seite zu entdecken.",
+        ].join("\n\n"),
+      },
+    },
+  },
+  {
+    cle: "portrait-evan-s",
+    titre: "Evan's, l'art de donner une seconde vie aux objets",
+    resume:
+      "Evans Nyarko-Badohu Tété, qui signe Evan's, transforme objets et textiles destinés au rebut en portraits et en formes vibrantes : l'art comme guérison, expression de soi et réflexion sociale.",
+    contenu: [
+      "Evans Nyarko-Badohu Tété, qui signe Evan's, se définit comme un artiste pluridisciplinaire, animé par une profonde passion pour la vie et par la volonté d'en exprimer la beauté et la complexité.",
+      "Son travail donne une seconde vie aux objets et aux matériaux destinés au rebut, qu'il transforme en portraits et en formes vibrantes qui célèbrent l'expérience humaine : un art de la récupération et du recyclage d'objets, de matériaux et de textiles de toutes sortes. Il voit dans l'art un puissant moyen de guérison, d'expression de soi et de réflexion sociale.",
+      "Son parcours reflète son héritage togolais et son ouverture sur le monde. Il a découvert l'art dans les gestes et les éléments du quotidien ; c'est à Dakar qu'il a embrassé l'univers artistique, en participant à des ateliers de théâtre, de voix et de poésie. Après des études de marketing et de communication à HECM, les rencontres interculturelles ont continué à nourrir son imaginaire et sa créativité.",
+      "Son œuvre maîtresse sur ArTova, « Egnepkliwo (moi et toi) », mesure 1,70 m sur 1,20 m. Il présente son univers et ses œuvres sur sa page.",
+    ].join("\n\n"),
+    source_nom: "ArTova",
+    image_url: "/fichiers/f86fc1c4de484c0e9140f3b947c5f099",
+    credit_image: "Evan's / ArTova",
+    portee: "togo",
+    categorie: "artistes",
+    importance: 6,
+    publie_le: "2026-11-25T13:30:00Z",
+    artiste_slug: "evan-s",
+    personnes: [{ nom: "Evan's", slug: "evan-s" }],
+    revision: 1,
+    traductions: {
+      en: {
+        titre: "Evan's, the art of giving objects a second life",
+        resume:
+          "Evans Nyarko-Badohu Tété, who signs Evan's, turns discarded objects and textiles into portraits and vibrant forms: art as healing, self-expression and social reflection.",
+        contenu: [
+          "Evans Nyarko-Badohu Tété, who signs Evan's, describes himself as a multidisciplinary artist, driven by a deep passion for life and by the wish to express its beauty and complexity.",
+          "His work gives a second life to objects and materials meant for the bin, turning them into portraits and vibrant forms that celebrate the human experience: an art of salvage and recycling of objects, materials and textiles of every kind. He sees art as a powerful means of healing, self-expression and social reflection.",
+          "His path reflects his Togolese heritage and his openness to the world. He discovered art in everyday gestures and elements; it was in Dakar that he truly embraced the artistic world, taking part in theatre, voice and poetry workshops. After studying marketing and communication at HECM, intercultural encounters kept feeding his imagination and creativity.",
+          "His master work on ArTova, “Egnepkliwo (me and you)”, measures 1.70 m by 1.20 m. He presents his world and his works on his page.",
+        ].join("\n\n"),
+      },
+      de: {
+        titre: "Evan's, die Kunst, Dingen ein zweites Leben zu geben",
+        resume:
+          "Evans Nyarko-Badohu Tété, der als Evan's signiert, verwandelt ausrangierte Gegenstände und Textilien in Porträts und lebendige Formen: Kunst als Heilung, Selbstausdruck und gesellschaftliche Reflexion.",
+        contenu: [
+          "Evans Nyarko-Badohu Tété, der als Evan's signiert, versteht sich als multidisziplinärer Künstler, getragen von einer tiefen Leidenschaft für das Leben und dem Wunsch, dessen Schönheit und Komplexität auszudrücken.",
+          "Seine Arbeit schenkt Gegenständen und Materialien, die für den Müll bestimmt waren, ein zweites Leben und verwandelt sie in Porträts und lebendige Formen, die die menschliche Erfahrung feiern: eine Kunst der Wiederverwertung von Gegenständen, Materialien und Textilien aller Art. In der Kunst sieht er ein kraftvolles Mittel zur Heilung, zum Selbstausdruck und zur gesellschaftlichen Reflexion.",
+          "Sein Weg spiegelt sein togoisches Erbe und seine Weltoffenheit. Die Kunst entdeckte er in den Gesten und Dingen des Alltags; in Dakar fand er wirklich in die künstlerische Welt, bei Workshops zu Theater, Stimme und Poesie. Nach einem Studium in Marketing und Kommunikation an der HECM nährten interkulturelle Begegnungen weiter seine Fantasie und Kreativität.",
+          "Sein Hauptwerk auf ArTova, „Egnepkliwo (ich und du)“, misst 1,70 m mal 1,20 m. Seine Welt und seine Werke stellt er auf seiner Seite vor.",
+        ].join("\n\n"),
+      },
+    },
+  },
 ];

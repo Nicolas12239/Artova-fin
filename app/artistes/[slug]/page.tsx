@@ -9,6 +9,8 @@ import { BoutonPartager } from "@/components/BoutonPartager";
 import { MotifPinceau, MotifCollage, MotifPierre } from "@/components/Motifs";
 import { formatFcfa } from "@/lib/format";
 import { DISCIPLINES_SEO, descriptionCourte, filAriane, metadonnees } from "@/lib/seo";
+import { CarteActualite } from "@/components/ActualiteCards";
+import { actualitesDeLArtiste } from "@/lib/actualites";
 import { SITE_URL, urlAbsolue } from "@/lib/site";
 import { LIBELLE_DISCIPLINE, type Artiste, type Oeuvre, type OeuvreAvecArtiste } from "@/lib/types";
 
@@ -86,6 +88,7 @@ export default async function PageUnivers({
     artiste.formation && { label: "Formation", valeur: artiste.formation },
   ].filter(Boolean) as { label: string; valeur: string }[];
 
+  const actus = artiste.statut === "publie" ? await actualitesDeLArtiste(artiste.slug, 3).catch(() => []) : [];
   const metierSeo = DISCIPLINES_SEO[artiste.discipline].singulier;
   const donneesStructurees = [
     {
@@ -310,6 +313,24 @@ export default async function PageUnivers({
           ))}
         </div>
       </section>
+
+      {actus.length > 0 && (
+        <section aria-labelledby="dans-l-actu" className="mx-auto max-w-7xl px-4 pb-16 md:px-8 md:pb-24">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-t-[6px] border-encre pt-3">
+            <h2 id="dans-l-actu" className="font-condense text-4xl font-bold uppercase leading-none md:text-5xl">
+              Dans l&apos;actualité
+            </h2>
+            <Link href="/actualites" className="font-condense text-base font-semibold uppercase tracking-[0.06em] underline underline-offset-4 hover:text-terracotta">
+              Actu art →
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {actus.map((a) => (
+              <CarteActualite key={a.id} a={a} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="px-0 pb-16 sm:px-4 md:px-8 md:pb-24">
         <div
