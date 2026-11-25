@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { TEXTES, type Langue } from "@/lib/actualites-i18n";
+import { TEXTES, avecLangue, type Langue } from "@/lib/actualites-i18n";
+import { slugTag } from "@/lib/actualites-tags";
 
 export interface PersonneAffichee {
   nom: string;
@@ -34,18 +35,25 @@ export function NomsCites({ personnes, langue }: { personnes: PersonneAffichee[]
               )}
               <span className="min-w-0">
                 <span className="block font-display text-xl leading-tight">{p.nom}</span>
-                {p.slug && <span className="block text-xs text-terracotta">{t.voirSaPage} →</span>}
+                <span className="block text-xs text-gris">#{p.nom} · {t.tousArticlesSur.replace("{nom}", p.nom)}</span>
               </span>
             </>
           );
           return (
-            <li key={p.nom}>
-              {p.slug ? (
-                <Link href={`/artistes/${p.slug}`} className="flex items-center gap-4 border border-fil bg-craie p-2 transition-colors hover:border-encre">
-                  {contenu}
+            <li key={p.nom} className="flex items-stretch gap-2 border border-fil bg-craie p-2">
+              <Link
+                href={avecLangue(`/actualites/artiste/${slugTag(p.nom)}`, langue)}
+                className="flex min-w-0 flex-1 items-center gap-4 transition-colors hover:text-terracotta"
+              >
+                {contenu}
+              </Link>
+              {p.slug && (
+                <Link
+                  href={`/artistes/${p.slug}`}
+                  className="flex shrink-0 items-center border-l border-fil pl-3 font-condense text-[12px] font-semibold uppercase tracking-[0.07em] text-terracotta hover:underline"
+                >
+                  ArTova →
                 </Link>
-              ) : (
-                <div className="flex items-center gap-4 border border-fil p-2">{contenu}</div>
               )}
             </li>
           );

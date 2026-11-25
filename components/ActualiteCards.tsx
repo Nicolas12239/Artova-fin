@@ -9,8 +9,11 @@ import {
   fr,
   ilYa,
   libelleDates,
+  lirePersonnes,
   type Actualite,
 } from "@/lib/actualites-commun";
+import { slugTag } from "@/lib/actualites-tags";
+import { avecLangue } from "@/lib/actualites-i18n";
 import { TEXTES, type Langue } from "@/lib/actualites-i18n";
 
 // Rubrique en caractères condensés : le Togo ressort en terre cuite.
@@ -101,6 +104,7 @@ export function CarteActualite({ a, langue = "fr" }: { a: Actualite; langue?: La
         </div>
         <p className="mt-2 line-clamp-4 text-[15px] leading-relaxed text-encre/75">{typo(c.resume, langue)}</p>
       </Link>
+      <TagsArtistes a={a} langue={langue} />
       <p className="mt-3 flex items-center justify-between gap-3 text-xs">
         <span className="min-w-0 truncate font-condense text-[13px] font-semibold uppercase tracking-[0.05em] text-encre">
           {t.par} {a.source_nom}
@@ -239,5 +243,27 @@ export function CarteVideo({ a, langue = "fr" }: { a: Actualite; langue?: Langue
         </h3>
       </Link>
     </article>
+  );
+}
+
+// Tags des personnes citées (trois au plus) : chaque nom mène à tous ses articles.
+export function TagsArtistes({ a, langue = "fr" }: { a: Actualite; langue?: Langue }) {
+  const noms = lirePersonnes(a.personnes).slice(0, 3);
+  if (noms.length === 0) return null;
+  return (
+    <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={TEXTES[langue].nomsCites}>
+      {noms.map((p) => (
+        <li key={p.nom}>
+          <Link
+            href={avecLangue(`/actualites/artiste/${slugTag(p.nom)}`, langue)}
+            className={`inline-block border px-2 py-0.5 font-condense text-[12px] font-semibold uppercase tracking-[0.06em] transition-colors hover:border-encre hover:bg-encre hover:text-craie ${
+              p.slug ? "border-terracotta text-terracotta" : "border-fil text-gris"
+            }`}
+          >
+            #{p.nom}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

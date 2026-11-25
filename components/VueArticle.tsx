@@ -5,7 +5,7 @@ import { CouvertureActualite } from "./CouvertureActualite";
 import { FormCommentaire } from "./FormCommentaire";
 import { GalerieActualite } from "./GalerieActualite";
 import { NomsCites, type PersonneAffichee } from "./NomsCites";
-import { SelecteurLangue } from "./SelecteurLangue";
+import { NavActu } from "./NavActu";
 import { VideosActualite } from "./VideosActualite";
 import { retirerCommentaire } from "@/app/actions/actualites";
 import { formatDateHeureFr } from "@/lib/format";
@@ -20,6 +20,7 @@ import {
   type CommentaireActualite,
 } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, fmt, nombre, type Langue } from "@/lib/actualites-i18n";
+import { slugTag } from "@/lib/actualites-tags";
 
 // Page d'un article : grande image pleine largeur, titre centré sur fond encre,
 // puis lecture sur fond clair. Les données (base) sont fournies par la page.
@@ -49,10 +50,15 @@ export function VueArticle({
   const c = contenuLangue(a, langue);
   const typo = (texte: string) => (langue === "fr" ? fr(texte) : texte);
   const admin = utilisateur?.role === "admin";
-  const paragraphes = (c.contenu ?? "")
+  // Blocs de l'article : un bloc commençant par « ## » est un intertitre.
+  const blocs = (c.contenu ?? "")
     .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .map((b, i) => (b.startsWith("## ") ? { titre: b.slice(3).trim(), id: `partie-${i}` } : { texte: b }));
+  const intertitres = blocs.flatMap((b) => ("titre" in b && b.titre ? [{ titre: b.titre, id: b.id }] : []));
+  const mots = `${c.resume} ${c.contenu ?? ""}`.split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.round(mots / 210));
   const redaction = a.source_nom === "ArTova";
   const credit = a.credit_image ?? a.source_nom;
   const etat = a.evenement_debut ? etatEvenement(a.evenement_debut, a.evenement_fin, undefined, langue) : null;
@@ -60,21 +66,13 @@ export function VueArticle({
 
   return (
     <div lang={langue}>
+      <NavActu langue={langue} chemin={chemin} />
       <header className="bg-encre text-craie">
         <div className="relative aspect-[4/3] max-h-[640px] w-full overflow-hidden sm:aspect-[16/9] lg:aspect-[21/9]">
           <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
         </div>
-        <div className="mx-auto max-w-4xl px-4 pb-14 pt-8 text-center sm:px-6 md:pb-20 md:pt-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link
-              href={avecLangue("/actualites", langue)}
-              className="font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-craie/60 underline-offset-4 hover:text-craie hover:underline"
-            >
-              {t.retour}
-            </Link>
-            <SelecteurLangue langue={langue} chemin={chemin} claire />
-          </div>
-          <div className="mt-8">
+        <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 text-center sm:px-6 md:pb-20 md:pt-14">
+          <div>
             <Rubrique a={a} langue={langue} claire centree />
           </div>
           <h1 className="mt-5 font-display text-[2.4rem] leading-[1.05] sm:text-6xl lg:text-7xl">{typo(c.titre)}</h1>
@@ -88,7 +86,15 @@ export function VueArticle({
         </div>
       </header>
 
-      <article className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 md:pt-14">
+      <article className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 md:pt-10">
+        <nav aria-label={t.arianeAria} className="mb-8 font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-gris">
+          <Link href="/" className="hover:text-encre">{t.accueil}</Link> /{" "}
+          <Link href={avecLangue("/actualites", langue)} className="hover:text-encre">{t.actuArt}</Link> /{" "}
+          <Link href={avecLangue(`/actualites?categorie=${a.categorie}`, langue)} className="hover:text-encre">
+            {t.categories[a.categorie]}
+          </Link>
+          <span className="ml-3 normal-case tracking-normal text-gris/80">· {fmt(t.lecture, { n: minutes })}</span>
+        </nav>
         {a.statut !== "publie" && (
           <p role="status" className="mb-8 border-l-2 border-terracotta pl-3 text-sm text-terracotta">
             {t.masquee}
@@ -119,11 +125,39 @@ export function VueArticle({
           </div>
         )}
 
-        {paragraphes.map((p, i) => (
-          <p key={i} className={`text-[18px] leading-[1.8] text-encre/85 ${i > 0 ? "mt-6" : ""}`}>
-            {typo(p)}
-          </p>
-        ))}
+        {intertitres.length >= 3 && (
+          <nav aria-label={t.sommaire} className="mb-10 border border-fil bg-craie p-5">
+            <p className="font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-terracotta">{t.sommaire}</p>
+            <ol className="mt-3 space-y-1.5">
+              {intertitres.map((h) => (
+                <li key={h.id}>
+                  <a href={`#${h.id}`} className="text-[15px] underline-offset-4 hover:text-terracotta hover:underline">
+                    {typo(h.titre)}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
+
+        {blocs.map((b, i) =>
+          "titre" in b && b.titre ? (
+            <h2
+              key={b.id}
+              id={b.id}
+              className="mt-12 scroll-mt-28 border-t-[3px] border-encre pt-3 font-condense text-3xl font-bold uppercase leading-tight"
+            >
+              {typo(b.titre)}
+            </h2>
+          ) : (
+            <p
+              key={i}
+              className={`text-[18px] leading-[1.8] text-encre/85 ${i > 0 ? "mt-6" : ""} ${i === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-terracotta" : ""}`}
+            >
+              {typo("texte" in b ? (b.texte ?? "") : "")}
+            </p>
+          ),
+        )}
         {a.image_url && !a.images && <p className="mt-8 text-xs text-gris">{fmt(t.image, { source: credit })}</p>}
 
         <NomsCites personnes={personnes} langue={langue} />

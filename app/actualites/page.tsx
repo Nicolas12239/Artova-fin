@@ -60,7 +60,7 @@ export const maxDuration = 60;
 export default async function PageActualites({
   searchParams,
 }: {
-  searchParams: Promise<{ portee?: string; categorie?: string; page?: string; lang?: string }>;
+  searchParams: Promise<{ portee?: string; categorie?: string; page?: string; lang?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const langue = langueDe(params.lang);
@@ -69,11 +69,12 @@ export default async function PageActualites({
   const portee = estPortee(params.portee) ? params.portee : undefined;
   const categorie = estCategorie(params.categorie) ? params.categorie : undefined;
   const page = Math.min(200, Math.max(1, parseInt(params.page ?? "1", 10) || 1));
-  const filtre = { portee, categorie };
+  const q = (params.q ?? "").trim().slice(0, 80);
+  const filtre = { portee, categorie, q: q || undefined };
 
   const [utilisateur, vedette, total, agenda, enBref, enVideo] = await Promise.all([
     getCurrentUser(),
-    actualiteALaUne(filtre),
+    q ? Promise.resolve(null) : actualiteALaUne(filtre),
     compterActualites(filtre),
     page === 1 ? agendaLome(4).catch(() => []) : Promise.resolve([]),
     listerActualites(filtre, { limite: 8 }),
@@ -89,6 +90,7 @@ export default async function PageActualites({
   return (
     <VueActualites
       langue={langue}
+      q={q}
       portee={portee}
       categorie={categorie}
       page={page}

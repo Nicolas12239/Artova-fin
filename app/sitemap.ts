@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 // Les images sont déclarées pour apparaître dans la recherche d'images.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const maintenant = new Date();
-  const [artistes, oeuvres, actualites] = await Promise.all([
+  const [artistes, oeuvres, actualites, tags] = await Promise.all([
     query<{ slug: string; portrait_url: string | null }>(
       "SELECT slug, portrait_url FROM artistes WHERE statut = 'publie' ORDER BY id",
     ),
@@ -20,6 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     query<{ id: number; titre: string; publie_le: Date; image_url: string | null }>(
       "SELECT id, titre, publie_le, image_url FROM actualites WHERE statut = 'publie' ORDER BY publie_le DESC LIMIT 500",
+    ).catch(() => []),
+    query<{ slug: string }>(
+      `SELECT DISTINCT t.slug FROM actualites_tags t JOIN actualites a ON a.id = t.actualite_id
+       WHERE a.statut = 'publie' LIMIT 400`,
     ).catch(() => []),
   ]);
   return [
@@ -34,6 +38,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/artistes`, lastModified: maintenant, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/actualites`, lastModified: maintenant, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/actualites/agenda`, lastModified: maintenant, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/actualites/artistes`, lastModified: maintenant, changeFrequency: "daily", priority: 0.7 },
+    ...tags.map((t) => ({
+      url: `${SITE_URL}/actualites/artiste/${t.slug}`,
+      lastModified: maintenant,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
     ...actualites.map((a) => ({
       url: `${SITE_URL}${lienActualite(a)}`,
       lastModified: new Date(a.publie_le),

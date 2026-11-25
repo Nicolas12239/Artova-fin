@@ -20,6 +20,8 @@ const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom
 export interface FiltreActualites {
   portee?: Portee;
   categorie?: Categorie;
+  // Recherche libre : titre, résumé, texte, noms cités et traductions.
+  q?: string;
 }
 
 function clauseFiltre(filtre: FiltreActualites): { sql: string; params: Param[] } {
@@ -32,6 +34,14 @@ function clauseFiltre(filtre: FiltreActualites): { sql: string; params: Param[] 
   if (filtre.categorie) {
     conditions.push("a.categorie = ?");
     params.push(filtre.categorie);
+  }
+  const q = filtre.q?.trim().slice(0, 80);
+  if (q) {
+    const motif = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+    conditions.push(
+      "(a.titre LIKE ? OR a.resume LIKE ? OR a.contenu LIKE ? OR a.personnes LIKE ? OR a.lieu LIKE ? OR a.traductions LIKE ?)",
+    );
+    params.push(motif, motif, motif, motif, motif, motif);
   }
   return { sql: conditions.join(" AND "), params };
 }
@@ -210,4 +220,51 @@ export async function actualitesDeLArtiste(slug: string, limite = 3): Promise<Ac
      ORDER BY a.publie_le DESC, a.id DESC LIMIT ${l}`,
     [slug],
   );
+}
+
+// ─── Tags : une page par personne citée ──────────────────────────────────────
+
+export interface Tag {
+  slug: string;
+  nom: string;
+  nb: number;
+}
+
+// Tous les noms cités, du plus cité au moins cité.
+export async function listeTags(): Promise<Tag[]> {
+  const rows = await query<Tag>(
+    `SELECT t.slug, MIN(t.nom) AS nom, COUNT(*) AS nb
+     FROM actualites_tags t JOIN actualites a ON a.id = t.actualite_id AND a.statut = 'publie'
+     GROUP BY t.slug ORDER BY nb DESC, nom ASC LIMIT 400`,
+  );
+  return rows.map((r) => ({ ...r, nb: Number(r.nb) }));
+}
+
+export async function tagParSlug(slug: string): Promise<Tag | null> {
+  const rows = await query<Tag>(
+    `SELECT t.slug, MIN(t.nom) AS nom, COUNT(*) AS nb
+     FROM actualites_tags t JOIN actualites a ON a.id = t.actualite_id AND a.statut = 'publie'
+     WHERE t.slug = ? GROUP BY t.slug LIMIT 1`,
+    [slug],
+  );
+  return rows[0] ? { ...rows[0], nb: Number(rows[0].nb) } : null;
+}
+
+export async function actualitesDuTag(slug: string, limite = 24): Promise<Actualite[]> {
+  const l = Math.max(1, Math.min(60, Math.floor(limite)));
+  return query<Actualite>(
+    `SELECT ${COLONNES} FROM actualites a JOIN actualites_tags t ON t.actualite_id = a.id
+     WHERE a.statut = 'publie' AND t.slug = ?
+     ORDER BY a.publie_le DESC, a.id DESC LIMIT ${l}`,
+    [slug],
+  );
+}
+
+// Page d'artiste ArTova correspondant à un tag (même identifiant), s'il existe.
+export async function artistePourTag(slug: string): Promise<{ slug: string; nom: string; portrait_url: string | null; discipline: string } | null> {
+  const rows = await query<{ slug: string; nom: string; portrait_url: string | null; discipline: string }>(
+    "SELECT slug, nom, portrait_url, discipline FROM artistes WHERE slug = ? AND statut = 'publie' LIMIT 1",
+    [slug],
+  );
+  return rows[0] ?? null;
 }

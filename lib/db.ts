@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import mysql from "mysql2/promise";
 import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
 import { ARTICLES_REDACTION, CLES_OBSOLETES, empreinteRedaction } from "./actualites-redaction";
+import { lirePersonnes } from "./actualites-commun";
+import { slugTag } from "./actualites-tags";
 
 export type Param = string | number | boolean | Date | Buffer | null;
 
@@ -106,6 +108,30 @@ async function migrer(): Promise<void> {
   }
 }
 
+// Identifiant d'un tag : « A. Sika » devient « a-sika », comme sa page d'artiste.
+export { slugTag };
+
+// Remplace les tags d'une actualité par les personnes citées (JSON de `personnes`).
+async function poserTagsInterne(actualiteId: number, personnes: string | null): Promise<void> {
+  await pool.query("DELETE FROM actualites_tags WHERE actualite_id = ?", [actualiteId]);
+  const vus = new Set<string>();
+  for (const p of lirePersonnes(personnes)) {
+    const slug = slugTag(p.nom);
+    if (!slug || vus.has(slug)) continue;
+    vus.add(slug);
+    await pool.query("INSERT IGNORE INTO actualites_tags (actualite_id, slug, nom) VALUES (?, ?, ?)", [
+      actualiteId,
+      slug,
+      p.nom.slice(0, 100),
+    ]);
+  }
+}
+
+export async function poserTags(actualiteId: number, personnes: string | null): Promise<void> {
+  await pret();
+  await poserTagsInterne(actualiteId, personnes);
+}
+
 // Actualités de l'art : sources suivies, publications, « j'aime » et commentaires.
 async function migrerActualites(): Promise<void> {
   const table = (nom: string, corps: string) =>
@@ -170,6 +196,16 @@ async function migrerActualites(): Promise<void> {
      vu_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
      PRIMARY KEY (empreinte)`,
   );
+  // Une ligne par personne citée dans une actualité : alimente les pages « tag »
+  // (tous les articles sur un artiste) et l'index des artistes cités.
+  await table(
+    "actualites_tags",
+    `actualite_id INT UNSIGNED NOT NULL,
+     slug VARCHAR(100) NOT NULL,
+     nom VARCHAR(100) NOT NULL,
+     PRIMARY KEY (actualite_id, slug),
+     KEY idx_actualites_tags_slug (slug)`,
+  );
   await table(
     "actualites_likes",
     `actualite_id INT UNSIGNED NOT NULL,
@@ -188,6 +224,14 @@ async function migrerActualites(): Promise<void> {
      PRIMARY KEY (id),
      KEY idx_actualites_commentaires (actualite_id, cree_le)`,
   );
+
+  // Rattrape les tags des actualités déjà publiées (une seule fois pour chacune).
+  const [sansTags] = await pool.query(
+    `SELECT a.id, a.personnes FROM actualites a
+     WHERE a.personnes IS NOT NULL AND NOT EXISTS (SELECT 1 FROM actualites_tags t WHERE t.actualite_id = a.id)
+     LIMIT 500`,
+  );
+  for (const r of sansTags as { id: number; personnes: string | null }[]) await poserTagsInterne(r.id, r.personnes);
 
   // Colonnes ajoutées après la première mise en ligne.
   for (const [colonne, definition] of [
@@ -258,11 +302,12 @@ async function migrerActualites(): Promise<void> {
            videos=?, artiste_slug=?, images=?, credit_image=?, personnes=?, traductions=?, revision=? WHERE id=?`,
           [...champs, ligne.id],
         );
+        await poserTagsInterne(ligne.id, a.personnes ? JSON.stringify(a.personnes) : null);
       }
       continue;
     }
     if (await dejaVu(empreinte)) continue;
-    await pool.query(
+    const [insere] = await pool.query(
       `INSERT IGNORE INTO actualites
        (empreinte, titre, resume, contenu, url_source, source_nom, image_url, portee, categorie, importance,
         a_la_une, publie_le, evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image,
@@ -270,6 +315,8 @@ async function migrerActualites(): Promise<void> {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
       [empreinte, ...champs],
     );
+    const idInsere = Number((insere as { insertId?: number }).insertId ?? 0);
+    if (idInsere > 0) await poserTagsInterne(idInsere, a.personnes ? JSON.stringify(a.personnes) : null);
     await marquer(empreinte);
   }
 }

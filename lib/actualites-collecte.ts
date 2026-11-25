@@ -1,4 +1,4 @@
-import { execute, query, type Param } from "./db";
+import { execute, poserTags, query, type Param } from "./db";
 import {
   devinerCategorie,
   devinerPortee,
@@ -362,6 +362,7 @@ export async function collecterActualites({
       ],
     );
     if (ajout.affectedRows > 0) {
+      if (r.personnes && ajout.insertId) await poserTags(Number(ajout.insertId), r.personnes);
       rapport.publiees++;
       if (r.evenement) rapport.evenements++;
       if (r.videos) rapport.videos++;

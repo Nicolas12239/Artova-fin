@@ -201,6 +201,8 @@ export interface VideoIntegree {
   lecteur: string;
   // Les vidéos TikTok et Instagram sont verticales, YouTube est en 16/9.
   vertical: boolean;
+  // Intégration d'un profil Instagram (ses dernières publications), pas d'une publication.
+  profil?: boolean;
 }
 
 // Reconnaît une adresse de vidéo TikTok, Instagram ou YouTube. Les liens courts
@@ -219,7 +221,19 @@ export function lireVideo(brut: string): VideoIntegree | null {
   }
   if (hote === "instagram.com") {
     const m = /\/(p|reel|reels|tv)\/([A-Za-z0-9_-]{5,20})/.exec(u.pathname);
-    if (!m) return null;
+    if (!m) {
+      // Adresse d'un profil (instagram.com/nom) : intégration officielle du profil.
+      const profil = /^\/([A-Za-z0-9._]{2,30})\/?$/.exec(u.pathname)?.[1];
+      const reserves = ["explore", "accounts", "stories", "direct", "about", "reels", "p", "reel", "tv", "developer", "legal"];
+      if (!profil || reserves.includes(profil.toLowerCase())) return null;
+      return {
+        plateforme: "instagram",
+        url: `https://www.instagram.com/${profil}/`,
+        lecteur: `https://www.instagram.com/${profil}/embed`,
+        vertical: true,
+        profil: true,
+      };
+    }
     const genre = m[1] === "reels" ? "reel" : m[1];
     return { plateforme: "instagram", url: `https://www.instagram.com/${genre}/${m[2]}/`, lecteur: `https://www.instagram.com/${genre}/${m[2]}/embed`, vertical: true };
   }

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useEnvoiAvecImages } from "./envoiImages";
 import { ajouterSource, collecterMaintenant, publierManuellement } from "@/app/actions/actualites";
-import { CATEGORIES, LIBELLE_PORTEE, lireTraductions } from "@/lib/actualites-commun";
+import { CATEGORIES, LIBELLE_PORTEE, lirePersonnes, lireTraductions } from "@/lib/actualites-commun";
 
 const champ =
   "w-full border border-encre/25 bg-creme px-4 py-3 text-sm outline-none transition-colors focus:border-terracotta";
@@ -52,6 +52,7 @@ export interface PublicationInitiale {
   artiste_slug: string | null;
   images: string | null;
   credit_image: string | null;
+  personnes: string | null;
   traductions: string | null;
   a_la_une: number;
 }
@@ -123,6 +124,19 @@ export function FormPublication({
           <input id="pub-lieu" name="lieu" type="text" maxLength={160} placeholder="Galerie, musée, quartier…" defaultValue={initial?.lieu ?? ""} className={champ} />
         </div>
       </fieldset>
+      <div>
+        <label htmlFor="pub-noms" className={libelle}>
+          Noms cités (un par ligne) : chaque nom devient un tag cliquable, relié à la page de l&apos;artiste s&apos;il est sur ArTova
+        </label>
+        <textarea
+          id="pub-noms"
+          name="noms"
+          rows={4}
+          placeholder={"A. Sika\nEli Dush"}
+          defaultValue={lirePersonnes(initial?.personnes).map((p) => p.nom).join("\n")}
+          className={champ}
+        />
+      </div>
       <div>
         <label htmlFor="pub-images" className={libelle}>
           Photos supplémentaires (un lien https:// par ligne, jusqu&apos;à huit)

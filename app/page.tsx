@@ -82,6 +82,11 @@ export default async function Accueil() {
         url: site,
         inLanguage: "fr",
         publisher: { "@id": `${site}/#organisation` },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: { "@type": "EntryPoint", urlTemplate: `${site}/actualites?q={search_term_string}` },
+          "query-input": "required name=search_term_string",
+        },
       },
     ],
   };

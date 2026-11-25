@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CarteActualite, CarteAgenda, CarteVideo, LigneBreve, VedetteActualite } from "./ActualiteCards";
-import { SelecteurLangue } from "./SelecteurLangue";
+import { NavActu } from "./NavActu";
 import {
   dateEditoriale,
   type Actualite,
@@ -11,6 +11,8 @@ import { TEXTES, avecLangue, fmt, nombre, type Langue } from "@/lib/actualites-i
 
 export interface DonneesVueActualites {
   langue: Langue;
+  // Recherche libre en cours (filtre les articles, masque la une et l'agenda).
+  q?: string;
   portee?: Portee;
   categorie?: Categorie;
   page: number;
@@ -24,8 +26,9 @@ export interface DonneesVueActualites {
   admin: boolean;
 }
 
-function chemin(filtre: { portee?: Portee; categorie?: Categorie; page?: number }): string {
+function chemin(filtre: { portee?: Portee; categorie?: Categorie; page?: number; q?: string }): string {
   const q = new URLSearchParams();
+  if (filtre.q) q.set("q", filtre.q);
   if (filtre.portee) q.set("portee", filtre.portee);
   if (filtre.categorie) q.set("categorie", filtre.categorie);
   if (filtre.page && filtre.page > 1) q.set("page", String(filtre.page));
@@ -39,21 +42,20 @@ const RUBRIQUES = [undefined, ...CATEGORIES_ORDRE] as const;
 
 // Page d'accueil de l'actualité : titre de presse, « à la une » plein cadre,
 // agenda de Lomé, colonnes d'articles et brèves. Sans accès à la base de données.
-export function VueActualites({ langue, portee, categorie, page, vedette, articles, enBref, agenda, enVideo, total, suite, admin }: DonneesVueActualites) {
+export function VueActualites({ langue, q = "", portee, categorie, page, vedette, articles, enBref, agenda, enVideo, total, suite, admin }: DonneesVueActualites) {
   const t = TEXTES[langue];
-  const filtreActif = Boolean(portee || categorie);
+  const recherche = q.trim().length > 0;
+  const filtreActif = Boolean(portee || categorie || recherche);
   const premierePage = page === 1;
-  const montrerAgenda = premierePage && !categorie && (!portee || portee === "togo") && agenda.length > 0;
-  const lien = (f: { portee?: Portee; categorie?: Categorie; page?: number }) => avecLangue(chemin(f), langue);
+  const montrerAgenda = premierePage && !categorie && !q.trim() && (!portee || portee === "togo") && agenda.length > 0;
+  const lien = (f: { portee?: Portee; categorie?: Categorie; page?: number }) => avecLangue(chemin({ ...f, q: q || undefined }), langue);
 
   return (
     <div lang={langue}>
+      <NavActu langue={langue} active="une" chemin={chemin({ portee, categorie, page, q: q || undefined })} q={q} />
       <header className="border-b-[5px] border-encre bg-craie">
-        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 md:px-8 md:pt-8">
-          <div className="flex justify-end">
-            <SelecteurLangue langue={langue} chemin={chemin({ portee, categorie, page })} />
-          </div>
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+        <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 md:px-8 md:pt-10">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
             <h1 className="font-condense text-[3.5rem] font-bold uppercase leading-[0.9] sm:text-7xl md:text-[7.5rem]">
               {t.titreSection}
             </h1>
@@ -101,6 +103,15 @@ export function VueActualites({ langue, portee, categorie, page, vedette, articl
         </div>
       </header>
 
+      {recherche && (
+        <p role="status" className="mx-auto max-w-7xl px-4 pt-8 font-condense text-xl font-semibold uppercase tracking-[0.05em] sm:px-6 md:px-8">
+          {articles.length === 0 ? fmt(t.aucunResultat, { q }) : fmt(t.resultats[total === 1 ? 0 : 1], { n: total, q })}{" "}
+          <Link href={avecLangue("/actualites", langue)} className="ml-2 text-sm font-medium normal-case tracking-normal text-terracotta underline underline-offset-4">
+            {t.effacer}
+          </Link>
+        </p>
+      )}
+
       {!vedette && articles.length === 0 ? (
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-8">
           <div className="border border-fil bg-craie px-6 py-16 text-center">
@@ -122,7 +133,7 @@ export function VueActualites({ langue, portee, categorie, page, vedette, articl
         </div>
       ) : (
         <>
-          {vedette && premierePage && <VedetteActualite a={vedette} langue={langue} />}
+          {vedette && premierePage && !recherche && <VedetteActualite a={vedette} langue={langue} />}
 
           {montrerAgenda && (
             <section aria-labelledby="agenda-lome" className="bg-panel">

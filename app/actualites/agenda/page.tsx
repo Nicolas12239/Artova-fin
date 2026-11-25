@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { actualiserSiBesoin } from "@/lib/actualites-actualiser";
 import Link from "next/link";
 import { CarteAgenda } from "@/components/ActualiteCards";
-import { SelecteurLangue } from "@/components/SelecteurLangue";
+import { NavActu } from "@/components/NavActu";
 import { agendaComplet, lienActualite } from "@/lib/actualites";
 import { contenuLangue, dateEditoriale, etatEvenement, type Actualite } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, langueDe } from "@/lib/actualites-i18n";
@@ -107,18 +107,10 @@ export default async function PageAgenda({ searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
       />
+      <NavActu langue={langue} active="agenda" chemin="/actualites/agenda" />
       <header className="border-b-[5px] border-encre bg-craie">
         <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6 md:px-8 md:pt-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link
-              href={avecLangue("/actualites", langue)}
-              className="font-condense text-[14px] font-semibold uppercase tracking-[0.08em] text-gris underline-offset-4 hover:text-encre hover:underline"
-            >
-              {t.retour}
-            </Link>
-            <SelecteurLangue langue={langue} chemin="/actualites/agenda" />
-          </div>
-          <h1 className="mt-4 font-condense text-[3.2rem] font-bold uppercase leading-[0.92] sm:text-7xl md:text-[6.5rem]">
+          <h1 className="font-condense text-[3.2rem] font-bold uppercase leading-[0.92] sm:text-7xl md:text-[6.5rem]">
             {t.agendaTitre}
           </h1>
           <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-gris">

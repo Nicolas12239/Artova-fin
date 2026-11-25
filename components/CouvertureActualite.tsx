@@ -39,7 +39,7 @@ export function CouvertureActualite({
         decoding="async"
         referrerPolicy="no-referrer"
         onError={() => setCassee(true)}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        className="absolute inset-0 h-full w-full object-cover object-[50%_28%] transition-transform duration-700 group-hover:scale-[1.03]"
       />
     );
   }

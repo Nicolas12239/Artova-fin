@@ -4,7 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { execute, query } from "@/lib/db";
+import { execute, poserTags, query, slugTag } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { estSousLimite } from "@/lib/rate-limit";
 import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
@@ -195,6 +195,7 @@ const schemaPublication = z.object({
   videos: z.string().trim().max(2000, "Trop d'adresses de vidéos.").optional().or(z.literal("")),
   images: z.string().trim().max(4000, "Trop d'adresses d'images.").optional().or(z.literal("")),
   credit_image: z.string().trim().max(160).optional().or(z.literal("")),
+  noms: z.string().trim().max(2000).optional().or(z.literal("")),
   titre_en: z.string().trim().max(300).optional().or(z.literal("")),
   resume_en: z.string().trim().max(600).optional().or(z.literal("")),
   contenu_en: z.string().trim().max(20000).optional().or(z.literal("")),
@@ -225,6 +226,7 @@ export async function publierManuellement(
     videos: String(formData.get("videos") ?? ""),
     images: String(formData.get("images") ?? ""),
     credit_image: String(formData.get("credit_image") ?? ""),
+    noms: String(formData.get("noms") ?? ""),
     titre_en: String(formData.get("titre_en") ?? ""),
     resume_en: String(formData.get("resume_en") ?? ""),
     contenu_en: String(formData.get("contenu_en") ?? ""),
@@ -252,6 +254,20 @@ export async function publierManuellement(
   if (imageRefusee) {
     return { erreur: `Adresse d'image non reconnue : ${imageRefusee.slice(0, 80)}. Utilisez un lien https:// ou une image déjà envoyée sur ArTova.` };
   }
+  // Noms cités (un par ligne) : chaque nom devient un tag ; ceux qui correspondent à
+  // un artiste ArTova (même identifiant de page) renvoient à sa page.
+  const noms = [...new Set((d.noms ?? "").split(/[\r\n]+/).map((n) => nettoyerHtml(n).slice(0, 80)).filter((n) => n.length >= 2))].slice(0, 20);
+  const slugsNoms = noms.map((n) => slugTag(n)).filter(Boolean);
+  const artistesTrouves = slugsNoms.length
+    ? await query<{ slug: string }>(
+        `SELECT slug FROM artistes WHERE statut = 'publie' AND slug IN (${slugsNoms.map(() => "?").join(",")})`,
+        slugsNoms,
+      )
+    : [];
+  const slugsArtistes = new Set(artistesTrouves.map((r) => r.slug));
+  const personnesJson = noms.length
+    ? JSON.stringify(noms.map((nom) => ({ nom, slug: slugsArtistes.has(slugTag(nom)) ? slugTag(nom) : null })))
+    : null;
   const traduction = (langue: "en" | "de") => {
     const titre = d[`titre_${langue}`] ?? "";
     const resume = d[`resume_${langue}`] ?? "";
@@ -284,26 +300,28 @@ export async function publierManuellement(
     nettoyerHtml(d.source_nom), d.portee, d.categorie, formData.get("a_la_une") === "1" ? 1 : 0,
     d.evenement_debut || null, d.evenement_fin || null, d.lieu ? nettoyerHtml(d.lieu) : null,
     lignesVideos.join("\n") || null, d.artiste_slug || null,
-    lignesImages.join("\n") || null, d.credit_image ? nettoyerHtml(d.credit_image) : null, traductionsJson,
+    lignesImages.join("\n") || null, d.credit_image ? nettoyerHtml(d.credit_image) : null, personnesJson, traductionsJson,
   ];
 
   if (d.id) {
     await execute(
       `UPDATE actualites SET titre=?, resume=?, contenu=?, url_source=?, source_nom=?, portee=?, categorie=?,
-       a_la_une=?, evenement_debut=?, evenement_fin=?, lieu=?, videos=?, artiste_slug=?, images=?, credit_image=?, traductions=? ${image ? ", image_url=?" : ""} WHERE id=?`,
+       a_la_une=?, evenement_debut=?, evenement_fin=?, lieu=?, videos=?, artiste_slug=?, images=?, credit_image=?, personnes=?, traductions=? ${image ? ", image_url=?" : ""} WHERE id=?`,
       image ? [...valeurs, image, d.id] : [...valeurs, d.id],
     );
+    await poserTags(d.id, personnesJson);
     rafraichir();
     return { succes: "Actualité modifiée." };
   }
 
-  await execute(
+  const cree = await execute(
     `INSERT INTO actualites
      (empreinte, titre, resume, contenu, url_source, source_nom, portee, categorie, importance, a_la_une,
-      evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image, traductions, image_url, origine)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 8, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
+      evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image, personnes, traductions, image_url, origine)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 8, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
     [createHash("sha1").update(`manuel:${randomUUID()}`).digest("hex"), ...valeurs, image],
   );
+  if (personnesJson && cree.insertId) await poserTags(Number(cree.insertId), personnesJson);
   rafraichir();
   return { succes: "Actualité publiée." };
 }

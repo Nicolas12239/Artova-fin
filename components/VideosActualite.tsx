@@ -5,6 +5,7 @@ const NOMS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube" } as
 
 function tailleLecteur(v: VideoIntegree): string {
   if (v.plateforme === "tiktok") return "h-[740px] w-[325px] max-w-full";
+  if (v.plateforme === "instagram" && v.profil) return "h-[780px] w-[540px] max-w-full";
   if (v.plateforme === "instagram") return "h-[640px] w-[400px] max-w-full";
   return "aspect-video w-full";
 }
@@ -36,7 +37,7 @@ export function VideosActualite({ videos, titre, langue = "fr" }: { videos: stri
             </div>
             <figcaption className="mt-2 text-xs text-gris">
               <a href={v.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-terracotta">
-                {t.voirSur} {NOMS[v.plateforme]} ↗
+                {v.profil ? t.voirProfil : t.voirSur} {NOMS[v.plateforme]} ↗
               </a>
             </figcaption>
           </figure>
