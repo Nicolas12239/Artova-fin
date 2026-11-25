@@ -20,7 +20,8 @@ const CSP = [
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
   `connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com${emulateurFirebase}`,
-  `frame-src https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://appleid.apple.com${emulateurFirebase}`,
+  // Vidéos intégrées dans les actualités : TikTok, Instagram et YouTube (sans cookies).
+  `frame-src https://*.firebaseapp.com https://*.web.app https://accounts.google.com https://appleid.apple.com https://www.tiktok.com https://www.instagram.com https://www.youtube-nocookie.com${emulateurFirebase}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

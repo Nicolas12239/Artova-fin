@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useEnvoiAvecImages } from "./envoiImages";
 import { ajouterSource, collecterMaintenant, publierManuellement } from "@/app/actions/actualites";
-import { CATEGORIES, LIBELLE_PORTEE } from "@/lib/actualites-commun";
+import { CATEGORIES, LIBELLE_PORTEE, lireTraductions } from "@/lib/actualites-commun";
 
 const champ =
   "w-full border border-encre/25 bg-creme px-4 py-3 text-sm outline-none transition-colors focus:border-terracotta";
@@ -48,11 +48,23 @@ export interface PublicationInitiale {
   evenement_debut: string | null;
   evenement_fin: string | null;
   lieu: string | null;
+  videos: string | null;
+  artiste_slug: string | null;
+  images: string | null;
+  credit_image: string | null;
+  traductions: string | null;
   a_la_une: number;
 }
 
-export function FormPublication({ initial }: { initial?: PublicationInitiale }) {
+export function FormPublication({
+  initial,
+  artistes = [],
+}: {
+  initial?: PublicationInitiale;
+  artistes?: { slug: string; nom: string }[];
+}) {
   const { etat, onSubmit, enCours } = useEnvoiAvecImages(publierManuellement, { viderApresSucces: !initial });
+  const tr = lireTraductions(initial?.traductions);
   return (
     <form key={initial?.id ?? "nouveau"} onSubmit={onSubmit} className="space-y-4">
       {initial && <input type="hidden" name="id" value={initial.id} />}
@@ -111,6 +123,53 @@ export function FormPublication({ initial }: { initial?: PublicationInitiale }) 
           <input id="pub-lieu" name="lieu" type="text" maxLength={160} placeholder="Galerie, musée, quartier…" defaultValue={initial?.lieu ?? ""} className={champ} />
         </div>
       </fieldset>
+      <div>
+        <label htmlFor="pub-images" className={libelle}>
+          Photos supplémentaires (un lien https:// par ligne, jusqu&apos;à huit)
+        </label>
+        <textarea id="pub-images" name="images" rows={3} placeholder="https://…" defaultValue={initial?.images ?? ""} className={champ} />
+      </div>
+      <div>
+        <label htmlFor="pub-credit" className={libelle}>Crédit des images (nom du média ou du photographe)</label>
+        <input id="pub-credit" name="credit_image" type="text" maxLength={160} defaultValue={initial?.credit_image ?? ""} className={champ} />
+      </div>
+      <details className="border border-fil p-4" open={Boolean(tr.en || tr.de)}>
+        <summary className="cursor-pointer text-xs tracking-wide text-encre/70">
+          Traductions anglaise et allemande (facultatif : sans traduction, le texte français est affiché)
+        </summary>
+        <div className="mt-4 space-y-4">
+          {(["en", "de"] as const).map((l) => (
+            <fieldset key={l} className="space-y-3">
+              <legend className="text-xs font-medium tracking-wide">{l === "en" ? "English" : "Deutsch"}</legend>
+              <input name={`titre_${l}`} type="text" maxLength={300} placeholder="Titre" defaultValue={tr[l]?.titre ?? ""} className={champ} />
+              <textarea name={`resume_${l}`} rows={2} maxLength={600} placeholder="Résumé" defaultValue={tr[l]?.resume ?? ""} className={champ} />
+              <textarea name={`contenu_${l}`} rows={4} maxLength={20000} placeholder="Texte complet" defaultValue={tr[l]?.contenu ?? ""} className={champ} />
+            </fieldset>
+          ))}
+        </div>
+      </details>
+      <div>
+        <label htmlFor="pub-videos" className={libelle}>
+          Vidéos (un lien par ligne : TikTok, Instagram ou YouTube, jusqu&apos;à six)
+        </label>
+        <textarea
+          id="pub-videos"
+          name="videos"
+          rows={3}
+          placeholder={"https://www.tiktok.com/@artova.corp/video/…\nhttps://www.instagram.com/reel/…"}
+          defaultValue={initial?.videos ?? ""}
+          className={champ}
+        />
+      </div>
+      <div>
+        <label htmlFor="pub-artiste" className={libelle}>Artiste ArTova concerné (affiche un lien vers sa page)</label>
+        <select id="pub-artiste" name="artiste_slug" defaultValue={initial?.artiste_slug ?? ""} className={champ}>
+          <option value="">Aucun</option>
+          {artistes.map((a) => (
+            <option key={a.slug} value={a.slug}>{a.nom}</option>
+          ))}
+        </select>
+      </div>
       <div>
         <label htmlFor="pub-image" className={libelle}>
           Image{initial ? " (laisser vide pour garder l'actuelle)" : ""}

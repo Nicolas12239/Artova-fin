@@ -1,6 +1,7 @@
 // Types, libellés et formats partagés par le serveur et les composants du
 // navigateur : ce fichier ne doit jamais importer la base de données.
 import type { Portee } from "./actualites-sources";
+import { LOCALES, TEXTES, fmt, type Langue } from "./actualites-i18n";
 
 export type { Portee };
 
@@ -50,6 +51,15 @@ export interface Actualite {
   evenement_debut: string | null;
   evenement_fin: string | null;
   lieu: string | null;
+  // Adresses de vidéos TikTok, Instagram ou YouTube, une par ligne.
+  videos: string | null;
+  // Page d'un artiste ArTova liée à l'article.
+  artiste_slug: string | null;
+  // Photos supplémentaires (une adresse par ligne) et crédit de l'image.
+  images: string | null;
+  credit_image: string | null;
+  // Traductions anglaise et allemande (JSON : { en: {titre, resume, contenu}, de: … }).
+  traductions: string | null;
   nb_likes: number;
   nb_commentaires: number;
 }
@@ -62,44 +72,40 @@ export interface CommentaireActualite {
   cree_le: Date;
 }
 
-const relatif = new Intl.RelativeTimeFormat("fr", { numeric: "auto" });
-const jourMois = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "Africa/Lome" });
-const jourLong = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "Africa/Lome",
-});
+function formats(langue: Langue) {
+  const loc = LOCALES[langue];
+  return {
+    loc,
+    relatif: new Intl.RelativeTimeFormat(loc, { numeric: "auto" }),
+    jourMois: new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", timeZone: "Africa/Lome" }),
+    jourLong: new Intl.DateTimeFormat(loc, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Lome" }),
+    complete: new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Lome" }),
+  };
+}
 
-export function ilYa(date: Date | string): string {
+export function ilYa(date: Date | string, langue: Langue = "fr"): string {
+  const f = formats(langue);
   const d = new Date(date);
   const minutes = Math.round((d.getTime() - Date.now()) / 60000);
-  if (minutes > -60) return relatif.format(Math.min(0, minutes), "minute");
+  if (minutes > -60) return f.relatif.format(Math.min(0, minutes), "minute");
   const heures = Math.round(minutes / 60);
-  if (heures > -24) return relatif.format(heures, "hour");
+  if (heures > -24) return f.relatif.format(heures, "hour");
   const jours = Math.round(heures / 24);
-  if (jours > -7) return relatif.format(jours, "day");
-  return jourMois.format(d);
+  if (jours > -7) return f.relatif.format(jours, "day");
+  return f.jourMois.format(d);
 }
-
-const dateComplete = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Lome" });
 
 // « 24 novembre 2026 », pour la ligne de date sous les titres.
-export function dateLongue(date: Date | string): string {
-  return dateComplete.format(new Date(date));
+export function dateLongue(date: Date | string, langue: Langue = "fr"): string {
+  return formats(langue).complete.format(new Date(date));
 }
 
-export function dateEditoriale(date: Date = new Date()): string {
-  const texte = jourLong.format(date);
+export function dateEditoriale(date: Date = new Date(), langue: Langue = "fr"): string {
+  const texte = formats(langue).jourLong.format(date);
   return texte.charAt(0).toUpperCase() + texte.slice(1);
 }
 
 // ─── Rendez-vous : dates d'exposition ────────────────────────────────────────
-
-const MOIS_COURTS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-const JOURS_COURTS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
-const JOURS_LONGS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
 function jourUtc(date: string): Date {
   const [a, m, j] = date.split("-").map(Number);
@@ -111,23 +117,37 @@ export function aujourdhui(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function libelleDates(debut: string, fin: string | null): string {
+export function libelleDates(debut: string, fin: string | null, langue: Langue = "fr"): string {
+  const loc = LOCALES[langue];
+  const court = (d: Date, options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(loc, { ...options, timeZone: "UTC" }).format(d);
   const d = jourUtc(debut);
-  if (!fin || fin === debut) return `${JOURS_COURTS[d.getUTCDay()]} ${d.getUTCDate()} ${MOIS_COURTS[d.getUTCMonth()]}`;
+  if (!fin || fin === debut) return court(d, { weekday: "short", day: "numeric", month: "short" });
   const f = jourUtc(fin);
-  if (d.getUTCMonth() === f.getUTCMonth()) return `${d.getUTCDate()}–${f.getUTCDate()} ${MOIS_COURTS[f.getUTCMonth()]}`;
-  return `${d.getUTCDate()} ${MOIS_COURTS[d.getUTCMonth()]} – ${f.getUTCDate()} ${MOIS_COURTS[f.getUTCMonth()]}`;
+  if (d.getUTCMonth() === f.getUTCMonth()) {
+    return `${d.getUTCDate()}–${court(f, { day: "numeric", month: "short" })}`;
+  }
+  return `${court(d, { day: "numeric", month: "short" })} – ${court(f, { day: "numeric", month: "short" })}`;
 }
 
 export type TonEvenement = "en_cours" | "bientot" | "termine";
 
-export function etatEvenement(debut: string, fin: string | null, auj: string = aujourdhui()): { texte: string; ton: TonEvenement } {
-  if (auj > (fin ?? debut)) return { texte: "Terminée", ton: "termine" };
-  if (auj >= debut) return { texte: "En cours", ton: "en_cours" };
+export function etatEvenement(
+  debut: string,
+  fin: string | null,
+  auj: string = aujourdhui(),
+  langue: Langue = "fr",
+): { texte: string; ton: TonEvenement } {
+  const e = TEXTES[langue].etat;
+  if (auj > (fin ?? debut)) return { texte: e.termine, ton: "termine" };
+  if (auj >= debut) return { texte: e.enCours, ton: "en_cours" };
   const jours = Math.round((jourUtc(debut).getTime() - jourUtc(auj).getTime()) / 86_400_000);
-  if (jours === 1) return { texte: "Demain", ton: "bientot" };
-  if (jours <= 6) return { texte: `Ce ${JOURS_LONGS[jourUtc(debut).getUTCDay()]}`, ton: "bientot" };
-  return { texte: "À venir", ton: "bientot" };
+  if (jours === 1) return { texte: e.demain, ton: "bientot" };
+  if (jours <= 6) {
+    const jour = new Intl.DateTimeFormat(LOCALES[langue], { weekday: "long", timeZone: "UTC" }).format(jourUtc(debut));
+    return { texte: fmt(e.ce, { jour: langue === "en" ? jour.charAt(0).toUpperCase() + jour.slice(1) : jour }), ton: "bientot" };
+  }
+  return { texte: e.aVenir, ton: "bientot" };
 }
 
 // Typographie française : une espace insécable avant « : ; ! ? » et autour des
@@ -136,4 +156,92 @@ export function fr(texte: string): string {
   return texte
     .replace(/«[ \u202f]/g, "«\u00a0")
     .replace(/[ \u202f]+([»:;!?])/g, "\u00a0$1");
+}
+
+// ─── Traductions du contenu ──────────────────────────────────────────────────
+
+export interface ContenuTraduit {
+  titre?: string;
+  resume?: string;
+  contenu?: string;
+}
+
+export function lireTraductions(brut: string | null | undefined): Partial<Record<Langue, ContenuTraduit>> {
+  if (!brut) return {};
+  try {
+    const v = JSON.parse(brut) as unknown;
+    return v && typeof v === "object" ? (v as Partial<Record<Langue, ContenuTraduit>>) : {};
+  } catch {
+    return {};
+  }
+}
+
+// Titre, résumé et texte d'une actualité dans la langue demandée ; à défaut de
+// traduction, le texte d'origine.
+export function contenuLangue(
+  a: { titre: string; resume: string; contenu: string | null; traductions: string | null },
+  langue: Langue,
+): { titre: string; resume: string; contenu: string | null } {
+  if (langue === "fr") return { titre: a.titre, resume: a.resume, contenu: a.contenu };
+  const t = lireTraductions(a.traductions)[langue];
+  return { titre: t?.titre || a.titre, resume: t?.resume || a.resume, contenu: t?.contenu || a.contenu };
+}
+
+// ─── Vidéos intégrées ────────────────────────────────────────────────────────
+
+export type PlateformeVideo = "tiktok" | "instagram" | "youtube";
+
+export interface VideoIntegree {
+  plateforme: PlateformeVideo;
+  // Adresse de la page d'origine, pour le lien « Voir sur … ».
+  url: string;
+  // Adresse du lecteur intégré.
+  lecteur: string;
+  // Les vidéos TikTok et Instagram sont verticales, YouTube est en 16/9.
+  vertical: boolean;
+}
+
+// Reconnaît une adresse de vidéo TikTok, Instagram ou YouTube. Les liens courts
+// (vm.tiktok.com) ne sont pas acceptés : ils cachent l'identifiant de la vidéo.
+export function lireVideo(brut: string): VideoIntegree | null {
+  let u: URL;
+  try {
+    u = new URL(brut.trim());
+  } catch {
+    return null;
+  }
+  const hote = u.hostname.replace(/^www\.|^m\./, "");
+  if (hote === "tiktok.com") {
+    const m = /\/video\/(\d{8,25})/.exec(u.pathname);
+    return m ? { plateforme: "tiktok", url: `https://www.tiktok.com${u.pathname}`, lecteur: `https://www.tiktok.com/embed/v2/${m[1]}`, vertical: true } : null;
+  }
+  if (hote === "instagram.com") {
+    const m = /\/(p|reel|reels|tv)\/([A-Za-z0-9_-]{5,20})/.exec(u.pathname);
+    if (!m) return null;
+    const genre = m[1] === "reels" ? "reel" : m[1];
+    return { plateforme: "instagram", url: `https://www.instagram.com/${genre}/${m[2]}/`, lecteur: `https://www.instagram.com/${genre}/${m[2]}/embed`, vertical: true };
+  }
+  let id: string | null = null;
+  if (hote === "youtu.be") id = u.pathname.slice(1).split("/")[0] || null;
+  else if (hote === "youtube.com" || hote === "youtube-nocookie.com") {
+    id = u.searchParams.get("v") ?? /\/(?:shorts|embed|live)\/([\w-]{6,20})/.exec(u.pathname)?.[1] ?? null;
+  }
+  if (id && /^[\w-]{6,20}$/.test(id)) {
+    return { plateforme: "youtube", url: `https://www.youtube.com/watch?v=${id}`, lecteur: `https://www.youtube-nocookie.com/embed/${id}`, vertical: false };
+  }
+  return null;
+}
+
+export function lireVideos(texte: string | null | undefined): VideoIntegree[] {
+  if (!texte) return [];
+  const vues = new Set<string>();
+  const videos: VideoIntegree[] = [];
+  for (const ligne of texte.split(/[\r\n]+/)) {
+    const v = lireVideo(ligne);
+    if (v && !vues.has(v.lecteur)) {
+      vues.add(v.lecteur);
+      videos.push(v);
+    }
+  }
+  return videos.slice(0, 6);
 }

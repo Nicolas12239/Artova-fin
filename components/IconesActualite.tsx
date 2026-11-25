@@ -13,3 +13,11 @@ export function IconeBulle({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
   );
 }
+
+export function IconeLecture({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M8 5.5v13a.8.8 0 0 0 1.2.7l10.4-6.5a.8.8 0 0 0 0-1.4L9.2 4.8A.8.8 0 0 0 8 5.5Z" />
+    </svg>
+  );
+}

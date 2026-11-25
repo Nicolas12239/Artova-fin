@@ -64,6 +64,8 @@ interface Retenu {
   portee: Portee;
   importance: number;
   image: string | null;
+  // JSON { en: {titre, resume}, de: {titre, resume} } quand l'IA a traduit.
+  traductions: string | null;
 }
 
 function message(erreur: unknown): string {
@@ -250,6 +252,7 @@ export async function collecterActualites({
       retenus.push({
         candidat, titre: fiche.titre, resume: fiche.resume, categorie: fiche.categorie,
         portee: fiche.portee, importance: fiche.importance, image: entree.image,
+        traductions: JSON.stringify(fiche.traductions),
       });
       continue;
     }
@@ -265,6 +268,11 @@ export async function collecterActualites({
       portee,
       importance: portee === "togo" ? 7 : portee === "afrique" ? 6 : 5,
       image: entree.image,
+      // Média anglophone sans IA : son texte d'origine sert de version anglaise.
+      traductions:
+        source.langue === "en"
+          ? JSON.stringify({ en: { titre: tronquer(entree.titre, 140), resume: entree.extrait.length >= 30 ? tronquer(entree.extrait, 280) : "" } })
+          : null,
     });
   }
 
@@ -282,11 +290,11 @@ export async function collecterActualites({
   for (const r of retenus) {
     const ajout = await execute(
       `INSERT IGNORE INTO actualites
-       (empreinte, titre, resume, url_source, source_nom, image_url, portee, categorie, importance, origine, source_id, publie_le)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'auto', ?, ?)`,
+       (empreinte, titre, resume, url_source, source_nom, image_url, portee, categorie, importance, origine, source_id, publie_le, traductions)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'auto', ?, ?, ?)`,
       [
         r.candidat.empreinte, r.titre, r.resume, r.candidat.entree.lien, r.candidat.source.nom,
-        r.image, r.portee, r.categorie, r.importance, r.candidat.source.id, r.candidat.date,
+        r.image, r.portee, r.categorie, r.importance, r.candidat.source.id, r.candidat.date, r.traductions,
       ],
     );
     if (ajout.affectedRows > 0) rapport.publiees++;

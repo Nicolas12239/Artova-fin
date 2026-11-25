@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
@@ -7,19 +8,30 @@ import { ArtworkCard } from "@/components/Cards";
 import { BoutonPartager } from "@/components/BoutonPartager";
 import { MotifPinceau, MotifCollage, MotifPierre } from "@/components/Motifs";
 import { formatFcfa } from "@/lib/format";
+import { DISCIPLINES_SEO, descriptionCourte, filAriane, metadonnees } from "@/lib/seo";
+import { SITE_URL, urlAbsolue } from "@/lib/site";
 import { LIBELLE_DISCIPLINE, type Artiste, type Oeuvre, type OeuvreAvecArtiste } from "@/lib/types";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const rows = await query<Artiste>(
     "SELECT * FROM artistes WHERE slug = ? LIMIT 1",
     [slug],
   );
-  return { title: rows[0]?.nom ?? "Artiste" };
+  const a = rows[0];
+  if (!a || a.statut !== "publie") return { title: a?.nom ?? "Artiste", robots: { index: false, follow: false } };
+  const metier = DISCIPLINES_SEO[a.discipline].singulier;
+  return metadonnees({
+    titre: `${a.nom}, ${metier}${a.ville ? ` à ${a.ville}` : ""} : œuvres et univers`,
+    description: descriptionCourte(a.note_univers ? `${a.note_univers} ${a.histoire}` : a.histoire),
+    chemin: `/artistes/${a.slug}`,
+    image: a.banniere_url ?? a.portrait_url,
+    type: "profile",
+  });
 }
 
 function Motif({
@@ -74,8 +86,42 @@ export default async function PageUnivers({
     artiste.formation && { label: "Formation", valeur: artiste.formation },
   ].filter(Boolean) as { label: string; valeur: string }[];
 
+  const metierSeo = DISCIPLINES_SEO[artiste.discipline].singulier;
+  const donneesStructurees = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${SITE_URL}/artistes/${artiste.slug}#artiste`,
+      name: artiste.nom,
+      url: `${SITE_URL}/artistes/${artiste.slug}`,
+      jobTitle: DISCIPLINES_SEO[artiste.discipline].metier,
+      description: descriptionCourte(artiste.histoire, 300),
+      image: artiste.portrait_url ? urlAbsolue(artiste.portrait_url) : undefined,
+      nationality: { "@type": "Country", name: "Togo" },
+      workLocation: artiste.ville ? { "@type": "Place", name: artiste.ville } : undefined,
+      knowsAbout: [metierSeo, "art togolais", "art contemporain africain"],
+      subjectOf: oeuvres.slice(0, 12).map((o) => ({
+        "@type": "VisualArtwork",
+        name: o.titre,
+        url: `${SITE_URL}/oeuvres/${o.id}`,
+        image: urlAbsolue(o.image_url),
+      })),
+    },
+    filAriane([
+      { nom: "Accueil", chemin: "/" },
+      { nom: "Artistes", chemin: "/artistes" },
+      { nom: artiste.nom, chemin: `/artistes/${artiste.slug}` },
+    ]),
+  ];
+
   return (
     <>
+      {artiste.statut === "publie" && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
+        />
+      )}
       {artiste.statut !== "publie" && (
         <div className="border-b border-[#d9a441]/50 bg-[#f7ecd2] px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] text-encre">
           Aperçu : cette page n&apos;est pas encore publiée

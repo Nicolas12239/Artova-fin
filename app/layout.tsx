@@ -3,6 +3,7 @@ import { Barlow_Condensed, Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/Header";
 import { getCurrentUser } from "@/lib/auth";
+import { SITE_URL } from "@/lib/site";
 import { BandeauInstallation, EnregistrerServiceWorker } from "@/components/ApplicationMobile";
 
 const cormorant = Cormorant_Garamond({
@@ -27,7 +28,6 @@ const inter = Inter({
   display: "swap",
 });
 
-const SITE_URL = process.env.SITE_URL || "https://artova-fin-production.up.railway.app";
 const DESCRIPTION =
   "ArTova, la plateforme de l'art togolais : découvrez les peintres, plasticiens et sculpteurs du Togo, leurs histoires et leurs œuvres originales, des toiles et des sculptures à commander depuis Lomé.";
 
@@ -51,6 +51,13 @@ export const metadata: Metadata = {
     "acheter tableau Togo",
     "galerie d'art Lomé",
     "œuvres d'art Lomé",
+    "peinture togolaise",
+    "sculpture togolaise",
+    "exposition Lomé",
+    "agenda expositions Lomé",
+    "actualité art Togo",
+    "artiste plasticien Togo",
+    "art contemporain Lomé",
   ],
   authors: [{ name: "ArTova" }],
   creator: "ArTova",

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import mysql from "mysql2/promise";
 import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
 import { ARTICLES_REDACTION, empreinteRedaction } from "./actualites-redaction";
@@ -149,6 +150,12 @@ async function migrerActualites(): Promise<void> {
      evenement_debut DATE DEFAULT NULL,
      evenement_fin DATE DEFAULT NULL,
      lieu VARCHAR(160) DEFAULT NULL,
+     videos TEXT DEFAULT NULL,
+     artiste_slug VARCHAR(120) DEFAULT NULL,
+     images TEXT DEFAULT NULL,
+     credit_image VARCHAR(160) DEFAULT NULL,
+     traductions MEDIUMTEXT DEFAULT NULL,
+     revision SMALLINT UNSIGNED NOT NULL DEFAULT 0,
      PRIMARY KEY (id),
      UNIQUE KEY uq_actualites_empreinte (empreinte),
      KEY idx_actualites_liste (statut, publie_le),
@@ -181,36 +188,75 @@ async function migrerActualites(): Promise<void> {
      KEY idx_actualites_commentaires (actualite_id, cree_le)`,
   );
 
-  // Sources de départ, posées une seule fois : ensuite l'administration décide.
-  const [compte] = await pool.query("SELECT COUNT(*) AS n FROM sources_actualites");
-  if (Number((compte as { n: number }[])[0]?.n ?? 0) === 0) {
-    for (const s of SOURCES_PAR_DEFAUT) {
-      await pool.query(
-        "INSERT IGNORE INTO sources_actualites (nom, url_flux, portee, langue, filtrer) VALUES (?, ?, ?, ?, ?)",
-        [s.nom, s.url_flux, s.portee, s.langue, s.filtrer ? 1 : 0],
-      );
+  // Colonnes ajoutées après la première mise en ligne.
+  for (const [colonne, definition] of [
+    ["videos", "TEXT DEFAULT NULL"],
+    ["artiste_slug", "VARCHAR(120) DEFAULT NULL"],
+    ["images", "TEXT DEFAULT NULL"],
+    ["credit_image", "VARCHAR(160) DEFAULT NULL"],
+    ["traductions", "MEDIUMTEXT DEFAULT NULL"],
+    ["revision", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"],
+  ] as const) {
+    if (!(await colonneExiste("actualites", colonne))) {
+      await pool.query(`ALTER TABLE actualites ADD COLUMN ${colonne} ${definition}`);
     }
   }
 
+  const dejaVu = async (empreinte: string): Promise<boolean> => {
+    const [rows] = await pool.query("SELECT 1 FROM actualites_vues WHERE empreinte = ? LIMIT 1", [empreinte]);
+    return (rows as unknown[]).length > 0;
+  };
+  const marquer = (empreinte: string) =>
+    pool.query("INSERT IGNORE INTO actualites_vues (empreinte) VALUES (?)", [empreinte]);
+
+  // Sources de départ : chaque source n'est posée qu'une fois. Une source retirée
+  // depuis l'administration ne revient donc pas.
+  for (const s of SOURCES_PAR_DEFAUT) {
+    const cle = createHash("sha1").update(`source:${s.url_flux}`).digest("hex");
+    if (await dejaVu(cle)) continue;
+    await pool.query(
+      "INSERT IGNORE INTO sources_actualites (nom, url_flux, portee, langue, filtrer) VALUES (?, ?, ?, ?, ?)",
+      [s.nom, s.url_flux, s.portee, s.langue, s.filtrer ? 1 : 0],
+    );
+    await marquer(cle);
+  }
+
   // Articles de la rédaction ArTova : posés une fois, puis modifiables ou
-  // supprimables depuis l'administration (l'empreinte reste en mémoire, un
-  // article supprimé ne revient pas).
+  // supprimables depuis l'administration (un article supprimé ne revient pas).
+  // Quand le code augmente le numéro de révision d'un article, sa fiche est
+  // réécrite : c'est la seule façon de remplacer une modification de l'admin.
   for (const a of ARTICLES_REDACTION) {
     const empreinte = empreinteRedaction(a);
-    const [deja] = await pool.query("SELECT 1 FROM actualites_vues WHERE empreinte = ? LIMIT 1", [empreinte]);
-    if ((deja as unknown[]).length > 0) continue;
+    const champs = [
+      a.titre, a.resume, a.contenu ?? null, a.url_source ?? null, a.source_nom, a.image_url ?? null,
+      a.portee, a.categorie, a.importance, a.a_la_une ? 1 : 0, new Date(a.publie_le),
+      a.evenement_debut ?? null, a.evenement_fin ?? null, a.lieu ?? null, a.videos ?? null,
+      a.artiste_slug ?? null, a.images ?? null, a.credit_image ?? null,
+      a.traductions ? JSON.stringify(a.traductions) : null, a.revision,
+    ];
+    const [existant] = await pool.query("SELECT id, revision FROM actualites WHERE empreinte = ? LIMIT 1", [empreinte]);
+    const ligne = (existant as { id: number; revision: number }[])[0];
+    if (ligne) {
+      if (ligne.revision < a.revision) {
+        await pool.query(
+          `UPDATE actualites SET titre=?, resume=?, contenu=?, url_source=?, source_nom=?, image_url=?, portee=?,
+           categorie=?, importance=?, a_la_une=?, publie_le=?, evenement_debut=?, evenement_fin=?, lieu=?,
+           videos=?, artiste_slug=?, images=?, credit_image=?, traductions=?, revision=? WHERE id=?`,
+          [...champs, ligne.id],
+        );
+      }
+      continue;
+    }
+    if (await dejaVu(empreinte)) continue;
     await pool.query(
       `INSERT IGNORE INTO actualites
        (empreinte, titre, resume, contenu, url_source, source_nom, image_url, portee, categorie, importance,
-        a_la_une, origine, publie_le, evenement_debut, evenement_fin, lieu)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel', ?, ?, ?, ?)`,
-      [
-        empreinte, a.titre, a.resume, a.contenu ?? null, a.url_source ?? null, a.source_nom, a.image_url ?? null,
-        a.portee, a.categorie, a.importance, a.a_la_une ? 1 : 0, new Date(a.publie_le),
-        a.evenement_debut ?? null, a.evenement_fin ?? null, a.lieu ?? null,
-      ],
+        a_la_une, publie_le, evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image,
+        traductions, revision, origine)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
+      [empreinte, ...champs],
     );
-    await pool.query("INSERT IGNORE INTO actualites_vues (empreinte) VALUES (?)", [empreinte]);
+    await marquer(empreinte);
   }
 }
 

@@ -1,6 +1,7 @@
 import { query, type Param } from "./db";
 import { slugifier } from "./validation";
 import type { Actualite, Categorie, CommentaireActualite, Portee } from "./actualites-commun";
+import { avecLangue, type Langue } from "./actualites-i18n";
 
 // Tout ce qui est partagé avec le navigateur vit dans actualites-commun.ts.
 export * from "./actualites-commun";
@@ -12,7 +13,7 @@ const SCORE = `(a.importance + CASE a.portee WHEN 'togo' THEN 2 WHEN 'afrique' T
 const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom, a.image_url,
   a.portee, a.categorie, a.importance, a.a_la_une, a.statut, a.origine, a.publie_le,
   DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut,
-  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu,
+  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.traductions,
   (SELECT COUNT(*) FROM actualites_likes l WHERE l.actualite_id = a.id) AS nb_likes,
   (SELECT COUNT(*) FROM actualites_commentaires c WHERE c.actualite_id = a.id AND c.statut = 'publie') AS nb_commentaires`;
 
@@ -122,9 +123,9 @@ export async function commentairesActualite(actualiteId: number): Promise<Commen
 
 // /actualites/123-titre-de-l-article : seul le nombre en tête compte, le reste
 // sert au référencement et à la lisibilité du lien partagé.
-export function lienActualite(a: { id: number; titre: string }): string {
+export function lienActualite(a: { id: number; titre: string }, langue: Langue = "fr"): string {
   const slug = slugifier(a.titre).slice(0, 70).replace(/-+$/, "");
-  return `/actualites/${a.id}${slug ? `-${slug}` : ""}`;
+  return avecLangue(`/actualites/${a.id}${slug ? `-${slug}` : ""}`, langue);
 }
 
 export function idDepuisLien(segment: string): number | null {
@@ -146,4 +147,43 @@ export async function agendaLome(limite = 6): Promise<Actualite[]> {
      ORDER BY (COALESCE(a.evenement_fin, a.evenement_debut) < ?) ASC, a.evenement_debut ASC, a.id ASC LIMIT ${l}`,
     [debutFenetre, finFenetre, new Date().toISOString().slice(0, 10)],
   );
+}
+
+// Tout l'agenda : en cours, à venir (six mois) et terminé depuis moins d'un mois.
+export async function agendaComplet(): Promise<Actualite[]> {
+  const jour = 86_400_000;
+  const debutFenetre = new Date(Date.now() - 30 * jour).toISOString().slice(0, 10);
+  const finFenetre = new Date(Date.now() + 183 * jour).toISOString().slice(0, 10);
+  return query<Actualite>(
+    `SELECT ${COLONNES} FROM actualites a
+     WHERE a.statut = 'publie' AND a.evenement_debut IS NOT NULL
+       AND COALESCE(a.evenement_fin, a.evenement_debut) >= ? AND a.evenement_debut <= ?
+     ORDER BY a.evenement_debut ASC, a.id ASC LIMIT 60`,
+    [debutFenetre, finFenetre],
+  );
+}
+
+export async function actualitesEnVideo(limite = 3): Promise<Actualite[]> {
+  const l = Math.max(1, Math.min(12, Math.floor(limite)));
+  return query<Actualite>(
+    `SELECT ${COLONNES} FROM actualites a
+     WHERE a.statut = 'publie' AND a.videos IS NOT NULL AND a.videos <> ''
+     ORDER BY a.publie_le DESC, a.id DESC LIMIT ${l}`,
+  );
+}
+
+export interface ArtisteLie {
+  slug: string;
+  nom: string;
+  discipline: string;
+  portrait_url: string | null;
+}
+
+export async function artisteLie(slug: string | null): Promise<ArtisteLie | null> {
+  if (!slug) return null;
+  const rows = await query<ArtisteLie>(
+    "SELECT slug, nom, discipline, portrait_url FROM artistes WHERE slug = ? AND statut = 'publie' LIMIT 1",
+    [slug],
+  );
+  return rows[0] ?? null;
 }

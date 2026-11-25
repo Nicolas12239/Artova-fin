@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { basculerLike } from "@/app/actions/actualites";
 import { IconeBulle, IconeCoeur } from "./IconesActualite";
+import { nombre, type Langue, type TextesActualites } from "@/lib/actualites-i18n";
 
 const bouton =
   "inline-flex items-center gap-2 border border-fil px-4 py-2.5 text-sm text-encre/85 transition-colors hover:border-encre hover:text-encre";
@@ -20,6 +21,8 @@ export function ActionsActualite({
   aimeInitial,
   likesInitial,
   nbCommentaires,
+  textes,
+  langue = "fr",
 }: {
   id: number;
   titre: string;
@@ -29,6 +32,8 @@ export function ActionsActualite({
   aimeInitial: boolean;
   likesInitial: number;
   nbCommentaires: number;
+  textes: Pick<TextesActualites, "jaime" | "vous_aimez" | "partager" | "partagerNatif" | "copierLien" | "lienCopie" | "nbCommentaires">;
+  langue?: Langue;
 }) {
   const router = useRouter();
   const [aime, setAime] = useState(aimeInitial);
@@ -54,7 +59,7 @@ export function ActionsActualite({
     setLikes(likes + (aime ? -1 : 1));
     setInfo(null);
     demarrer(async () => {
-      const r = await basculerLike(id);
+      const r = await basculerLike(id, langue);
       if (r.erreur === "connexion") {
         setAime(avant.aime);
         setLikes(avant.likes);
@@ -81,7 +86,7 @@ export function ActionsActualite({
   async function copier() {
     try {
       await navigator.clipboard.writeText(adresse());
-      setInfo("Lien copié. Collez-le dans votre story Instagram, TikTok ou un message.");
+      setInfo(textes.lienCopie);
     } catch {
       setInfo(adresse());
     }
@@ -106,19 +111,19 @@ export function ActionsActualite({
           className={`${bouton} ${aime ? "border-terracotta text-terracotta hover:border-terracotta hover:text-terracotta" : ""}`}
         >
           <IconeCoeur plein={aime} className="h-[18px] w-[18px]" />
-          {aime ? "Vous aimez" : "J'aime"} · {likes}
+          {aime ? textes.vous_aimez : textes.jaime} · {likes}
         </button>
         <a href="#commentaires" className={bouton}>
           <IconeBulle className="h-[18px] w-[18px]" />
-          {nbCommentaires} commentaire{nbCommentaires > 1 ? "s" : ""}
+          {nombre(textes.nbCommentaires, nbCommentaires)}
         </a>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        <span className="text-gris">Partager</span>
+        <span className="text-gris">{textes.partager}</span>
         {natif && (
           <button type="button" onClick={partagerNatif} className="underline underline-offset-4 hover:text-terracotta">
-            Instagram, TikTok et plus
+            {textes.partagerNatif}
           </button>
         )}
         <a href={lien("wa")} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-terracotta">
@@ -131,7 +136,7 @@ export function ActionsActualite({
           X
         </a>
         <button type="button" onClick={copier} className="underline underline-offset-4 hover:text-terracotta">
-          Copier le lien
+          {textes.copierLien}
         </button>
       </div>
       {info && (

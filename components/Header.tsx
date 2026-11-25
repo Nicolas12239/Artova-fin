@@ -15,7 +15,7 @@ function liens() {
   return [
     { href: "/", label: "Accueil" },
     { href: "/artistes", label: "Nos artistes" },
-    { href: "/actualites", label: "Actualités" },
+    { href: "/actualites", label: "Actu art" },
     { href: "/#comment-ca-marche", label: "Comment ça marche" },
     { href: "/#mouvement", label: "Le mouvement" },
   ];
@@ -195,7 +195,12 @@ export function Footer() {
           </h2>
           <ul className="mt-4 space-y-2 text-encre/80">
             <li><Link className="hover:underline" href="/artistes">Nos artistes</Link></li>
-            <li><Link className="hover:underline" href="/actualites">L&apos;actualité de l&apos;art</Link></li>
+            <li><Link className="hover:underline" href="/art-togolais">L&apos;art togolais</Link></li>
+            <li><Link className="hover:underline" href="/art-togolais/peintres">Peintres togolais</Link></li>
+            <li><Link className="hover:underline" href="/art-togolais/sculpteurs">Sculpteurs togolais</Link></li>
+            <li><Link className="hover:underline" href="/art-togolais/plasticiens">Plasticiens togolais</Link></li>
+            <li><Link className="hover:underline" href="/actualites">Actu art</Link></li>
+            <li><Link className="hover:underline" href="/actualites/agenda">Agenda de l&apos;art à Lomé</Link></li>
             <li><Link className="hover:underline" href="/#comment-ca-marche">Comment ça marche</Link></li>
             <li><Link className="hover:underline" href="/#mouvement">Le mouvement</Link></li>
             <li><Link className="hover:underline" href="/inscription">Rejoindre ArTova</Link></li>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
@@ -7,6 +8,8 @@ import { ArtworkCard } from "@/components/Cards";
 import { CommanderLien } from "@/components/CommanderLien";
 import { BoutonPartager } from "@/components/BoutonPartager";
 import { formatFcfa } from "@/lib/format";
+import { descriptionCourte, filAriane, metadonnees } from "@/lib/seo";
+import { SITE_URL, urlAbsolue } from "@/lib/site";
 import { LIBELLE_STATUT_OEUVRE, type OeuvreAvecArtiste, type StatutArtiste } from "@/lib/types";
 
 const SELECT_OEUVRE = `SELECT o.*, a.nom AS artiste_nom, a.slug AS artiste_slug, a.theme_primaire, a.theme_accent,
@@ -17,13 +20,21 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}): Promise<Metadata> {
   const { id } = await params;
-  const rows = await query<OeuvreAvecArtiste>(
+  const rows = await query<OeuvreAvecArtiste & { artiste_statut: StatutArtiste }>(
     `${SELECT_OEUVRE} WHERE o.id = ? LIMIT 1`,
     [Number(id)],
   );
-  return { title: rows[0]?.titre ?? "Œuvre" };
+  const o = rows[0];
+  if (!o || o.artiste_statut !== "publie") return { title: o?.titre ?? "Œuvre", robots: { index: false, follow: false } };
+  const details = [o.type, o.technique, o.dimensions].filter(Boolean).join(", ");
+  return metadonnees({
+    titre: `${o.titre}, œuvre de ${o.artiste_nom}`,
+    description: descriptionCourte(`${o.titre} par ${o.artiste_nom}${details ? ` (${details})` : ""}. ${o.description}`),
+    chemin: `/oeuvres/${o.id}`,
+    image: o.image_url,
+  });
 }
 
 export default async function PageOeuvre({
@@ -52,8 +63,33 @@ export default async function PageOeuvre({
     [oeuvre.artiste_id, oeuvre.id],
   );
 
+  const donneesStructurees = [
+    {
+      "@context": "https://schema.org",
+      "@type": "VisualArtwork",
+      name: oeuvre.titre,
+      url: `${SITE_URL}/oeuvres/${oeuvre.id}`,
+      image: urlAbsolue(oeuvre.image_url),
+      description: descriptionCourte(oeuvre.description, 300),
+      artform: oeuvre.type,
+      artMedium: oeuvre.technique ?? undefined,
+      dateCreated: oeuvre.annee ? String(oeuvre.annee) : undefined,
+      creator: { "@type": "Person", name: oeuvre.artiste_nom, url: `${SITE_URL}/artistes/${oeuvre.artiste_slug}` },
+    },
+    filAriane([
+      { nom: "Accueil", chemin: "/" },
+      { nom: "Artistes", chemin: "/artistes" },
+      { nom: oeuvre.artiste_nom, chemin: `/artistes/${oeuvre.artiste_slug}` },
+      { nom: oeuvre.titre, chemin: `/oeuvres/${oeuvre.id}` },
+    ]),
+  ];
+
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
+      />
       <nav
         aria-label="Fil d'Ariane"
         className="flex flex-wrap items-center gap-2 pb-6 pt-14 text-[11px] uppercase tracking-[0.16em] text-gris md:pt-16"

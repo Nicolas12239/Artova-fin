@@ -5,6 +5,7 @@ import { ArtworkCard, ArtistCard, ArtistesBientot } from "@/components/Cards";
 import { CONTACT } from "@/components/Header";
 import { VideoExplication } from "@/components/VideoExplication";
 import { CarteActualite } from "@/components/ActualiteCards";
+import { SITE_URL } from "@/lib/site";
 import { actualiteALaUne, listerActualites } from "@/lib/actualites";
 import { COMMISSION_ARTOVA, type Artiste, type OeuvreAvecArtiste } from "@/lib/types";
 
@@ -48,7 +49,7 @@ export default async function Accueil() {
     ? await listerActualites({}, { limite: 2, sauf: vedetteActu.id }).catch(() => [])
     : [];
 
-  const site = process.env.SITE_URL || "https://artova-fin-production.up.railway.app";
+  const site = SITE_URL;
   const donneesStructurees = {
     "@context": "https://schema.org",
     "@graph": [
@@ -63,6 +64,9 @@ export default async function Accueil() {
           "Plateforme de l'art togolais : peintres, plasticiens et sculpteurs du Togo, leurs histoires et leurs œuvres.",
         address: { "@type": "PostalAddress", addressLocality: "Lomé", addressCountry: "TG" },
         sameAs: [CONTACT.tiktok, CONTACT.instagram],
+        areaServed: { "@type": "Country", name: "Togo" },
+        knowsAbout: ["art togolais", "peinture", "sculpture", "arts plastiques", "art contemporain africain"],
+        slogan: "La référence de l'art togolais",
       },
       {
         "@type": "WebSite",
@@ -198,6 +202,18 @@ export default async function Accueil() {
           </div>
         </section>
       )}
+
+      {/* Explorer : maillage vers les pages de référence sur l'art togolais */}
+      <section aria-label="Explorer l'art togolais" className="border-b border-fil bg-creme">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-6 font-condense text-base font-semibold uppercase tracking-[0.06em] sm:px-6 md:px-8">
+          <span className="text-gris">Explorer l&apos;art togolais</span>
+          <Link href="/art-togolais/peintres" className="underline-offset-4 hover:text-terracotta hover:underline">Peintres togolais</Link>
+          <Link href="/art-togolais/sculpteurs" className="underline-offset-4 hover:text-terracotta hover:underline">Sculpteurs togolais</Link>
+          <Link href="/art-togolais/plasticiens" className="underline-offset-4 hover:text-terracotta hover:underline">Plasticiens togolais</Link>
+          <Link href="/actualites/agenda" className="underline-offset-4 hover:text-terracotta hover:underline">Agenda des expositions à Lomé</Link>
+          <Link href="/art-togolais" className="underline-offset-4 hover:text-terracotta hover:underline">Guide de l&apos;art togolais</Link>
+        </div>
+      </section>
 
       {/* Motion design : comment utiliser la plateforme */}
       <section id="comment-ca-marche" className="scroll-mt-20 border-y border-fil bg-panel">

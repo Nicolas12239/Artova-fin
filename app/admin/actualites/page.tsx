@@ -26,7 +26,7 @@ export default async function PageAdminActualites({
 }) {
   const { modifier } = await searchParams;
   const aModifier = Number(modifier) > 0 ? await actualiteParId(Number(modifier)) : null;
-  const [articles, sources, commentaires, bilan] = await Promise.all([
+  const [articles, sources, commentaires, artistes, bilan] = await Promise.all([
     query<Actualite>(
       `SELECT a.id, a.titre, a.source_nom, a.portee, a.categorie, a.statut, a.origine, a.a_la_une, a.publie_le,
         DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut, DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu,
@@ -42,6 +42,7 @@ export default async function PageAdminActualites({
        JOIN utilisateurs u ON u.id = c.utilisateur_id
        WHERE c.statut = 'publie' ORDER BY c.cree_le DESC LIMIT 15`,
     ),
+    query<{ slug: string; nom: string }>("SELECT slug, nom FROM artistes WHERE statut = 'publie' ORDER BY nom"),
     query<{ total: number; publiees: number; likes: number; commentaires: number }>(
       `SELECT (SELECT COUNT(*) FROM actualites) AS total,
               (SELECT COUNT(*) FROM actualites WHERE statut = 'publie') AS publiees,
@@ -133,7 +134,7 @@ export default async function PageAdminActualites({
             </Link>
           )}
           <div className="mt-5">
-            <FormPublication initial={aModifier ?? undefined} />
+            <FormPublication initial={aModifier ?? undefined} artistes={artistes} />
           </div>
         </div>
       </section>

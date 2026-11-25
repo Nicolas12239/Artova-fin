@@ -21,10 +21,18 @@ export const SOURCES_PAR_DEFAUT: SourceParDefaut[] = [
   { nom: "Togo-Presse", url_flux: "https://togopresse.tg/feed", portee: "togo", langue: "fr", filtrer: true },
   { nom: "24 Heure Info", url_flux: "https://www.24heureinfo.com/feed", portee: "togo", langue: "fr", filtrer: true },
   { nom: "Togocultures", url_flux: "https://www.togocultures.com/feed", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "La Cinquième", url_flux: "https://www.lacinquieme.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Afrikelles", url_flux: "https://www.afrikelles.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Actu Togo", url_flux: "https://actu-togo.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "La Une Togo", url_flux: "https://launetogo.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Journal du Togo", url_flux: "https://www.journaldutogo.com/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "ActuBilan", url_flux: "https://actubilan.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Flash Info Togo", url_flux: "https://flashinfotogo.com/feed/", portee: "togo", langue: "fr", filtrer: true },
   { nom: "Culture au pluriel", url_flux: "https://cultureaupluriel.wordpress.com/feed/", portee: "togo", langue: "fr", filtrer: true },
   { nom: "Le Nouveau Reporter", url_flux: "https://lenouveaureporter.com/feed/", portee: "togo", langue: "fr", filtrer: true },
   // Afrique
   { nom: "ART AFRICA", url_flux: "https://www.artafricamagazine.org/feed/", portee: "afrique", langue: "en", filtrer: false },
+  { nom: "Africa Blooming", url_flux: "https://africablooming.com/feed/", portee: "afrique", langue: "en", filtrer: true },
   { nom: "Africanews", url_flux: "https://www.africanews.com/feed/rss", portee: "afrique", langue: "en", filtrer: true },
   // Monde
   { nom: "Connaissance des Arts", url_flux: "https://www.connaissancedesarts.com/feed/", portee: "monde", langue: "fr", filtrer: false },

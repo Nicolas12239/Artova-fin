@@ -3,17 +3,25 @@
 import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { commenter } from "@/app/actions/actualites";
+import type { Langue, TextesActualites } from "@/lib/actualites-i18n";
 
 export function FormCommentaire({
   actualiteId,
   connecte,
   chemin,
+  textes,
+  langue = "fr",
 }: {
   actualiteId: number;
   connecte: boolean;
   chemin: string;
+  textes: Pick<
+    TextesActualites,
+    "commentaireLabel" | "commentairePlaceholder" | "commentairePublier" | "commentairePublication" | "invite" | "seConnecter" | "creerCompte"
+  >;
+  langue?: Langue;
 }) {
-  const [etat, action, enCours] = useActionState(commenter.bind(null, actualiteId), null);
+  const [etat, action, enCours] = useActionState(commenter.bind(null, actualiteId, langue), null);
   const formulaire = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -21,17 +29,19 @@ export function FormCommentaire({
   }, [etat]);
 
   if (!connecte) {
+    const [avant, reste] = textes.invite.split("{connexion}");
+    const [milieu, fin] = (reste ?? "").split("{inscription}");
     return (
       <p className="border border-fil bg-craie p-5 text-sm leading-relaxed text-encre/80">
-        La lecture est libre. Pour commenter et aimer une actualité,{" "}
+        {avant}
         <Link href={`/connexion?next=${encodeURIComponent(chemin)}`} className="underline underline-offset-4 hover:text-terracotta">
-          connectez-vous
-        </Link>{" "}
-        ou{" "}
-        <Link href={`/inscription?next=${encodeURIComponent(chemin)}`} className="underline underline-offset-4 hover:text-terracotta">
-          créez un compte
+          {textes.seConnecter}
         </Link>
-        , c&apos;est gratuit.
+        {milieu}
+        <Link href={`/inscription?next=${encodeURIComponent(chemin)}`} className="underline underline-offset-4 hover:text-terracotta">
+          {textes.creerCompte}
+        </Link>
+        {fin}
       </p>
     );
   }
@@ -39,7 +49,7 @@ export function FormCommentaire({
   return (
     <form ref={formulaire} action={action} className="space-y-3">
       <label htmlFor="texte-commentaire" className="block text-sm text-encre/80">
-        Votre commentaire
+        {textes.commentaireLabel}
       </label>
       <textarea
         id="texte-commentaire"
@@ -48,7 +58,7 @@ export function FormCommentaire({
         required
         minLength={2}
         maxLength={1000}
-        placeholder="Qu'en pensez-vous ? Restez courtois : les propos injurieux sont retirés."
+        placeholder={textes.commentairePlaceholder}
         className="w-full border border-encre/25 bg-creme px-4 py-3 text-sm outline-none transition-colors focus:border-terracotta"
       />
       {etat?.erreur && (
@@ -66,7 +76,7 @@ export function FormCommentaire({
         disabled={enCours}
         className="bg-encre px-6 py-3 text-sm tracking-wide text-creme transition-colors hover:bg-terracotta disabled:opacity-50"
       >
-        {enCours ? "Publication…" : "Publier le commentaire"}
+        {enCours ? textes.commentairePublication : textes.commentairePublier}
       </button>
     </form>
   );

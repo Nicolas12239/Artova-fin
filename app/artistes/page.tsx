@@ -2,10 +2,14 @@ import Link from "next/link";
 import { query } from "@/lib/db";
 import { ArtistCard, ArtistesBientot } from "@/components/Cards";
 import type { Artiste } from "@/lib/types";
+import { metadonnees } from "@/lib/seo";
 
-export const metadata = {
-  title: "Nos artistes",
-};
+export const metadata = metadonnees({
+  titre: "Artistes togolais : peintres, sculpteurs et plasticiens",
+  description:
+    "Les artistes togolais de la plateforme ArTova : peintres, sculpteurs et plasticiens de Lomé et du Togo. Découvrez leurs univers, leurs parcours et leurs œuvres originales.",
+  chemin: "/artistes",
+});
 
 const FILTRES: { valeur: "" | Artiste["discipline"]; label: string }[] = [
   { valeur: "", label: "Tous les artistes" },

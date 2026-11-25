@@ -2,41 +2,52 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { VueArticle } from "@/components/VueArticle";
 import { getCurrentUser } from "@/lib/auth";
+import { SITE_URL, urlAbsolue } from "@/lib/site";
 import {
-  CATEGORIES,
   aAime,
   actualiteParId,
   actualitesLiees,
+  artisteLie,
   commentairesActualite,
   idDepuisLien,
   lienActualite,
 } from "@/lib/actualites";
+import { contenuLangue } from "@/lib/actualites-commun";
+import { TEXTES, avecLangue, langueDe } from "@/lib/actualites-i18n";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ lang?: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { id } = await params;
+  const langue = langueDe((await searchParams).lang);
   const numero = idDepuisLien(id);
   const a = numero ? await actualiteParId(numero) : null;
   if (!a || a.statut !== "publie") return { title: "Actualité introuvable", robots: { index: false } };
+  const c = contenuLangue(a, langue);
+  const base = lienActualite(a);
   return {
-    title: a.titre,
-    description: a.resume,
-    alternates: { canonical: lienActualite(a) },
+    title: c.titre,
+    description: c.resume,
+    alternates: {
+      canonical: avecLangue(base, langue),
+      languages: { fr: base, en: avecLangue(base, "en"), de: avecLangue(base, "de"), "x-default": base },
+    },
     openGraph: {
       type: "article",
-      title: a.titre,
-      description: a.resume,
+      title: c.titre,
+      description: c.resume,
+      locale: langue === "fr" ? "fr_FR" : langue === "en" ? "en_GB" : "de_DE",
       publishedTime: new Date(a.publie_le).toISOString(),
-      section: CATEGORIES[a.categorie],
+      section: TEXTES[langue].categories[a.categorie],
       images: a.image_url ? [{ url: a.image_url }] : undefined,
     },
-    twitter: { card: a.image_url ? "summary_large_image" : "summary", title: a.titre, description: a.resume },
+    twitter: { card: a.image_url ? "summary_large_image" : "summary", title: c.titre, description: c.resume },
   };
 }
 
-export default async function PageActualite({ params }: Props) {
+export default async function PageActualite({ params, searchParams }: Props) {
   const { id } = await params;
+  const langue = langueDe((await searchParams).lang);
   const numero = idDepuisLien(id);
   const a = numero ? await actualiteParId(numero) : null;
   if (!a) notFound();
@@ -45,21 +56,46 @@ export default async function PageActualite({ params }: Props) {
   if (a.statut !== "publie" && utilisateur?.role !== "admin") notFound();
 
   const chemin = lienActualite(a);
-  const [commentaires, liees, aime] = await Promise.all([
+  const [commentaires, liees, aime, artiste] = await Promise.all([
     commentairesActualite(a.id),
     actualitesLiees(a, 3),
     utilisateur ? aAime(a.id, utilisateur.id) : Promise.resolve(false),
+    artisteLie(a.artiste_slug),
   ]);
 
-  const site = process.env.SITE_URL || "https://artova-fin.vercel.app";
+  const site = SITE_URL;
+  const c = contenuLangue(a, langue);
+  const image = a.image_url ? urlAbsolue(a.image_url) : undefined;
+  // Un rendez-vous (exposition, vernissage…) est aussi décrit comme un événement :
+  // c'est ce qui permet aux moteurs de recherche de l'afficher dans leurs agendas.
+  const evenement = a.evenement_debut
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        name: c.titre,
+        description: c.resume,
+        startDate: a.evenement_debut,
+        endDate: a.evenement_fin ?? a.evenement_debut,
+        eventStatus: "https://schema.org/EventScheduled",
+        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+        location: {
+          "@type": "Place",
+          name: a.lieu ?? "Lomé",
+          address: { "@type": "PostalAddress", addressLocality: "Lomé", addressCountry: "TG" },
+        },
+        image: image ? [image] : undefined,
+        url: `${site}${chemin}`,
+      }
+    : null;
   const donneesStructurees = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
-    headline: a.titre,
-    description: a.resume,
+    headline: c.titre,
+    description: c.resume,
     datePublished: new Date(a.publie_le).toISOString(),
     mainEntityOfPage: `${site}${chemin}`,
-    image: a.image_url ? [a.image_url] : undefined,
+    image: image ? [image] : undefined,
+    inLanguage: langue,
     publisher: { "@type": "Organization", name: "ArTova", url: site },
     ...(a.url_source ? { isBasedOn: a.url_source, sourceOrganization: { "@type": "Organization", name: a.source_nom } } : {}),
   };
@@ -70,13 +106,21 @@ export default async function PageActualite({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
       />
+      {evenement && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(evenement).replace(/</g, "\\u003c") }}
+        />
+      )}
       <VueArticle
         a={a}
+        langue={langue}
         chemin={chemin}
         utilisateur={utilisateur ? { id: utilisateur.id, role: utilisateur.role } : null}
         commentaires={commentaires}
         liees={liees}
         aime={aime}
+        artiste={artiste}
       />
     </>
   );

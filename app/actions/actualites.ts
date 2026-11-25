@@ -10,7 +10,8 @@ import { estSousLimite } from "@/lib/rate-limit";
 import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
 import { adresseSure, nettoyerHtml } from "@/lib/actualites-flux";
 import { collecterActualites } from "@/lib/actualites-collecte";
-import { estCategorie, estPortee } from "@/lib/actualites";
+import { estCategorie, estPortee, lireVideo } from "@/lib/actualites";
+import { estLangue, type Langue } from "@/lib/actualites-i18n";
 
 export type EtatActualite = { erreur?: string; succes?: string } | null;
 
@@ -37,16 +38,51 @@ async function actualitePubliee(id: number): Promise<boolean> {
   return rows.length > 0;
 }
 
+const MESSAGES = {
+  fr: {
+    disparue: "Cette actualité n'existe plus.",
+    doucement: "Doucement : réessayez dans quelques minutes.",
+    connexion: "Connectez-vous pour commenter.",
+    court: "Écrivez au moins quelques mots.",
+    long: "Votre commentaire dépasse 1 000 caractères.",
+    invalide: "Commentaire invalide.",
+    vite: "Vous commentez très vite : patientez quelques minutes.",
+    merci: "Merci, votre commentaire est publié.",
+  },
+  en: {
+    disparue: "This story no longer exists.",
+    doucement: "Easy: please try again in a few minutes.",
+    connexion: "Sign in to comment.",
+    court: "Please write at least a few words.",
+    long: "Your comment is longer than 1,000 characters.",
+    invalide: "Invalid comment.",
+    vite: "You are commenting very fast: please wait a few minutes.",
+    merci: "Thank you, your comment is published.",
+  },
+  de: {
+    disparue: "Dieser Beitrag existiert nicht mehr.",
+    doucement: "Langsam: Bitte versuchen Sie es in einigen Minuten erneut.",
+    connexion: "Melden Sie sich an, um zu kommentieren.",
+    court: "Bitte schreiben Sie mindestens ein paar Worte.",
+    long: "Ihr Kommentar ist länger als 1.000 Zeichen.",
+    invalide: "Ungültiger Kommentar.",
+    vite: "Sie kommentieren sehr schnell: Bitte warten Sie einige Minuten.",
+    merci: "Danke, Ihr Kommentar ist veröffentlicht.",
+  },
+} as const;
+
 export async function basculerLike(
   actualiteId: number,
+  langue: Langue = "fr",
 ): Promise<{ erreur?: string; aime?: boolean; total?: number }> {
+  const m = MESSAGES[estLangue(langue) ? langue : "fr"];
   const utilisateur = await getCurrentUser();
   if (!utilisateur) return { erreur: "connexion" };
   if (!Number.isInteger(actualiteId) || !(await actualitePubliee(actualiteId))) {
-    return { erreur: "Cette actualité n'existe plus." };
+    return { erreur: m.disparue };
   }
   if (!estSousLimite(`like:${utilisateur.id}`, 40, 10 * 60 * 1000)) {
-    return { erreur: "Doucement : réessayez dans quelques minutes." };
+    return { erreur: m.doucement };
   }
 
   const existant = await query<{ n: number }>(
@@ -72,37 +108,33 @@ export async function basculerLike(
   return { aime, total: Number(total[0]?.n ?? 0) };
 }
 
-const schemaCommentaire = z
-  .string()
-  .transform((t) => t.replace(/\r\n/g, "\n").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\n{3,}/g, "\n\n").trim())
-  .pipe(
-    z
-      .string()
-      .min(2, "Écrivez au moins quelques mots.")
-      .max(1000, "Votre commentaire dépasse 1 000 caractères."),
-  );
+const nettoyerCommentaire = (t: string) =>
+  t.replace(/\r\n/g, "\n").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").replace(/\n{3,}/g, "\n\n").trim();
 
 export async function commenter(
   actualiteId: number,
+  langue: Langue,
   _prev: EtatActualite,
   formData: FormData,
 ): Promise<EtatActualite> {
+  const m = MESSAGES[estLangue(langue) ? langue : "fr"];
   const utilisateur = await getCurrentUser();
-  if (!utilisateur) return { erreur: "Connectez-vous pour commenter." };
-  if (!(await actualitePubliee(actualiteId))) return { erreur: "Cette actualité n'existe plus." };
+  if (!utilisateur) return { erreur: m.connexion };
+  if (!(await actualitePubliee(actualiteId))) return { erreur: m.disparue };
 
-  const parse = schemaCommentaire.safeParse(String(formData.get("texte") ?? ""));
-  if (!parse.success) return { erreur: parse.error.issues[0]?.message ?? "Commentaire invalide." };
+  const texte = nettoyerCommentaire(String(formData.get("texte") ?? ""));
+  if (texte.length < 2) return { erreur: m.court };
+  if (texte.length > 1000) return { erreur: m.long };
   if (!estSousLimite(`commentaire:${utilisateur.id}`, 5, 10 * 60 * 1000)) {
-    return { erreur: "Vous commentez très vite : patientez quelques minutes." };
+    return { erreur: m.vite };
   }
 
   await execute(
     "INSERT INTO actualites_commentaires (actualite_id, utilisateur_id, texte) VALUES (?, ?, ?)",
-    [actualiteId, utilisateur.id, parse.data],
+    [actualiteId, utilisateur.id, texte],
   );
   rafraichir();
-  return { succes: "Merci, votre commentaire est publié." };
+  return { succes: m.merci };
 }
 
 // L'auteur retire son commentaire ; l'administration peut retirer n'importe lequel.
@@ -160,6 +192,16 @@ const schemaPublication = z.object({
   evenement_debut: dateIso,
   evenement_fin: dateIso,
   lieu: z.string().trim().max(160, "Le lieu est trop long.").optional().or(z.literal("")),
+  videos: z.string().trim().max(2000, "Trop d'adresses de vidéos.").optional().or(z.literal("")),
+  images: z.string().trim().max(4000, "Trop d'adresses d'images.").optional().or(z.literal("")),
+  credit_image: z.string().trim().max(160).optional().or(z.literal("")),
+  titre_en: z.string().trim().max(300).optional().or(z.literal("")),
+  resume_en: z.string().trim().max(600).optional().or(z.literal("")),
+  contenu_en: z.string().trim().max(20000).optional().or(z.literal("")),
+  titre_de: z.string().trim().max(300).optional().or(z.literal("")),
+  resume_de: z.string().trim().max(600).optional().or(z.literal("")),
+  contenu_de: z.string().trim().max(20000).optional().or(z.literal("")),
+  artiste_slug: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
 // Crée une actualité à la main, ou modifie une actualité existante (champ « id »).
@@ -180,11 +222,50 @@ export async function publierManuellement(
     evenement_debut: String(formData.get("evenement_debut") ?? ""),
     evenement_fin: String(formData.get("evenement_fin") ?? ""),
     lieu: String(formData.get("lieu") ?? ""),
+    videos: String(formData.get("videos") ?? ""),
+    images: String(formData.get("images") ?? ""),
+    credit_image: String(formData.get("credit_image") ?? ""),
+    titre_en: String(formData.get("titre_en") ?? ""),
+    resume_en: String(formData.get("resume_en") ?? ""),
+    contenu_en: String(formData.get("contenu_en") ?? ""),
+    titre_de: String(formData.get("titre_de") ?? ""),
+    resume_de: String(formData.get("resume_de") ?? ""),
+    contenu_de: String(formData.get("contenu_de") ?? ""),
+    artiste_slug: String(formData.get("artiste_slug") ?? ""),
   });
   if (!parse.success) return { erreur: parse.error.issues[0]?.message ?? "Données invalides." };
   const d = parse.data;
   if (d.url_source && !adresseSure(d.url_source)) {
     return { erreur: "Le lien de la source doit commencer par https://." };
+  }
+  const lignesVideos = (d.videos ?? "").split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (lignesVideos.length > 6) return { erreur: "Six vidéos au plus par actualité." };
+  const refusee = lignesVideos.find((l) => !lireVideo(l));
+  if (refusee) {
+    return {
+      erreur: `Adresse de vidéo non reconnue : ${refusee.slice(0, 80)}. Collez le lien complet d'une vidéo TikTok (…/video/123…), d'une publication ou d'un reel Instagram, ou d'une vidéo YouTube.`,
+    };
+  }
+  const lignesImages = (d.images ?? "").split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (lignesImages.length > 8) return { erreur: "Huit photos au plus par actualité." };
+  const imageRefusee = lignesImages.find((l) => !/^(https:\/\/|\/fichiers\/)/.test(l));
+  if (imageRefusee) {
+    return { erreur: `Adresse d'image non reconnue : ${imageRefusee.slice(0, 80)}. Utilisez un lien https:// ou une image déjà envoyée sur ArTova.` };
+  }
+  const traduction = (langue: "en" | "de") => {
+    const titre = d[`titre_${langue}`] ?? "";
+    const resume = d[`resume_${langue}`] ?? "";
+    const contenu = d[`contenu_${langue}`] ?? "";
+    return titre || resume || contenu ? { titre, resume, contenu } : null;
+  };
+  const traductions = { en: traduction("en"), de: traduction("de") };
+  const traductionsJson =
+    traductions.en || traductions.de
+      ? JSON.stringify(Object.fromEntries(Object.entries(traductions).filter(([, v]) => v)))
+      : null;
+  if (d.artiste_slug) {
+    const trouve = await query<{ slug: string }>("SELECT slug FROM artistes WHERE slug = ? LIMIT 1", [d.artiste_slug]);
+    if (!trouve[0]) return { erreur: "Cet artiste ArTova n'existe pas." };
   }
   if (d.evenement_fin && !d.evenement_debut) return { erreur: "Indiquez aussi la date de début." };
   if (d.evenement_fin && d.evenement_fin < d.evenement_debut) {
@@ -202,12 +283,14 @@ export async function publierManuellement(
     nettoyerHtml(d.titre), nettoyerHtml(d.resume), d.contenu || null, d.url_source || null,
     nettoyerHtml(d.source_nom), d.portee, d.categorie, formData.get("a_la_une") === "1" ? 1 : 0,
     d.evenement_debut || null, d.evenement_fin || null, d.lieu ? nettoyerHtml(d.lieu) : null,
+    lignesVideos.join("\n") || null, d.artiste_slug || null,
+    lignesImages.join("\n") || null, d.credit_image ? nettoyerHtml(d.credit_image) : null, traductionsJson,
   ];
 
   if (d.id) {
     await execute(
       `UPDATE actualites SET titre=?, resume=?, contenu=?, url_source=?, source_nom=?, portee=?, categorie=?,
-       a_la_une=?, evenement_debut=?, evenement_fin=?, lieu=? ${image ? ", image_url=?" : ""} WHERE id=?`,
+       a_la_une=?, evenement_debut=?, evenement_fin=?, lieu=?, videos=?, artiste_slug=?, images=?, credit_image=?, traductions=? ${image ? ", image_url=?" : ""} WHERE id=?`,
       image ? [...valeurs, image, d.id] : [...valeurs, d.id],
     );
     rafraichir();
@@ -217,8 +300,8 @@ export async function publierManuellement(
   await execute(
     `INSERT INTO actualites
      (empreinte, titre, resume, contenu, url_source, source_nom, portee, categorie, importance, a_la_une,
-      evenement_debut, evenement_fin, lieu, image_url, origine)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 8, ?, ?, ?, ?, ?, 'manuel')`,
+      evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image, traductions, image_url, origine)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 8, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
     [createHash("sha1").update(`manuel:${randomUUID()}`).digest("hex"), ...valeurs, image],
   );
   rafraichir();
