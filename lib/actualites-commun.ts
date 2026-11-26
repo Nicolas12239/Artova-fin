@@ -19,6 +19,7 @@ export const CATEGORIES = {
   institutions: "Musées et galeries",
   patrimoine: "Patrimoine",
   creation: "Création",
+  decouverte: "Découvertes",
   general: "Actualité",
 } as const;
 

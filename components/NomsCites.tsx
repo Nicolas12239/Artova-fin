@@ -35,7 +35,7 @@ export function NomsCites({ personnes, langue }: { personnes: PersonneAffichee[]
               )}
               <span className="min-w-0">
                 <span className="block font-display text-xl leading-tight">{p.nom}</span>
-                <span className="block text-xs text-gris">#{p.nom} · {t.tousArticlesSur.replace("{nom}", p.nom)}</span>
+                <span className="block text-xs text-gris">{t.tousArticlesSur.replace("{nom}", p.nom)}</span>
               </span>
             </>
           );

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import mysql from "mysql2/promise";
 import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
 import { ARTICLES_REDACTION, CLES_OBSOLETES, empreinteRedaction } from "./actualites-redaction";
+import { ARTICLES_DECOUVERTES } from "./actualites-decouvertes";
 import { lirePersonnes } from "./actualites-commun";
 import { slugTag } from "./actualites-tags";
 
@@ -282,7 +283,7 @@ async function migrerActualites(): Promise<void> {
     await marquer(empreinte);
   }
 
-  for (const a of ARTICLES_REDACTION) {
+  for (const a of [...ARTICLES_REDACTION, ...ARTICLES_DECOUVERTES]) {
     const empreinte = empreinteRedaction(a);
     const champs = [
       a.titre, a.resume, a.contenu ?? null, a.url_source ?? null, a.source_nom, a.image_url ?? null,

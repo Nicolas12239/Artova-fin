@@ -36,6 +36,10 @@ const paire = (un: string, plusieurs: string): [string, string] => [un, plusieur
 
 const fr = {
   recherchePlaceholder: "Rechercher un artiste, une expo, un lieu…",
+  navDecouvertes: "Découvertes",
+  decouvertesTitre: "Découverte d'artistes",
+  decouvertesSous: "Plasticiens, sculpteurs, photographes, écrivains du Togo : de nouveaux portraits chaque jour.",
+  toutesDecouvertes: "Toutes les découvertes →",
   rechercher: "Rechercher",
   resultats: ["{n} résultat pour « {q} »", "{n} résultats pour « {q} »"] as [string, string],
   aucunResultat: "Aucun résultat pour « {q} ». Essayez un nom d'artiste, un lieu ou un titre.",
@@ -76,6 +80,7 @@ const fr = {
     institutions: "Musées et galeries",
     patrimoine: "Patrimoine",
     creation: "Création",
+    decouverte: "Découvertes",
     general: "Actualité",
   },
   lire: "Lire l'actualité",
@@ -152,6 +157,10 @@ type Textes = typeof fr;
 
 const en: Textes = {
   recherchePlaceholder: "Search an artist, an exhibition, a venue…",
+  navDecouvertes: "Discoveries",
+  decouvertesTitre: "Discover the artists",
+  decouvertesSous: "Visual artists, sculptors, photographers and writers from Togo: new portraits every day.",
+  toutesDecouvertes: "All discoveries →",
   rechercher: "Search",
   resultats: ["{n} result for “{q}”", "{n} results for “{q}”"] as [string, string],
   aucunResultat: "No result for “{q}”. Try an artist's name, a venue or a title.",
@@ -192,6 +201,7 @@ const en: Textes = {
     institutions: "Museums & galleries",
     patrimoine: "Heritage",
     creation: "Creation",
+    decouverte: "Discoveries",
     general: "News",
   },
   lire: "Read the story",
@@ -266,6 +276,10 @@ const en: Textes = {
 
 const de: Textes = {
   recherchePlaceholder: "Künstler, Ausstellung, Ort suchen…",
+  navDecouvertes: "Entdeckungen",
+  decouvertesTitre: "Künstler entdecken",
+  decouvertesSous: "Bildende Künstler, Bildhauer, Fotografen und Schriftsteller aus Togo: jeden Tag neue Porträts.",
+  toutesDecouvertes: "Alle Entdeckungen →",
   rechercher: "Suchen",
   resultats: ["{n} Treffer für „{q}“", "{n} Treffer für „{q}“"] as [string, string],
   aucunResultat: "Keine Treffer für „{q}“. Versuchen Sie einen Künstlernamen, einen Ort oder einen Titel.",
@@ -306,6 +320,7 @@ const de: Textes = {
     institutions: "Museen & Galerien",
     patrimoine: "Kulturerbe",
     creation: "Schaffen",
+    decouverte: "Entdeckungen",
     general: "Aktuelles",
   },
   lire: "Beitrag lesen",

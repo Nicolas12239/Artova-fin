@@ -60,6 +60,8 @@ export function VueArticle({
   const mots = `${c.resume} ${c.contenu ?? ""}`.split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(mots / 210));
   const redaction = a.source_nom === "ArTova";
+  // Les portraits de la rubrique « Découvertes » ont une photo de personne : format portrait.
+  const portrait = a.categorie === "decouverte" && Boolean(a.image_url);
   const credit = a.credit_image ?? a.source_nom;
   const etat = a.evenement_debut ? etatEvenement(a.evenement_debut, a.evenement_fin, undefined, langue) : null;
   const cheminLangue = avecLangue(chemin, langue);
@@ -67,24 +69,46 @@ export function VueArticle({
   return (
     <div lang={langue}>
       <NavActu langue={langue} chemin={chemin} />
-      <header className="bg-encre text-craie">
-        <div className="relative aspect-[4/3] max-h-[640px] w-full overflow-hidden sm:aspect-[16/9] lg:aspect-[21/9]">
-          <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
-        </div>
-        <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 text-center sm:px-6 md:pb-20 md:pt-14">
-          <div>
-            <Rubrique a={a} langue={langue} claire centree />
+      {portrait ? (
+        // Portrait d'artiste : la photo garde ses proportions, à côté du titre.
+        <header className="bg-encre text-craie">
+          <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-14 md:py-16">
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden bg-panel md:max-w-none">
+              <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
+            </div>
+            <div>
+              <Rubrique a={a} langue={langue} claire />
+              <h1 className="mt-5 font-display text-[2.3rem] leading-[1.05] sm:text-5xl lg:text-6xl">{typo(c.titre)}</h1>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-craie/75">{typo(c.resume)}</p>
+              <p className="mt-7 font-condense text-[14px] font-medium uppercase tracking-[0.06em] text-craie/60">
+                {redaction ? t.redaction : `${t.par} ${a.source_nom}`} ·{" "}
+                <time dateTime={new Date(a.publie_le).toISOString()} title={formatDateHeureFr(a.publie_le)}>
+                  {dateLongue(a.publie_le, langue)}
+                </time>
+              </p>
+            </div>
           </div>
-          <h1 className="mt-5 font-display text-[2.4rem] leading-[1.05] sm:text-6xl lg:text-7xl">{typo(c.titre)}</h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-craie/75">{typo(c.resume)}</p>
-          <p className="mt-7 font-condense text-[14px] font-medium uppercase tracking-[0.06em] text-craie/60">
-            {redaction ? t.redaction : `${t.par} ${a.source_nom}`} ·{" "}
-            <time dateTime={new Date(a.publie_le).toISOString()} title={formatDateHeureFr(a.publie_le)}>
-              {dateLongue(a.publie_le, langue)}
-            </time>
-          </p>
-        </div>
-      </header>
+        </header>
+      ) : (
+        <header className="bg-encre text-craie">
+          <div className="relative aspect-[4/3] max-h-[640px] w-full overflow-hidden sm:aspect-[16/9] lg:aspect-[21/9]">
+            <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
+          </div>
+          <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 text-center sm:px-6 md:pb-20 md:pt-14">
+            <div>
+              <Rubrique a={a} langue={langue} claire centree />
+            </div>
+            <h1 className="mt-5 font-display text-[2.4rem] leading-[1.05] sm:text-6xl lg:text-7xl">{typo(c.titre)}</h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-craie/75">{typo(c.resume)}</p>
+            <p className="mt-7 font-condense text-[14px] font-medium uppercase tracking-[0.06em] text-craie/60">
+              {redaction ? t.redaction : `${t.par} ${a.source_nom}`} ·{" "}
+              <time dateTime={new Date(a.publie_le).toISOString()} title={formatDateHeureFr(a.publie_le)}>
+                {dateLongue(a.publie_le, langue)}
+              </time>
+            </p>
+          </div>
+        </header>
+      )}
 
       <article className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 md:pt-10">
         <nav aria-label={t.arianeAria} className="mb-8 font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-gris">

@@ -8,6 +8,7 @@ import {
   actualiteALaUne,
   actualitesEnVideo,
   agendaLome,
+  decouvertesDuJour,
   compterActualites,
   estCategorie,
   estPortee,
@@ -72,13 +73,14 @@ export default async function PageActualites({
   const q = (params.q ?? "").trim().slice(0, 80);
   const filtre = { portee, categorie, q: q || undefined };
 
-  const [utilisateur, vedette, total, agenda, enBref, enVideo] = await Promise.all([
+  const [utilisateur, vedette, total, agenda, enBref, enVideo, decouvertes] = await Promise.all([
     getCurrentUser(),
     q ? Promise.resolve(null) : actualiteALaUne(filtre),
     compterActualites(filtre),
     page === 1 ? agendaLome(4).catch(() => []) : Promise.resolve([]),
     listerActualites(filtre, { limite: 8 }),
     page === 1 ? actualitesEnVideo(3).catch(() => []) : Promise.resolve([]),
+    page === 1 && !portee && !categorie && !q ? decouvertesDuJour(3).catch(() => []) : Promise.resolve([]),
   ]);
   const articles = await listerActualites(filtre, {
     limite: TAILLE_PAGE,
@@ -99,6 +101,7 @@ export default async function PageActualites({
       enBref={enBref}
       agenda={agenda}
       enVideo={enVideo}
+      decouvertes={decouvertes}
       total={total}
       suite={page * TAILLE_PAGE < totalGrille}
       admin={utilisateur?.role === "admin"}

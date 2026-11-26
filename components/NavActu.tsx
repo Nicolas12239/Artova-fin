@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SelecteurLangue } from "./SelecteurLangue";
 import { TEXTES, avecLangue, type Langue } from "@/lib/actualites-i18n";
 
-export type RubriqueNav = "une" | "agenda" | "artistes";
+export type RubriqueNav = "une" | "decouvertes" | "agenda" | "artistes";
 
 // Barre de navigation de la rubrique : accueil de l'actualité, agenda, artistes
 // cités, recherche et langue. Présente sur toutes les pages de la rubrique pour
@@ -22,6 +22,7 @@ export function NavActu({
   const t = TEXTES[langue];
   const liens: { cle: RubriqueNav; href: string; texte: string }[] = [
     { cle: "une", href: "/actualites", texte: t.aLaUne },
+    { cle: "decouvertes", href: "/actualites?categorie=decouverte", texte: t.navDecouvertes },
     { cle: "agenda", href: "/actualites/agenda", texte: t.navAgenda },
     { cle: "artistes", href: "/actualites/artistes", texte: t.navArtistes },
   ];

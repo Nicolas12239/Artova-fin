@@ -21,6 +21,8 @@ export interface DonneesVueActualites {
   enBref: Actualite[];
   agenda: Actualite[];
   enVideo: Actualite[];
+  // Portraits du jour (« Découverte d'artistes »), affichés sur la première page.
+  decouvertes?: Actualite[];
   total: number;
   suite: boolean;
   admin: boolean;
@@ -37,12 +39,12 @@ function chemin(filtre: { portee?: Portee; categorie?: Categorie; page?: number;
 }
 
 const ZONES = [undefined, "togo", "afrique", "monde"] as const;
-const CATEGORIES_ORDRE: Categorie[] = ["expositions", "marche", "artistes", "evenements", "institutions", "patrimoine", "creation", "general"];
+const CATEGORIES_ORDRE: Categorie[] = ["decouverte", "expositions", "marche", "artistes", "evenements", "institutions", "patrimoine", "creation", "general"];
 const RUBRIQUES = [undefined, ...CATEGORIES_ORDRE] as const;
 
 // Page d'accueil de l'actualité : titre de presse, « à la une » plein cadre,
 // agenda de Lomé, colonnes d'articles et brèves. Sans accès à la base de données.
-export function VueActualites({ langue, q = "", portee, categorie, page, vedette, articles, enBref, agenda, enVideo, total, suite, admin }: DonneesVueActualites) {
+export function VueActualites({ langue, q = "", portee, categorie, page, vedette, articles, enBref, agenda, enVideo, decouvertes = [], total, suite, admin }: DonneesVueActualites) {
   const t = TEXTES[langue];
   const recherche = q.trim().length > 0;
   const filtreActif = Boolean(portee || categorie || recherche);
@@ -52,7 +54,7 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
 
   return (
     <div lang={langue}>
-      <NavActu langue={langue} active="une" chemin={chemin({ portee, categorie, page, q: q || undefined })} q={q} />
+      <NavActu langue={langue} active={categorie === "decouverte" ? "decouvertes" : "une"} chemin={chemin({ portee, categorie, page, q: q || undefined })} q={q} />
       <header className="border-b-[5px] border-encre bg-craie">
         <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 md:px-8 md:pt-10">
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
@@ -154,6 +156,29 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
                     <CarteAgenda key={a.id} a={a} langue={langue} />
                   ))}
                 </ul>
+              </div>
+            </section>
+          )}
+
+          {premierePage && !filtreActif && decouvertes.length > 0 && (
+            <section aria-labelledby="decouvertes-jour" className="border-b border-fil bg-craie">
+              <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8 md:py-12">
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t-[6px] border-encre pt-4">
+                  <h2 id="decouvertes-jour" className="font-condense text-4xl font-bold uppercase leading-none md:text-5xl">
+                    {t.decouvertesTitre}
+                  </h2>
+                  <p className="text-sm text-gris">
+                    {t.decouvertesSous}{" "}
+                    <Link href={avecLangue("/actualites?categorie=decouverte", langue)} className="text-encre underline underline-offset-4 hover:text-terracotta">
+                      {t.toutesDecouvertes}
+                    </Link>
+                  </p>
+                </div>
+                <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+                  {decouvertes.map((a) => (
+                    <CarteActualite key={a.id} a={a} langue={langue} />
+                  ))}
+                </div>
               </div>
             </section>
           )}

@@ -27,6 +27,9 @@ export interface FiltreActualites {
 function clauseFiltre(filtre: FiltreActualites): { sql: string; params: Param[] } {
   const conditions = ["a.statut = 'publie'"];
   const params: Param[] = [];
+  // Les portraits « Découvertes » ont leur rubrique et leur bandeau : ils
+  // n'envahissent pas le fil principal (sauf recherche ou rubrique choisie).
+  if (!filtre.categorie && !filtre.q?.trim()) conditions.push("a.categorie <> 'decouverte'");
   if (filtre.portee) {
     conditions.push("a.portee = ?");
     params.push(filtre.portee);
@@ -267,4 +270,25 @@ export async function artistePourTag(slug: string): Promise<{ slug: string; nom:
     [slug],
   );
   return rows[0] ?? null;
+}
+
+// « Découverte d'artistes » : trois portraits qui changent chaque jour (rotation
+// déterministe : tout le monde voit les mêmes pendant la journée).
+export async function decouvertesDuJour(limite = 3): Promise<Actualite[]> {
+  const l = Math.max(1, Math.min(12, Math.floor(limite)));
+  const jour = Math.floor(Date.now() / 86_400_000);
+  return query<Actualite>(
+    `SELECT ${COLONNES} FROM actualites a
+     WHERE a.statut = 'publie' AND a.categorie = 'decouverte' AND a.personnes IS NOT NULL
+       AND a.titre LIKE 'Découverte :%'
+     ORDER BY MOD(a.id * 7919 + ?, 1009) ASC LIMIT ${l}`,
+    [jour],
+  );
+}
+
+export async function compterDecouvertes(): Promise<number> {
+  const rows = await query<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM actualites WHERE statut = 'publie' AND categorie = 'decouverte'",
+  );
+  return Number(rows[0]?.n ?? 0);
 }
