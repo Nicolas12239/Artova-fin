@@ -44,14 +44,16 @@ export function MenuMobile({
     <div className="xl:hidden">
       <button
         type="button"
-        aria-label={ouvert ? "Fermer le menu" : "Ouvrir le menu"}
         aria-expanded={ouvert}
         aria-controls="menu-mobile"
         onClick={() => setOuvert((v) => !v)}
-        className="flex h-11 w-11 flex-col items-center justify-center gap-[7px] rounded-full border border-encre/20 bg-craie"
+        className="flex h-11 items-center gap-3 rounded-full border border-encre/30 bg-craie pl-4 pr-3.5 text-sm font-medium text-encre"
       >
-        <span className={`block h-px w-5 bg-encre transition-transform duration-200 ease-out ${ouvert ? "translate-y-[4px] rotate-45" : ""}`} />
-        <span className={`block h-px w-5 bg-encre transition-transform duration-200 ease-out ${ouvert ? "-translate-y-[4px] -rotate-45" : ""}`} />
+        {ouvert ? "Fermer" : "Menu"}
+        <span aria-hidden="true" className="relative block h-3 w-5">
+          <span className={`absolute left-0 block h-px w-5 bg-encre transition-transform duration-200 ease-out ${ouvert ? "top-1/2 rotate-45" : "top-0"}`} />
+          <span className={`absolute left-0 block h-px w-5 bg-encre transition-transform duration-200 ease-out ${ouvert ? "top-1/2 -rotate-45" : "bottom-0"}`} />
+        </span>
       </button>
       <nav
         id="menu-mobile"

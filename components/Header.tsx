@@ -73,8 +73,12 @@ export function Header({
   return (
     <header
       style={{ viewTransitionName: "en-tete" }}
-      className="sticky top-0 z-50 border-b border-fil/80 bg-creme/90 backdrop-blur-md supports-[backdrop-filter]:bg-creme/80"
+      className="sticky top-0 z-50 border-b border-fil/80"
     >
+      {/* Le flou est porté par un calque à part : un « backdrop-filter » sur l'en-tête
+          lui-même ferait de lui le repère du menu mobile (position fixe), qui deviendrait
+          alors invisible (hauteur nulle). */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-creme/90 backdrop-blur-md supports-[backdrop-filter]:bg-creme/80" />
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Accueil ArTova" className="flex h-11 shrink-0 items-center">
           <LogoComplet className="h-7 w-auto sm:h-8" />
