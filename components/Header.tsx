@@ -80,7 +80,7 @@ export function Header({
           <LogoComplet className="h-7 w-auto sm:h-8" />
         </Link>
 
-        <nav className="ml-6 hidden items-center gap-5 md:flex lg:ml-10 lg:gap-8" aria-label="Navigation principale">
+        <nav className="ml-6 hidden items-center gap-6 xl:flex xl:ml-10 xl:gap-8" aria-label="Navigation principale">
           {LIENS.map((lien) => (
             <LienNav key={lien.href} href={lien.href}>
               {lien.label}
@@ -88,7 +88,7 @@ export function Header({
           ))}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-3 md:flex lg:gap-5">
+        <div className="ml-auto hidden items-center gap-3 xl:flex xl:gap-5">
           {utilisateur ? (
             <>
               {utilisateur.role === "artiste" && (
@@ -127,7 +127,7 @@ export function Header({
           )}
         </div>
 
-        <div className="ml-auto md:hidden">
+        <div className="ml-auto xl:hidden">
           <MenuMobile
             contact={CONTACT}
             liens={[

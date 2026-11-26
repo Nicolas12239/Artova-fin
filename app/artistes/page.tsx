@@ -49,7 +49,7 @@ export default async function PageArtistes({
         grand plan.
       </p>
 
-      <div className="mt-12 grid gap-12 md:grid-cols-[220px_1fr]">
+      <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="hidden md:block">
           <h2 className="font-display text-xl">Parcourir</h2>
           <ul className="mt-5 space-y-3 border-t border-fil pt-5">
@@ -70,15 +70,15 @@ export default async function PageArtistes({
           </ul>
         </aside>
 
-        <div>
-          <div className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 md:hidden">
+        <div className="min-w-0">
+          <div className="defile-x -mx-4 mb-6 px-4 pb-1 md:hidden">
             {FILTRES.map((filtre) => {
               const actif = filtre.valeur === "" ? !valide : valide && discipline === filtre.valeur;
               return (
                 <Link
                   key={filtre.valeur || "tous"}
                   href={filtre.valeur ? `/artistes?discipline=${filtre.valeur}` : "/artistes"}
-                  className={`shrink-0 border px-4 py-2 text-xs uppercase tracking-[0.14em] ${actif ? "border-encre bg-encre text-craie" : "border-fil text-gris"}`}
+                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${actif ? "border-encre bg-encre text-craie" : "border-fil text-encre/75"}`}
                 >
                   {filtre.label}
                 </Link>

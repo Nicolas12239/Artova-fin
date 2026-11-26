@@ -41,7 +41,7 @@ export function MenuMobile({
   }, [ouvert]);
 
   return (
-    <div className="md:hidden">
+    <div className="xl:hidden">
       <button
         type="button"
         aria-label={ouvert ? "Fermer le menu" : "Ouvrir le menu"}

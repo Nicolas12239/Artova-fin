@@ -53,7 +53,7 @@ function Bloc({ titre, liste, id, langue }: { titre: string; liste: Actualite[];
   return (
     <section aria-labelledby={id} className="mt-14">
       <TitreSection id={id}>{titre}</TitreSection>
-      <ul className="mt-8 grid gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
+      <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(min(17rem,100%),1fr))]">
         {liste.map((a) => (
           <CarteAgenda key={a.id} a={a} langue={langue} pleine />
         ))}
