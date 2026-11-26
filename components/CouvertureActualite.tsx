@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Portee } from "@/lib/actualites-sources";
 
 // Couleur de repli selon la portée : le Togo ressort en terre cuite, l'Afrique
@@ -28,18 +28,32 @@ export function CouvertureActualite({
   prioritaire?: boolean;
 }) {
   const [cassee, setCassee] = useState(false);
+  const image = useRef<HTMLImageElement>(null);
+  // Une image qui a échoué avant l'hydratation n'émet plus d'erreur : on le constate au montage.
+  useEffect(() => {
+    const el = image.current;
+    if (el && el.complete && el.naturalWidth === 0) setCassee(true);
+  }, [src]);
 
   if (src && !cassee) {
+    // « #haut » à la fin de l'adresse : la photo est recadrée par le haut (retire un
+    // bandeau de titre en bas d'un visuel de presse). Le fragment n'est jamais envoyé au serveur.
+    const recadre = src.endsWith("#haut");
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
+        ref={image}
         src={src}
         alt={alt}
         loading={prioritaire ? "eager" : "lazy"}
         decoding="async"
         referrerPolicy="no-referrer"
         onError={() => setCassee(true)}
-        className="absolute inset-0 h-full w-full object-cover object-[50%_28%] transition-transform duration-700 group-hover:scale-[1.03]"
+        className={
+          recadre
+            ? "absolute left-0 top-0 h-[150%] w-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+            : "absolute inset-0 h-full w-full object-cover object-[50%_28%] transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+        }
       />
     );
   }

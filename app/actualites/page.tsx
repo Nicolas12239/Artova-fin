@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
-import { actualiserSiBesoin } from "@/lib/actualites-actualiser";
+import { actualiserSiBesoin, enqueterSiBesoin } from "@/lib/actualites-actualiser";
 import { VueActualites } from "@/components/VueActualites";
 import { avecLangue, langueDe } from "@/lib/actualites-i18n";
 import { getCurrentUser } from "@/lib/auth";
@@ -67,6 +67,7 @@ export default async function PageActualites({
   const langue = langueDe(params.lang);
   // Après la réponse : la collecte (au plus toutes les 30 min) n'attend pas le lecteur.
   after(() => actualiserSiBesoin());
+  after(() => enqueterSiBesoin());
   const portee = estPortee(params.portee) ? params.portee : undefined;
   const categorie = estCategorie(params.categorie) ? params.categorie : undefined;
   const page = Math.min(200, Math.max(1, parseInt(params.page ?? "1", 10) || 1));

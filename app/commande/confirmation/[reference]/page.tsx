@@ -40,7 +40,7 @@ export default async function PageConfirmation({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-20 text-center md:py-28">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-terracotta">
+      <p className="text-xs uppercase tracking-[0.22em] text-terracotta">
         Commande transmise
       </p>
       <h1 className="mt-4 font-display text-5xl md:text-6xl">Merci, {prenom} !</h1>
@@ -64,29 +64,29 @@ export default async function PageConfirmation({
           </div>
           <div className="text-right">
             <p className="font-display text-xl">{formatFcfa(commande.prix_fcfa)}</p>
-            <span className="mt-2 inline-block border border-fil px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-gris">
+            <span className="mt-2 inline-block border border-fil px-3 py-1 text-xs uppercase tracking-[0.16em] text-gris">
               {LIBELLE_STATUT_COMMANDE[commande.statut]}
             </span>
           </div>
         </div>
         <dl className="mt-6 grid gap-4 border-t border-fil pt-6 sm:grid-cols-2">
           <div>
-            <dt className="text-[10px] uppercase tracking-[0.18em] text-gris">Ville</dt>
+            <dt className="text-xs uppercase tracking-[0.18em] text-gris">Ville</dt>
             <dd className="mt-1 text-sm">{commande.ville}</dd>
           </div>
           <div>
-            <dt className="text-[10px] uppercase tracking-[0.18em] text-gris">Téléphone</dt>
+            <dt className="text-xs uppercase tracking-[0.18em] text-gris">Téléphone</dt>
             <dd className="mt-1 text-sm">{commande.telephone}</dd>
           </div>
           {commande.adresse && (
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.18em] text-gris">Adresse</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-gris">Adresse</dt>
               <dd className="mt-1 text-sm">{commande.adresse}</dd>
             </div>
           )}
           {commande.message && (
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.18em] text-gris">Message</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-gris">Message</dt>
               <dd className="mt-1 text-sm">{commande.message}</dd>
             </div>
           )}

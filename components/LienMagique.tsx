@@ -108,7 +108,7 @@ export function LienMagique({ config, next }: { config: ConfigFirebase; next?: s
         vous avez reçu ce lien.
       </p>
       <div>
-        <label htmlFor="email-lien" className="mb-1 block text-[11px] uppercase tracking-[0.18em] text-gris">
+        <label htmlFor="email-lien" className="mb-1 block text-xs uppercase tracking-[0.18em] text-gris">
           Adresse e-mail
         </label>
         <input

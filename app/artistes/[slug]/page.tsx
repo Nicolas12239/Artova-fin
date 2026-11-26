@@ -126,7 +126,7 @@ export default async function PageUnivers({
         />
       )}
       {artiste.statut !== "publie" && (
-        <div className="border-b border-[#d9a441]/50 bg-[#f7ecd2] px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] text-encre">
+        <div className="border-b border-[#d9a441]/50 bg-[#f7ecd2] px-4 py-3 text-center text-xs uppercase tracking-[0.16em] text-encre">
           Aperçu : cette page n&apos;est pas encore publiée
           {artiste.statut === "en_attente" ? " (en attente de validation)" : ""}
         </div>
@@ -161,7 +161,7 @@ export default async function PageUnivers({
             style={{ backgroundColor: artiste.theme_fond }}
           >
             <p
-              className="text-[11px] uppercase tracking-[0.22em]"
+              className="text-xs uppercase tracking-[0.22em]"
               style={{ color: artiste.theme_primaire }}
             >
               {discipline} · {artiste.ville ?? "Togo"}
@@ -191,7 +191,7 @@ export default async function PageUnivers({
         </div>
         {maitresse && (
           <div className="relative bg-craie/95 px-5 py-4 md:absolute md:bottom-8 md:left-8 md:max-w-[340px]">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-gris">
+            <p className="text-xs uppercase tracking-[0.2em] text-gris">
               Œuvre maîtresse
             </p>
             <div className="mt-1 flex items-baseline justify-between gap-4">
@@ -259,7 +259,7 @@ export default async function PageUnivers({
                         key={ligne.label}
                         className="grid gap-1 border-t border-encre/15 py-4 sm:grid-cols-[160px_1fr] sm:gap-4"
                       >
-                        <dt className="text-[11px] uppercase tracking-[0.18em] text-gris">{ligne.label}</dt>
+                        <dt className="text-xs uppercase tracking-[0.18em] text-gris">{ligne.label}</dt>
                         <dd className="text-sm">{ligne.valeur}</dd>
                       </div>
                     ))}
@@ -267,7 +267,7 @@ export default async function PageUnivers({
                 )}
                 {expositions.length > 0 && (
                   <div className="mt-8">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-gris">
+                    <p className="text-xs uppercase tracking-[0.18em] text-gris">
                       Expositions & distinctions
                     </p>
                     <ul className="mt-4 space-y-3">

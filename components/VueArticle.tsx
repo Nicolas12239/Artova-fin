@@ -4,8 +4,12 @@ import { CarteActualite, Rubrique } from "./ActualiteCards";
 import { CouvertureActualite } from "./CouvertureActualite";
 import { FormCommentaire } from "./FormCommentaire";
 import { GalerieActualite } from "./GalerieActualite";
-import { NomsCites, type PersonneAffichee } from "./NomsCites";
+import { BoutonEnquete } from "./BoutonEnquete";
+import { DossierActualite, type PersonneAffichee } from "./DossierActualite";
+import { TexteAvecNoms } from "./TexteAvecNoms";
 import { NavActu } from "./NavActu";
+import { ProgressionLecture } from "./ProgressionLecture";
+import { TitreSection } from "./TitreSection";
 import { VideosActualite } from "./VideosActualite";
 import { retirerCommentaire } from "@/app/actions/actualites";
 import { formatDateHeureFr } from "@/lib/format";
@@ -20,7 +24,6 @@ import {
   type CommentaireActualite,
 } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, fmt, nombre, type Langue } from "@/lib/actualites-i18n";
-import { slugTag } from "@/lib/actualites-tags";
 
 // Page d'un article : grande image pleine largeur, titre centré sur fond encre,
 // puis lecture sur fond clair. Les données (base) sont fournies par la page.
@@ -65,22 +68,26 @@ export function VueArticle({
   const credit = a.credit_image ?? a.source_nom;
   const etat = a.evenement_debut ? etatEvenement(a.evenement_debut, a.evenement_fin, undefined, langue) : null;
   const cheminLangue = avecLangue(chemin, langue);
+  // Chaque personne citée est liée une seule fois dans le texte, vers sa fiche.
+  const nomsLies = new Set<string>();
+  const nomsCites = personnes.map((p) => p.nom);
 
   return (
     <div lang={langue}>
+      <ProgressionLecture />
       <NavActu langue={langue} chemin={chemin} />
       {portrait ? (
         // Portrait d'artiste : la photo garde ses proportions, à côté du titre.
-        <header className="bg-encre text-craie">
+        <header className="border-b border-fil bg-craie">
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-14 md:py-16">
-            <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden bg-panel md:max-w-none">
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-3xl bg-panel md:max-w-none">
               <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
             </div>
             <div>
-              <Rubrique a={a} langue={langue} claire />
-              <h1 className="mt-5 font-display text-[2.3rem] leading-[1.05] sm:text-5xl lg:text-6xl">{typo(c.titre)}</h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-craie/75">{typo(c.resume)}</p>
-              <p className="mt-7 font-condense text-[14px] font-medium uppercase tracking-[0.06em] text-craie/60">
+              <Rubrique a={a} langue={langue} />
+              <h1 className="mt-4 font-display text-[2.4rem] font-medium leading-[1.04] text-balance sm:text-5xl lg:text-6xl">{typo(c.titre)}</h1>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-encre/75">{typo(c.resume)}</p>
+              <p className="mt-6 text-sm text-gris">
                 {redaction ? t.redaction : `${t.par} ${a.source_nom}`} ·{" "}
                 <time dateTime={new Date(a.publie_le).toISOString()} title={formatDateHeureFr(a.publie_le)}>
                   {dateLongue(a.publie_le, langue)}
@@ -90,35 +97,38 @@ export function VueArticle({
           </div>
         </header>
       ) : (
-        <header className="bg-encre text-craie">
-          <div className="relative aspect-[4/3] max-h-[640px] w-full overflow-hidden sm:aspect-[16/9] lg:aspect-[21/9]">
-            <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
-          </div>
-          <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 text-center sm:px-6 md:pb-20 md:pt-14">
-            <div>
-              <Rubrique a={a} langue={langue} claire centree />
-            </div>
-            <h1 className="mt-5 font-display text-[2.4rem] leading-[1.05] sm:text-6xl lg:text-7xl">{typo(c.titre)}</h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-craie/75">{typo(c.resume)}</p>
-            <p className="mt-7 font-condense text-[14px] font-medium uppercase tracking-[0.06em] text-craie/60">
+        <header className="border-b border-fil bg-craie">
+          <div className="mx-auto max-w-4xl px-4 pb-8 pt-10 sm:px-6 md:pb-10 md:pt-14">
+            <Rubrique a={a} langue={langue} />
+            <h1 className="mt-4 font-display text-[2.5rem] font-medium leading-[1.03] text-balance sm:text-6xl lg:text-7xl">{typo(c.titre)}</h1>
+            <p className="mt-5 max-w-3xl text-lg leading-relaxed text-encre/75 sm:text-xl">{typo(c.resume)}</p>
+            <p className="mt-6 text-sm text-gris">
               {redaction ? t.redaction : `${t.par} ${a.source_nom}`} ·{" "}
               <time dateTime={new Date(a.publie_le).toISOString()} title={formatDateHeureFr(a.publie_le)}>
                 {dateLongue(a.publie_le, langue)}
               </time>
+              {" · "}
+              {fmt(t.lecture, { n: minutes })}
             </p>
+          </div>
+          <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 md:pb-14">
+            <div className="relative aspect-[4/3] max-h-[620px] w-full overflow-hidden rounded-3xl bg-panel sm:aspect-[16/9] lg:aspect-[2/1]">
+              <CouvertureActualite src={a.image_url} alt={c.titre} source={a.source_nom} portee={a.portee} prioritaire />
+            </div>
+            {a.image_url && <p className="mt-2 text-xs text-gris">{fmt(t.image, { source: credit })}</p>}
           </div>
         </header>
       )}
 
-      <article className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 md:pt-10">
-        <nav aria-label={t.arianeAria} className="mb-8 font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-gris">
+      <article className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 md:pt-14">
+        <nav aria-label={t.arianeAria} className="mb-8 text-sm text-gris">
           <Link href="/" className="hover:text-encre">{t.accueil}</Link> /{" "}
           <Link href={avecLangue("/actualites", langue)} className="hover:text-encre">{t.actuArt}</Link> /{" "}
           <Link href={avecLangue(`/actualites?categorie=${a.categorie}`, langue)} className="hover:text-encre">
             {t.categories[a.categorie]}
           </Link>
-          <span className="ml-3 normal-case tracking-normal text-gris/80">· {fmt(t.lecture, { n: minutes })}</span>
         </nav>
+        {admin && <BoutonEnquete id={a.id} />}
         {a.statut !== "publie" && (
           <p role="status" className="mb-8 border-l-2 border-terracotta pl-3 text-sm text-terracotta">
             {t.masquee}
@@ -126,13 +136,11 @@ export function VueArticle({
         )}
 
         {a.evenement_debut && etat && (
-          <div className="mb-10 border-y-[3px] border-encre py-5">
+          <div className="mb-10 rounded-2xl border border-fil bg-craie p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="font-condense text-3xl font-bold uppercase leading-none">
-                {libelleDates(a.evenement_debut, a.evenement_fin, langue)}
-              </p>
+              <p className="font-display text-3xl font-medium leading-none">{libelleDates(a.evenement_debut, a.evenement_fin, langue)}</p>
               <span
-                className={`px-2.5 py-1 font-condense text-[13px] font-semibold uppercase tracking-[0.08em] ${
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
                   etat.ton === "en_cours"
                     ? "bg-terracotta text-craie"
                     : etat.ton === "bientot"
@@ -143,19 +151,23 @@ export function VueArticle({
                 {etat.texte}
               </span>
             </div>
-            <p className="mt-2 font-condense text-base font-medium uppercase tracking-[0.05em] text-gris">
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-gris">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4 shrink-0" aria-hidden="true">
+                <path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z" />
+                <circle cx="12" cy="9.8" r="2.4" />
+              </svg>
               {a.lieu ?? t.lieuADefaut}
             </p>
           </div>
         )}
 
         {intertitres.length >= 3 && (
-          <nav aria-label={t.sommaire} className="mb-10 border border-fil bg-craie p-5">
-            <p className="font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-terracotta">{t.sommaire}</p>
+          <nav aria-label={t.sommaire} className="mb-10 rounded-2xl border border-fil bg-craie p-5">
+            <p className="text-sm font-medium text-terracotta">{t.sommaire}</p>
             <ol className="mt-3 space-y-1.5">
               {intertitres.map((h) => (
                 <li key={h.id}>
-                  <a href={`#${h.id}`} className="text-[15px] underline-offset-4 hover:text-terracotta hover:underline">
+                  <a href={`#${h.id}`} className="inline-flex min-h-9 items-center text-[15px] underline-offset-4 hover:text-terracotta hover:underline">
                     {typo(h.titre)}
                   </a>
                 </li>
@@ -166,25 +178,20 @@ export function VueArticle({
 
         {blocs.map((b, i) =>
           "titre" in b && b.titre ? (
-            <h2
-              key={b.id}
-              id={b.id}
-              className="mt-12 scroll-mt-28 border-t-[3px] border-encre pt-3 font-condense text-3xl font-bold uppercase leading-tight"
-            >
+            <TitreSection key={b.id} id={b.id} className="mt-14">
               {typo(b.titre)}
-            </h2>
+            </TitreSection>
           ) : (
             <p
               key={i}
               className={`text-[18px] leading-[1.8] text-encre/85 ${i > 0 ? "mt-6" : ""} ${i === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-terracotta" : ""}`}
             >
-              {typo("texte" in b ? (b.texte ?? "") : "")}
+              <TexteAvecNoms texte={typo("texte" in b ? (b.texte ?? "") : "")} noms={nomsCites} vus={nomsLies} langue={langue} />
             </p>
           ),
         )}
-        {a.image_url && !a.images && <p className="mt-8 text-xs text-gris">{fmt(t.image, { source: credit })}</p>}
 
-        <NomsCites personnes={personnes} langue={langue} />
+        <DossierActualite personnes={personnes} enquete={a.enquete} langue={langue} />
 
         <GalerieActualite images={a.images} titre={c.titre} credit={credit} langue={langue} />
 
@@ -193,17 +200,15 @@ export function VueArticle({
         {artiste && (
           <Link
             href={`/artistes/${artiste.slug}`}
-            className="group mt-12 flex items-center gap-5 border border-fil bg-craie p-4 transition-colors hover:border-encre"
+            className="group mt-12 flex items-center gap-5 rounded-2xl border border-fil bg-craie p-4 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-18px_rgba(27,26,23,0.35)]"
           >
             {artiste.portrait_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={artiste.portrait_url} alt={artiste.nom} className="h-20 w-20 shrink-0 object-cover" />
+              <img src={artiste.portrait_url} alt={artiste.nom} className="h-20 w-20 shrink-0 rounded-xl object-cover" />
             )}
             <span className="min-w-0">
-              <span className="block font-condense text-[13px] font-semibold uppercase tracking-[0.08em] text-terracotta">
-                {t.artisteSur}
-              </span>
-              <span className="block font-display text-2xl leading-tight group-hover:underline">{artiste.nom}</span>
+              <span className="block text-xs font-medium text-terracotta">{t.artisteSur}</span>
+              <span className="block font-display text-2xl leading-tight transition-colors group-hover:text-terracotta">{artiste.nom}</span>
               <span className="mt-1 block text-sm text-gris">{t.decouvrirArtiste}</span>
             </span>
           </Link>
@@ -218,7 +223,7 @@ export function VueArticle({
               href={a.url_source}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="mt-4 inline-block bg-encre px-6 py-3 text-sm tracking-wide text-creme transition-colors hover:bg-terracotta"
+              className="mt-4 inline-flex min-h-11 items-center rounded-full bg-encre px-6 text-sm font-medium text-creme transition-colors hover:bg-terracotta"
             >
               {redaction ? t.consulterSource : fmt(t.lireSource, { source: a.source_nom })}
             </a>
@@ -249,9 +254,9 @@ export function VueArticle({
         </div>
 
         <section id="commentaires" className="mt-16 scroll-mt-24">
-          <h2 className="border-t-[6px] border-encre pt-3 font-condense text-4xl font-bold uppercase leading-none">
+          <TitreSection id="titre-commentaires">
             {commentaires.length > 0 ? nombre(t.nbCommentaires, commentaires.length) : t.commentaires}
-          </h2>
+          </TitreSection>
           {commentaires.length === 0 && <p className="mt-3 text-sm text-gris">{t.aucunCommentaire}</p>}
           <ul className="mt-6 divide-y divide-fil border-y border-fil">
             {commentaires.map((co) => (
@@ -294,12 +299,14 @@ export function VueArticle({
       </article>
 
       {liees.length > 0 && (
-        <section className="border-t-[5px] border-encre bg-craie">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-8">
-            <h2 className="font-condense text-4xl font-bold uppercase leading-none md:text-5xl">{t.aLireAussi}</h2>
-            <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="border-t border-fil bg-craie">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-8 md:py-16">
+            <TitreSection id="a-lire-aussi">{t.aLireAussi}</TitreSection>
+            <div className="defile-x -mx-4 mt-8 px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-8 sm:gap-y-12 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
               {liees.map((l) => (
-                <CarteActualite key={l.id} a={l} langue={langue} />
+                <div key={l.id} className="w-[82%] sm:w-auto">
+                  <CarteActualite a={l} langue={langue} />
+                </div>
               ))}
             </div>
           </div>

@@ -13,7 +13,7 @@ const SCORE = `(a.importance + CASE a.portee WHEN 'togo' THEN 2 WHEN 'afrique' T
 const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom, a.image_url,
   a.portee, a.categorie, a.importance, a.a_la_une, a.statut, a.origine, a.publie_le,
   DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut,
-  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.personnes, a.traductions,
+  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.personnes, a.traductions, a.enquete,
   (SELECT COUNT(*) FROM actualites_likes l WHERE l.actualite_id = a.id) AS nb_likes,
   (SELECT COUNT(*) FROM actualites_commentaires c WHERE c.actualite_id = a.id AND c.statut = 'publie') AS nb_commentaires`;
 

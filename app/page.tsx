@@ -117,7 +117,7 @@ export default async function Accueil() {
                 <br />
                 maintenant.
               </h1>
-              <span className="mt-2 shrink-0 text-[10px] uppercase tracking-[0.22em] text-gris">
+              <span className="mt-2 shrink-0 text-xs uppercase tracking-[0.22em] text-gris">
                 Lomé
               </span>
             </div>
@@ -328,7 +328,7 @@ export default async function Accueil() {
         <section className="border-t border-fil bg-creme">
           <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1fr_1.4fr] md:gap-16 md:px-8 md:py-24">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-terracotta">
+              <p className="text-xs uppercase tracking-[0.22em] text-terracotta">
                 Vous êtes artiste ?
               </p>
               <h2 className="mt-3 font-display text-3xl leading-tight sm:text-4xl md:text-5xl">

@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
 import { ARTICLES_REDACTION, CLES_OBSOLETES, empreinteRedaction } from "./actualites-redaction";
 import { ARTICLES_DECOUVERTES } from "./actualites-decouvertes";
+import { ARTICLES_ENQUETES } from "./actualites-enquetes";
 import { lirePersonnes } from "./actualites-commun";
 import { slugTag } from "./actualites-tags";
 
@@ -242,6 +243,8 @@ async function migrerActualites(): Promise<void> {
     ["credit_image", "VARCHAR(160) DEFAULT NULL"],
     ["personnes", "TEXT DEFAULT NULL"],
     ["traductions", "MEDIUMTEXT DEFAULT NULL"],
+    ["enquete", "TEXT DEFAULT NULL"],
+    ["enquete_le", "TIMESTAMP NULL DEFAULT NULL"],
     ["revision", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"],
   ] as const) {
     if (!(await colonneExiste("actualites", colonne))) {
@@ -283,7 +286,7 @@ async function migrerActualites(): Promise<void> {
     await marquer(empreinte);
   }
 
-  for (const a of [...ARTICLES_REDACTION, ...ARTICLES_DECOUVERTES]) {
+  for (const a of [...ARTICLES_REDACTION, ...ARTICLES_ENQUETES, ...ARTICLES_DECOUVERTES]) {
     const empreinte = empreinteRedaction(a);
     const champs = [
       a.titre, a.resume, a.contenu ?? null, a.url_source ?? null, a.source_nom, a.image_url ?? null,
@@ -292,6 +295,7 @@ async function migrerActualites(): Promise<void> {
       a.artiste_slug ?? null, a.images ?? null, a.credit_image ?? null,
       a.personnes ? JSON.stringify(a.personnes) : null,
       a.traductions ? JSON.stringify(a.traductions) : null, a.revision,
+      a.enquete ? JSON.stringify(a.enquete) : null,
     ];
     const [existant] = await pool.query("SELECT id, revision FROM actualites WHERE empreinte = ? LIMIT 1", [empreinte]);
     const ligne = (existant as { id: number; revision: number }[])[0];
@@ -300,7 +304,7 @@ async function migrerActualites(): Promise<void> {
         await pool.query(
           `UPDATE actualites SET titre=?, resume=?, contenu=?, url_source=?, source_nom=?, image_url=?, portee=?,
            categorie=?, importance=?, a_la_une=?, publie_le=?, evenement_debut=?, evenement_fin=?, lieu=?,
-           videos=?, artiste_slug=?, images=?, credit_image=?, personnes=?, traductions=?, revision=? WHERE id=?`,
+           videos=?, artiste_slug=?, images=?, credit_image=?, personnes=?, traductions=?, revision=?, enquete=? WHERE id=?`,
           [...champs, ligne.id],
         );
         await poserTagsInterne(ligne.id, a.personnes ? JSON.stringify(a.personnes) : null);
@@ -312,8 +316,8 @@ async function migrerActualites(): Promise<void> {
       `INSERT IGNORE INTO actualites
        (empreinte, titre, resume, contenu, url_source, source_nom, image_url, portee, categorie, importance,
         a_la_une, publie_le, evenement_debut, evenement_fin, lieu, videos, artiste_slug, images, credit_image,
-        personnes, traductions, revision, origine)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
+        personnes, traductions, revision, enquete, origine)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manuel')`,
       [empreinte, ...champs],
     );
     const idInsere = Number((insere as { insertId?: number }).insertId ?? 0);

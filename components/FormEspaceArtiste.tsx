@@ -12,7 +12,7 @@ import { COMMISSION_ARTOVA } from "@/lib/types";
 
 const champ =
   "w-full border-b border-encre/25 bg-transparent py-3 text-[15px] outline-none transition-colors placeholder:text-gris/60 focus:border-encre";
-const libelle = "mb-1 block text-[11px] uppercase tracking-[0.18em] text-gris";
+const libelle = "mb-1 block text-xs uppercase tracking-[0.18em] text-gris";
 const aide = "mt-2 text-xs leading-relaxed text-gris";
 const bouton =
   "w-full bg-encre px-8 py-4 text-[12px] uppercase tracking-[0.18em] text-craie transition-colors hover:bg-terracotta disabled:opacity-50 sm:w-auto";
@@ -76,12 +76,12 @@ function ChampImage({
         {apercu && !retiree ? (
           <>
             <img src={apercu} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <span className="absolute inset-x-0 bottom-0 bg-encre/75 py-2 text-center text-[10px] uppercase tracking-[0.18em] text-craie opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="absolute inset-x-0 bottom-0 bg-encre/75 py-2 text-center text-xs uppercase tracking-[0.18em] text-craie opacity-0 transition-opacity group-hover:opacity-100">
               Remplacer l&apos;image
             </span>
           </>
         ) : (
-          <span className="px-4 text-center text-[11px] uppercase tracking-[0.18em] text-gris">
+          <span className="px-4 text-center text-xs uppercase tracking-[0.18em] text-gris">
             + Choisir une image
           </span>
         )}
@@ -354,7 +354,7 @@ export function ChampsPage({
           aria-hidden="true"
         >
           <div>
-            <p className="text-[10px] uppercase tracking-[0.22em]" style={{ color: couleurs.primaire }}>
+            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: couleurs.primaire }}>
               Aperçu des couleurs
             </p>
             <p className="mt-1 font-display text-2xl text-encre">Votre page</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { deconnecter } from "@/app/actions/auth";
 import type { UtilisateurSession } from "@/lib/types";
 import { LogoComplet } from "./Logo";
+import { LienNav } from "./LienNav";
 import { MenuMobile } from "./MenuMobile";
 
 export const CONTACT = {
@@ -70,90 +71,71 @@ export function Header({
 }) {
   const LIENS = liens();
   return (
-    <header className="sticky top-0 z-50">
-      <div className="relative">
-        <div className="flex h-14 items-center justify-between border-b border-fil bg-[#efede4] pl-40 pr-4 sm:pl-48 sm:pr-6 md:h-16 md:pl-60 lg:pr-10">
-          <nav
-            className="hidden items-center gap-6 md:flex lg:gap-9"
-            aria-label="Navigation principale"
-          >
-            {LIENS.map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                className="font-display text-[16px] text-encre/85 underline-offset-4 hover:underline"
-              >
-                {lien.label}
+    <header
+      style={{ viewTransitionName: "en-tete" }}
+      className="sticky top-0 z-50 border-b border-fil/80 bg-creme/90 backdrop-blur-md supports-[backdrop-filter]:bg-creme/80"
+    >
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="Accueil ArTova" className="flex h-11 shrink-0 items-center">
+          <LogoComplet className="h-7 w-auto sm:h-8" />
+        </Link>
+
+        <nav className="ml-6 hidden items-center gap-5 md:flex lg:ml-10 lg:gap-8" aria-label="Navigation principale">
+          {LIENS.map((lien) => (
+            <LienNav key={lien.href} href={lien.href}>
+              {lien.label}
+            </LienNav>
+          ))}
+        </nav>
+
+        <div className="ml-auto hidden items-center gap-3 md:flex lg:gap-5">
+          {utilisateur ? (
+            <>
+              {utilisateur.role === "artiste" && (
+                <Link href="/espace-artiste" className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-fil px-4 text-sm transition-colors hover:border-encre">
+                  Espace artiste
+                </Link>
+              )}
+              {utilisateur.role === "admin" && (
+                <Link href="/admin" className="inline-flex min-h-11 items-center rounded-full border border-fil px-4 text-sm transition-colors hover:border-encre">
+                  Administration
+                </Link>
+              )}
+              <Link href="/compte" className="inline-flex min-h-11 items-center gap-2 font-display text-[17px] text-encre/85 hover:text-encre">
+                <IconeCompte />
+                {utilisateur.nom.split(" ")[0]}
               </Link>
-            ))}
-          </nav>
+              <form action={deconnecter}>
+                <button type="submit" className="min-h-11 text-sm text-gris transition-colors hover:text-encre">
+                  Se déconnecter
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link href="/connexion" className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap font-display text-[17px] text-encre/85 hover:text-encre">
+                <IconeCompte />
+                Se connecter
+              </Link>
+              <Link
+                href="/inscription"
+                className="inline-flex min-h-11 items-center rounded-full bg-encre px-5 text-sm font-medium text-creme transition-colors hover:bg-terracotta"
+              >
+                Créer un compte
+              </Link>
+            </>
+          )}
+        </div>
 
-          <div className="hidden items-center gap-4 md:flex lg:gap-6">
-            {utilisateur ? (
-              <>
-                {utilisateur.role === "artiste" && (
-                  <Link
-                    href="/espace-artiste"
-                    className="whitespace-nowrap text-[12px] uppercase tracking-[0.16em] text-encre/80 underline-offset-4 hover:underline"
-                  >
-                    Espace artiste
-                  </Link>
-                )}
-                {utilisateur.role === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="text-[12px] uppercase tracking-[0.16em] text-encre/80 underline-offset-4 hover:underline"
-                  >
-                    Administration
-                  </Link>
-                )}
-                <Link
-                  href="/compte"
-                  className="flex items-center gap-2 font-display text-[16px] text-encre/85 underline-offset-4 hover:underline"
-                >
-                  <IconeCompte />
-                  {utilisateur.nom.split(" ")[0]}
-                </Link>
-                <form action={deconnecter}>
-                  <button
-                    type="submit"
-                    className="text-[12px] uppercase tracking-[0.16em] text-gris transition-colors hover:text-encre"
-                  >
-                    Se déconnecter
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/connexion"
-                  className="flex items-center gap-2 whitespace-nowrap font-display text-[16px] text-encre/85 underline-offset-4 hover:underline"
-                >
-                  <IconeCompte />
-                  Se connecter
-                </Link>
-                <Link
-                  href="/inscription"
-                  className="text-[12px] uppercase tracking-[0.16em] text-encre/80 underline-offset-4 hover:underline"
-                >
-                  Créer un compte
-                </Link>
-              </>
-            )}
-          </div>
-
+        <div className="ml-auto md:hidden">
           <MenuMobile
             contact={CONTACT}
             liens={[
               ...LIENS,
               ...(utilisateur
                 ? [
-                    ...(utilisateur.role === "admin"
-                      ? [{ href: "/admin", label: "Administration" }]
-                      : []),
-                    ...(utilisateur.role === "artiste"
-                      ? [{ href: "/espace-artiste", label: "Espace artiste" }]
-                      : []),
+                    ...(utilisateur.role === "admin" ? [{ href: "/admin", label: "Administration" }] : []),
+                    ...(utilisateur.role === "artiste" ? [{ href: "/espace-artiste", label: "Espace artiste" }] : []),
                     { href: "/compte", label: "Mon compte" },
                   ]
                 : [
@@ -165,14 +147,6 @@ export function Header({
             connecte={Boolean(utilisateur)}
           />
         </div>
-
-        <Link
-          href="/"
-          aria-label="Accueil ArTova"
-          className="absolute left-0 top-0 z-50 flex h-20 w-36 items-center justify-center border-b border-r border-fil bg-craie sm:h-24 sm:w-44 md:h-28 md:w-56"
-        >
-          <LogoComplet className="h-7 w-auto sm:h-8 md:h-10" />
-        </Link>
       </div>
     </header>
   );
@@ -190,7 +164,7 @@ export function Footer() {
           </p>
         </div>
         <nav aria-label="Navigation pied de page" className="text-sm">
-          <h2 className="text-[11px] uppercase tracking-[0.2em] text-gris">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-gris">
             Explorer
           </h2>
           <ul className="mt-4 space-y-2 text-encre/80">
@@ -209,7 +183,7 @@ export function Footer() {
           </ul>
         </nav>
         <div className="text-sm">
-          <h2 className="text-[11px] uppercase tracking-[0.2em] text-gris">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-gris">
             Contact
           </h2>
           <ul className="mt-4 space-y-2 text-encre/80">
@@ -242,7 +216,7 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-fil px-4 py-5 text-center text-[11px] uppercase tracking-[0.16em] text-gris">
+      <div className="border-t border-fil px-4 py-5 text-center text-xs uppercase tracking-[0.16em] text-gris">
         © {new Date().getFullYear()} ArTova · Lomé, Togo. Tous droits réservés.
       </div>
     </footer>

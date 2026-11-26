@@ -34,7 +34,7 @@ export default async function PageCommande({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-gris">Commande</p>
+      <p className="text-xs uppercase tracking-[0.22em] text-gris">Commande</p>
       <h1 className="mt-3 font-display text-4xl md:text-5xl">Votre commande</h1>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gris">
         Vérifiez l'œuvre puis confirmez : votre commande est transmise par

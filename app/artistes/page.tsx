@@ -39,7 +39,7 @@ export default async function PageArtistes({
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-14 md:px-8 md:pb-24 md:pt-20">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-gris">
+      <p className="text-xs uppercase tracking-[0.22em] text-gris">
         Découverte
       </p>
       <h1 className="mt-3 font-display text-4xl sm:text-5xl md:text-6xl">Nos artistes</h1>
@@ -78,7 +78,7 @@ export default async function PageArtistes({
                 <Link
                   key={filtre.valeur || "tous"}
                   href={filtre.valeur ? `/artistes?discipline=${filtre.valeur}` : "/artistes"}
-                  className={`shrink-0 border px-4 py-2 text-[11px] uppercase tracking-[0.14em] ${actif ? "border-encre bg-encre text-craie" : "border-fil text-gris"}`}
+                  className={`shrink-0 border px-4 py-2 text-xs uppercase tracking-[0.14em] ${actif ? "border-encre bg-encre text-craie" : "border-fil text-gris"}`}
                 >
                   {filtre.label}
                 </Link>

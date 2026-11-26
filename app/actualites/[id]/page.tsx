@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { VueArticle } from "@/components/VueArticle";
 import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL, urlAbsolue } from "@/lib/site";
@@ -15,6 +16,12 @@ import {
 } from "@/lib/actualites";
 import { contenuLangue, lirePersonnes } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, langueDe } from "@/lib/actualites-i18n";
+import { enqueterSiBesoin } from "@/lib/actualites-actualiser";
+import { comptesParSlug } from "@/lib/actualites-personnes";
+import { slugTag } from "@/lib/actualites-tags";
+
+// La page peut lancer l'enquête de l'article qu'on lit (recherche web) : 60 s est le plafond de Vercel.
+export const maxDuration = 60;
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ lang?: string }> };
 
@@ -66,11 +73,17 @@ export default async function PageActualite({ params, searchParams }: Props) {
 
   const personnesBrutes = lirePersonnes(a.personnes);
   const portraits = await portraitsArtistes(personnesBrutes.flatMap((p) => (p.slug ? [p.slug] : [])));
+  const comptes = await comptesParSlug(personnesBrutes.map((p) => slugTag(p.nom)));
   const personnes = personnesBrutes.map((p) => ({
-    nom: p.nom,
+    ...p,
     slug: p.slug && portraits.has(p.slug) ? p.slug : null,
     portrait_url: p.slug ? (portraits.get(p.slug) ?? null) : null,
+    nb: comptes.get(slugTag(p.nom)) ?? 1,
   }));
+  // Un article important pas encore documenté : l'enquête démarre après la réponse.
+  if (a.statut === "publie" && a.categorie !== "decouverte" && a.importance >= 5 && !a.enquete) {
+    after(() => enqueterSiBesoin(a.id));
+  }
   const site = SITE_URL;
   const c = contenuLangue(a, langue);
   const image = a.image_url ? urlAbsolue(a.image_url) : undefined;

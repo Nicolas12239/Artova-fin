@@ -61,7 +61,7 @@ export default async function PageAdminOeuvres({
                   <p className="font-display text-lg leading-tight">
                     {oeuvre.titre}
                     {oeuvre.oeuvre_maitre === 1 && (
-                      <span className="ml-2 align-middle text-[10px] tracking-[0.15em] text-terracotta">
+                      <span className="ml-2 align-middle text-xs tracking-[0.15em] text-terracotta">
                         MAÎTRESSE
                       </span>
                     )}

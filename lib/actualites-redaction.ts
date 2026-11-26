@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { empreinteUrl } from "./actualites-flux";
-import type { Categorie } from "./actualites-commun";
+import type { Categorie, PersonneCitee } from "./actualites-commun";
 import type { Portee } from "./actualites-sources";
 
 export interface ArticleRedaction {
@@ -28,7 +28,9 @@ export interface ArticleRedaction {
   images?: string;
   credit_image?: string;
   // Personnes citées (nom et, si elle existe, page de l'artiste sur ArTova).
-  personnes?: { nom: string; slug?: string | null }[];
+  personnes?: (Omit<PersonneCitee, "slug"> & { slug?: string | null })[];
+  // Dossier de recherche : pages consultées pour établir les noms, rôles et visuels.
+  enquete?: { maj: string; sources: { titre: string; url: string }[] };
   // Textes en anglais et en allemand ; le français est le texte de base.
   traductions?: Partial<Record<"en" | "de", { titre: string; resume: string; contenu?: string }>>;
   // À augmenter pour réécrire la fiche déjà publiée (voir lib/db.ts).
@@ -83,9 +85,26 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     categorie: "expositions",
     importance: 9,
     publie_le: "2026-11-24T10:00:00Z",
-    revision: 5,
+    revision: 6,
     videos: "https://www.instagram.com/artova.corp/",
-    personnes: [{ nom: "Amegne Blibo" }, { nom: "Missoh Kossi David" }, { nom: "Amouzou Art-Ayi" }, { nom: "Alvine La Plume Divine" }, { nom: "Julien Art Creation" }, { nom: "Johnford" }, { nom: "Professeur Jacques" }, { nom: "Christofort" }, { nom: "Miss Flora" }, { nom: "Wayiii" }, { nom: "Kim Pillar" }, { nom: "C. Koudakpo" }, { nom: "Marie C. Eusebio" }, { nom: "Robosso" }, { nom: "Al Bayan Kierfel" }, { nom: "Eli Dush" }],
+    personnes: [
+      { nom: "Amegne Blibo", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Missoh Kossi David", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Amouzou Art-Ayi", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Alvine La Plume Divine", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Julien Art Creation", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Johnford", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Professeur Jacques", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Christofort", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Miss Flora", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Wayiii", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Kim Pillar", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "C. Koudakpo", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Marie C. Eusebio", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Robosso", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Al Bayan Kierfel", role: "artiste", note: "Créateur retenu à l'issue du casting ouvert de l'exposition." },
+      { nom: "Eli Dush", role: "commissaire", note: "Assure la curation et la direction artistique de l'exposition et y présente son œuvre « Extension mystique ».", profil: "https://cultureaupluriel.wordpress.com/2026/11/24/extension-mystique-le-sacre-du-cheveu-avec-eli-dush/" },
+    ],
     evenement_debut: "2026-11-23",
     evenement_fin: "2026-11-29",
     lieu: "Nutafe Togo, Hédzranawoé Tingamé, Lomé",
@@ -144,8 +163,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     categorie: "expositions",
     importance: 8,
     publie_le: "2026-11-25T08:00:00Z",
-    revision: 3,
-    personnes: [{ nom: "Laka" }, { nom: "Jean-Daniel Rohrer" }],
+    revision: 4,
+    personnes: [{ nom: "Laka", role: "artiste", note: "Expose à la galerie ARTEMIS avec Jean-Daniel Rohrer." }, { nom: "Jean-Daniel Rohrer", role: "artiste", note: "Expose à la galerie ARTEMIS avec Laka." }],
     evenement_debut: "2026-11-13",
     evenement_fin: "2026-11-25",
     lieu: "Galerie ARTEMIS, Lomé",
@@ -191,9 +210,9 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     importance: 8,
     publie_le: "2026-11-25T09:00:00Z",
     lieu: "Musée Paul Ahyi, Agnassan, Lomé",
-    revision: 5,
+    revision: 6,
     videos: "https://www.instagram.com/artova.corp/",
-    personnes: [{ nom: "Barreso'o Ebene" }],
+    personnes: [{ nom: "Barreso'o Ebene", role: "artiste", note: "Artiste d'origine camerounaise, exposé au musée Paul Ahyi." }],
     traductions: {
       en: {
         titre: "Barreso'o Ebene, Cameroonian hyperrealist painter, exhibits at the Paul Ahyi Museum",
@@ -241,8 +260,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     evenement_debut: "2026-11-27",
     lieu: "Lomé",
     artiste_slug: "a-sika",
-    revision: 5,
-    personnes: [{ nom: "A. Sika", slug: "a-sika" }],
+    revision: 6,
+    personnes: [{ nom: "A. Sika", slug: "a-sika", role: "artiste", note: "Participe à l'exposition collective du vendredi 27 novembre 2026 à Lomé." }],
     traductions: {
       en: {
         titre: "A. Sika: a group exhibition this Friday in Lomé",
@@ -334,8 +353,8 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     importance: 7,
     publie_le: "2026-11-25T13:00:00Z",
     artiste_slug: "a-sika",
-    personnes: [{ nom: "A. Sika", slug: "a-sika" }, { nom: "Kossi Assou" }, { nom: "Tessi Kodjovi" }],
-    revision: 2,
+    personnes: [{ nom: "A. Sika", slug: "a-sika", role: "artiste", note: "Plasticienne autodidacte de Lomé, installée à Wognomé." }, { nom: "Kossi Assou", role: "intervenant", note: "Formateur ; a réuni six artistes, dont A. Sika, pour une masterclass le 5 octobre 2024." }, { nom: "Tessi Kodjovi", role: "invite", note: "Artiste associé, avec A. Sika, aux rencontres de Lomé Accueil du 15 janvier 2026." }],
+    revision: 3,
     videos: "https://www.instagram.com/ablasikaakpaloo/",
     traductions: {
       en: {

@@ -6,7 +6,7 @@ import { COMMISSION_ARTOVA } from "@/lib/types";
 
 const champ =
   "w-full border-b border-encre/30 bg-transparent py-3 text-sm outline-none transition-colors focus:border-encre";
-const libelle = "mb-1 block text-[11px] uppercase tracking-[0.18em] text-gris";
+const libelle = "mb-1 block text-xs uppercase tracking-[0.18em] text-gris";
 const bouton =
   "w-full bg-encre px-6 py-4 text-[12px] uppercase tracking-[0.18em] text-craie transition-colors hover:bg-terracotta disabled:opacity-50";
 
@@ -111,7 +111,7 @@ export function EncartCommission({ avecAcceptation = false }: { avecAcceptation?
         <span className="font-display text-4xl leading-none text-terracotta">
           {COMMISSION_ARTOVA} %
         </span>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-gris">
+        <p className="text-xs uppercase tracking-[0.18em] text-gris">
           Commission ArTova
         </p>
       </div>

@@ -24,3 +24,20 @@ export async function reserverCollecte(): Promise<boolean> {
   ]);
   return r.affectedRows > 0;
 }
+
+// Une enquête (recherche web par IA) au plus toutes les 10 minutes.
+export const INTERVALLE_ENQUETE_MS = 10 * 60 * 1000;
+const CLE_ENQUETE = createHash("sha1").update("etat:enquete").digest("hex");
+
+export async function reserverEnquete(): Promise<boolean> {
+  await execute("INSERT IGNORE INTO actualites_vues (empreinte, vu_le) VALUES (?, ?)", [
+    CLE_ENQUETE,
+    new Date("2000-01-01T00:00:00Z"),
+  ]);
+  const r = await execute("UPDATE actualites_vues SET vu_le = ? WHERE empreinte = ? AND vu_le < ?", [
+    new Date(),
+    CLE_ENQUETE,
+    new Date(Date.now() - INTERVALLE_ENQUETE_MS),
+  ]);
+  return r.affectedRows > 0;
+}

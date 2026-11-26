@@ -5,7 +5,7 @@ import { passerCommande } from "@/app/actions/commande";
 
 const champ =
   "w-full border-b border-encre/30 bg-transparent py-3 text-sm outline-none transition-colors focus:border-encre";
-const libelle = "mb-1 block text-[11px] uppercase tracking-[0.18em] text-gris";
+const libelle = "mb-1 block text-xs uppercase tracking-[0.18em] text-gris";
 
 export function FormCommande({
   oeuvreId,

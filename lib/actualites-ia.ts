@@ -7,7 +7,7 @@ import { nettoyerHtml, tronquer } from "./actualites-flux";
 
 // Modèle par défaut recommandé par Anthropic ; surchargeable (par exemple par
 // « claude-haiku-5-5 », nettement moins cher) avec ACTUALITES_MODELE.
-const MODELE = process.env.ACTUALITES_MODELE || "claude-opus-5-5";
+export const MODELE = process.env.ACTUALITES_MODELE || "claude-opus-5-5";
 
 const CATEGORIES = [
   "expositions", "marche", "artistes", "evenements", "institutions", "patrimoine", "creation", "general",

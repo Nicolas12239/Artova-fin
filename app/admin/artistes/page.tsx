@@ -78,7 +78,7 @@ export default async function PageAdminArtistes({
                     {artiste.nom}
                     {artiste.statut !== "publie" && (
                       <span
-                        className={`ml-2 align-middle text-[10px] uppercase tracking-[0.15em] ${artiste.statut === "en_attente" ? "text-terracotta" : "text-encre/50"}`}
+                        className={`ml-2 align-middle text-xs uppercase tracking-[0.15em] ${artiste.statut === "en_attente" ? "text-terracotta" : "text-encre/50"}`}
                       >
                         {LIBELLE_STATUT_ARTISTE[artiste.statut]}
                       </span>

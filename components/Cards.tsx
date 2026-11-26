@@ -21,11 +21,11 @@ export function ArtworkCard({
           className="max-h-full w-auto max-w-full object-contain shadow-[0_12px_32px_rgba(27,26,23,0.16)] transition-transform duration-700 group-hover:scale-[1.03]"
         />
         {oeuvre.statut !== "disponible" && (
-          <span className="absolute left-3 top-3 border border-fil bg-craie px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-gris">
+          <span className="absolute left-3 top-3 border border-fil bg-craie px-2 py-1 text-xs uppercase tracking-[0.16em] text-gris">
             {oeuvre.statut === "reserve" ? "Réservée" : "Vendue"}
           </span>
         )}
-        <span className="absolute inset-x-0 bottom-0 translate-y-full bg-encre/90 py-3 text-center text-[11px] uppercase tracking-[0.18em] text-craie transition-transform duration-300 group-hover:translate-y-0">
+        <span className="absolute inset-x-0 bottom-0 translate-y-full bg-encre/90 py-3 text-center text-xs uppercase tracking-[0.18em] text-craie transition-transform duration-300 group-hover:translate-y-0">
           Voir l'œuvre
         </span>
       </div>
@@ -66,7 +66,7 @@ export function ArtistCard({
           alt={artiste.nom}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
         />
-        <span className="absolute inset-x-0 bottom-0 translate-y-full bg-encre/90 py-3 text-center text-[11px] uppercase tracking-[0.18em] text-craie transition-transform duration-300 group-hover:translate-y-0">
+        <span className="absolute inset-x-0 bottom-0 translate-y-full bg-encre/90 py-3 text-center text-xs uppercase tracking-[0.18em] text-craie transition-transform duration-300 group-hover:translate-y-0">
           Voir l'univers
         </span>
       </div>

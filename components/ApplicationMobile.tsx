@@ -99,7 +99,7 @@ export function BandeauInstallation() {
             setInvitation(null);
             setFerme(true);
           }}
-          className="shrink-0 bg-encre px-4 py-3 text-[11px] uppercase tracking-[0.16em] text-craie"
+          className="shrink-0 bg-encre px-4 py-3 text-xs uppercase tracking-[0.16em] text-craie"
         >
           Installer
         </button>

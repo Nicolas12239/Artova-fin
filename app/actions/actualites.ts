@@ -12,6 +12,8 @@ import { adresseSure, nettoyerHtml } from "@/lib/actualites-flux";
 import { collecterActualites } from "@/lib/actualites-collecte";
 import { estCategorie, estPortee, lireVideo } from "@/lib/actualites";
 import { estLangue, type Langue } from "@/lib/actualites-i18n";
+import { enqueterActualite } from "@/lib/actualites-recherche";
+import { lirePersonnes } from "@/lib/actualites-commun";
 
 export type EtatActualite = { erreur?: string; succes?: string } | null;
 
@@ -175,6 +177,24 @@ export async function collecterMaintenant(
   }
 }
 
+// Lance (ou relance) l'enquête d'un article : noms, rôles, photos et vidéos, avec la
+// recherche web par IA quand la clé est disponible, sinon portraits libres de droits.
+export async function approfondirActualite(id: number): Promise<EtatActualite> {
+  await exigerAdmin();
+  try {
+    const r = await enqueterActualite(id, { budgetMs: 52_000 });
+    if (!r) return { erreur: "Article introuvable." };
+    rafraichir();
+    const mode = r.mode === "ia" ? "recherche web par l'IA" : "portraits libres de droits uniquement (clé IA absente ou indisponible)";
+    return {
+      succes: `Enquête terminée (${mode}) : ${r.personnes} personne(s) dont ${r.nouveaux} nouvelle(s), ${r.portraits} portrait(s), ${r.photos} photo(s), ${r.videos} vidéo(s), ${r.sources} source(s).${r.erreur ? ` Avertissement : ${r.erreur}` : ""}`,
+    };
+  } catch (erreur) {
+    console.error("[ArTova] Enquête sur une actualité :", erreur);
+    return { erreur: `L'enquête a échoué : ${erreur instanceof Error ? erreur.message : "erreur inconnue"}` };
+  }
+}
+
 const dateIso = z
   .string()
   .trim()
@@ -265,8 +285,20 @@ export async function publierManuellement(
       )
     : [];
   const slugsArtistes = new Set(artistesTrouves.map((r) => r.slug));
+  // Une modification de l'administration garde le rôle, la photo et les liens déjà
+  // établis par l'enquête pour les noms conservés.
+  const anterieurs = d.id
+    ? lirePersonnes((await query<{ personnes: string | null }>("SELECT personnes FROM actualites WHERE id = ? LIMIT 1", [d.id]))[0]?.personnes)
+    : [];
+  const dossierParSlug = new Map(anterieurs.map((p) => [slugTag(p.nom), p]));
   const personnesJson = noms.length
-    ? JSON.stringify(noms.map((nom) => ({ nom, slug: slugsArtistes.has(slugTag(nom)) ? slugTag(nom) : null })))
+    ? JSON.stringify(
+        noms.map((nom) => ({
+          ...(dossierParSlug.get(slugTag(nom)) ?? {}),
+          nom,
+          slug: slugsArtistes.has(slugTag(nom)) ? slugTag(nom) : null,
+        })),
+      )
     : null;
   const traduction = (langue: "en" | "de") => {
     const titre = d[`titre_${langue}`] ?? "";

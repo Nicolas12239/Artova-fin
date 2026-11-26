@@ -19,7 +19,7 @@ function Etape({ faite, children }: { faite: boolean; children: React.ReactNode 
   return (
     <li className="flex items-center gap-3 text-sm">
       <span
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] ${faite ? "border-encre bg-encre text-craie" : "border-encre/30 text-transparent"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs ${faite ? "border-encre bg-encre text-craie" : "border-encre/30 text-transparent"}`}
         aria-hidden="true"
       >
         ✓
@@ -82,11 +82,11 @@ export default async function PageEspaceArtiste({
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 md:px-8 md:pb-24 md:pt-20">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.22em] text-gris">Espace artiste</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-gris">Espace artiste</p>
           <h1 className="mt-3 break-words font-display text-4xl sm:text-5xl md:text-6xl">
             {artiste.nom}
           </h1>
-          <p className="mt-4 inline-flex items-center gap-2 border border-fil bg-craie px-3 py-1.5 text-[11px] uppercase tracking-[0.16em]">
+          <p className="mt-4 inline-flex items-center gap-2 border border-fil bg-craie px-3 py-1.5 text-xs uppercase tracking-[0.16em]">
             <span
               className={`h-2 w-2 rounded-full ${artiste.statut === "publie" ? "bg-[#3f7d4e]" : artiste.statut === "en_attente" ? "bg-[#d9a441]" : "bg-gris/50"}`}
               aria-hidden="true"
@@ -233,7 +233,7 @@ export default async function PageEspaceArtiste({
                     <p className="mt-1 text-xs text-gris">
                       {formatFcfa(oeuvre.prix_fcfa)} · {LIBELLE_STATUT_OEUVRE[oeuvre.statut]}
                     </p>
-                    <div className="mt-3 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em]">
+                    <div className="mt-3 flex items-center gap-4 text-xs uppercase tracking-[0.14em]">
                       <Link
                         href={`/espace-artiste?onglet=oeuvres&edit=${oeuvre.id}`}
                         className="underline underline-offset-4 hover:no-underline"
@@ -257,7 +257,7 @@ export default async function PageEspaceArtiste({
                 {initialOeuvre ? "Modifier l'œuvre" : "Ajouter une œuvre"}
               </h2>
               {initialOeuvre && (
-                <Link href="/espace-artiste?onglet=oeuvres" className="text-[11px] uppercase tracking-[0.14em] text-gris hover:text-encre">
+                <Link href="/espace-artiste?onglet=oeuvres" className="text-xs uppercase tracking-[0.14em] text-gris hover:text-encre">
                   Annuler
                 </Link>
               )}

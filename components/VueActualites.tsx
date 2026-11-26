@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CarteActualite, CarteAgenda, CarteVideo, LigneBreve, VedetteActualite } from "./ActualiteCards";
 import { NavActu } from "./NavActu";
+import { TitreSection } from "./TitreSection";
 import {
   dateEditoriale,
   type Actualite,
@@ -42,8 +43,8 @@ const ZONES = [undefined, "togo", "afrique", "monde"] as const;
 const CATEGORIES_ORDRE: Categorie[] = ["decouverte", "expositions", "marche", "artistes", "evenements", "institutions", "patrimoine", "creation", "general"];
 const RUBRIQUES = [undefined, ...CATEGORIES_ORDRE] as const;
 
-// Page d'accueil de l'actualité : titre de presse, « à la une » plein cadre,
-// agenda de Lomé, colonnes d'articles et brèves. Sans accès à la base de données.
+// Page d'accueil de l'actualité : « à la une » plein cadre, agenda de Lomé,
+// découvertes, vidéos, colonne d'articles et brèves. Sans accès à la base de données.
 export function VueActualites({ langue, q = "", portee, categorie, page, vedette, articles, enBref, agenda, enVideo, decouvertes = [], total, suite, admin }: DonneesVueActualites) {
   const t = TEXTES[langue];
   const recherche = q.trim().length > 0;
@@ -51,41 +52,43 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
   const premierePage = page === 1;
   const montrerAgenda = premierePage && !categorie && !q.trim() && (!portee || portee === "togo") && agenda.length > 0;
   const lien = (f: { portee?: Portee; categorie?: Categorie; page?: number }) => avecLangue(chemin({ ...f, q: q || undefined }), langue);
+  // Rangée de cartes : défilement horizontal aimanté sur mobile, grille ensuite.
+  const rangee = "defile-x -mx-4 px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-8 sm:gap-y-12 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3";
 
   return (
     <div lang={langue}>
       <NavActu langue={langue} active={categorie === "decouverte" ? "decouvertes" : "une"} chemin={chemin({ portee, categorie, page, q: q || undefined })} q={q} />
-      <header className="border-b-[5px] border-encre bg-craie">
-        <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 md:px-8 md:pt-10">
+      <header className="border-b border-fil bg-craie">
+        <div className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 md:px-8 md:pb-10 md:pt-14">
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-            <h1 className="font-condense text-[3.5rem] font-bold uppercase leading-[0.9] sm:text-7xl md:text-[7.5rem]">
-              {t.titreSection}
-            </h1>
-            <p className="pb-1.5 font-condense text-lg font-semibold uppercase tracking-[0.06em] sm:text-right">
-              {dateEditoriale(new Date(), langue)}
-              <span className="block text-sm font-medium normal-case tracking-normal text-gris">{t.baseline}</span>
+            <h1 className="font-display text-[3.6rem] font-medium leading-[0.92] sm:text-7xl md:text-[6.5rem]">{t.titreSection}</h1>
+            <p className="pb-1.5 text-sm text-gris sm:text-right">
+              <span className="block font-medium text-encre">{dateEditoriale(new Date(), langue)}</span>
+              {t.baseline}
             </p>
           </div>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-gris">{t.intro}</p>
+          <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-gris">{t.intro}</p>
 
-          <nav aria-label={t.zonesAria} className="-mx-4 mt-8 flex gap-7 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            {ZONES.map((valeur) => {
-              const actif = portee === valeur;
-              return (
-                <Link
-                  key={valeur ?? "tout"}
-                  href={lien({ portee: valeur, categorie })}
-                  aria-current={actif ? "page" : undefined}
-                  className={`shrink-0 border-b-[3px] pb-1 font-condense text-[1.6rem] font-bold uppercase leading-none tracking-[0.02em] transition-colors ${
-                    actif ? "border-terracotta text-terracotta" : "border-transparent text-encre/55 hover:text-encre"
-                  }`}
-                >
-                  {valeur ? t.zones[valeur] : t.aLaUne}
-                </Link>
-              );
-            })}
+          <nav aria-label={t.zonesAria} className="defile-x -mx-4 mt-8 px-4 sm:mx-0 sm:px-0">
+            <div className="inline-flex rounded-full border border-fil bg-creme p-1">
+              {ZONES.map((valeur) => {
+                const actif = portee === valeur;
+                return (
+                  <Link
+                    key={valeur ?? "tout"}
+                    href={lien({ portee: valeur, categorie })}
+                    aria-current={actif ? "page" : undefined}
+                    className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-medium transition-colors duration-150 ${
+                      actif ? "bg-terracotta text-craie" : "text-encre/70 hover:text-encre"
+                    }`}
+                  >
+                    {valeur ? t.zones[valeur] : t.aLaUne}
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
-          <nav aria-label={t.rubriquesAria} className="-mx-4 flex gap-6 overflow-x-auto border-t border-fil px-4 py-3.5 sm:mx-0 sm:px-0">
+          <nav aria-label={t.rubriquesAria} className="defile-x -mx-4 mt-4 px-4 sm:mx-0 sm:px-0">
             {RUBRIQUES.map((valeur) => {
               const actif = categorie === valeur;
               return (
@@ -93,8 +96,8 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
                   key={valeur ?? "toutes"}
                   href={lien({ portee, categorie: valeur })}
                   aria-current={actif ? "page" : undefined}
-                  className={`shrink-0 font-condense text-[15px] font-semibold uppercase tracking-[0.06em] transition-colors ${
-                    actif ? "text-terracotta underline decoration-2 underline-offset-[6px]" : "text-gris hover:text-encre"
+                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm transition-colors duration-150 ${
+                    actif ? "border-encre bg-encre text-craie" : "border-fil text-encre/75 hover:border-encre hover:text-encre"
                   }`}
                 >
                   {valeur ? t.categories[valeur] : t.toutesRubriques}
@@ -106,9 +109,9 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
       </header>
 
       {recherche && (
-        <p role="status" className="mx-auto max-w-7xl px-4 pt-8 font-condense text-xl font-semibold uppercase tracking-[0.05em] sm:px-6 md:px-8">
+        <p role="status" className="mx-auto max-w-7xl px-4 pt-8 font-display text-2xl sm:px-6 md:px-8">
           {articles.length === 0 ? fmt(t.aucunResultat, { q }) : fmt(t.resultats[total === 1 ? 0 : 1], { n: total, q })}{" "}
-          <Link href={avecLangue("/actualites", langue)} className="ml-2 text-sm font-medium normal-case tracking-normal text-terracotta underline underline-offset-4">
+          <Link href={avecLangue("/actualites", langue)} className="ml-2 font-sans text-sm text-terracotta underline underline-offset-4">
             {t.effacer}
           </Link>
         </p>
@@ -116,13 +119,13 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
 
       {!vedette && articles.length === 0 ? (
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-8">
-          <div className="border border-fil bg-craie px-6 py-16 text-center">
+          <div className="rounded-3xl border border-fil bg-craie px-6 py-16 text-center">
             <p className="font-display text-3xl">{filtreActif ? t.videFiltre : t.vide}</p>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gris">
               {filtreActif ? t.videFiltreTexte : t.videTexte}
             </p>
             {filtreActif && (
-              <Link href={avecLangue("/actualites", langue)} className="mt-6 inline-block border-b border-terracotta pb-1 text-sm">
+              <Link href={avecLangue("/actualites", langue)} className="mt-6 inline-flex min-h-11 items-center rounded-full border border-encre px-6 text-sm font-medium hover:bg-encre hover:text-creme">
                 {t.voirTout}
               </Link>
             )}
@@ -139,11 +142,9 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
 
           {montrerAgenda && (
             <section aria-labelledby="agenda-lome" className="bg-panel">
-              <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8 md:py-12">
-                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t-[6px] border-encre pt-4">
-                  <h2 id="agenda-lome" className="font-condense text-4xl font-bold uppercase leading-none md:text-5xl">
-                    {t.agendaTitre}
-                  </h2>
+              <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16">
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                  <TitreSection id="agenda-lome">{t.agendaTitre}</TitreSection>
                   <p className="text-sm text-gris">
                     {t.agendaSous}{" "}
                     <Link href={avecLangue("/actualites/agenda", langue)} className="text-encre underline underline-offset-4 hover:text-terracotta">
@@ -151,7 +152,7 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
                     </Link>
                   </p>
                 </div>
-                <ul className="mt-6 grid gap-px bg-fil [grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr))]">
+                <ul className="defile-x -mx-4 mt-8 px-4 pb-2 md:mx-0 md:grid md:gap-3 md:overflow-visible md:px-0 md:pb-0 md:[grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr))]">
                   {agenda.map((a) => (
                     <CarteAgenda key={a.id} a={a} langue={langue} />
                   ))}
@@ -162,11 +163,9 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
 
           {premierePage && !filtreActif && decouvertes.length > 0 && (
             <section aria-labelledby="decouvertes-jour" className="border-b border-fil bg-craie">
-              <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8 md:py-12">
-                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t-[6px] border-encre pt-4">
-                  <h2 id="decouvertes-jour" className="font-condense text-4xl font-bold uppercase leading-none md:text-5xl">
-                    {t.decouvertesTitre}
-                  </h2>
+              <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16">
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                  <TitreSection id="decouvertes-jour">{t.decouvertesTitre}</TitreSection>
                   <p className="text-sm text-gris">
                     {t.decouvertesSous}{" "}
                     <Link href={avecLangue("/actualites?categorie=decouverte", langue)} className="text-encre underline underline-offset-4 hover:text-terracotta">
@@ -174,9 +173,11 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
                     </Link>
                   </p>
                 </div>
-                <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+                <div className={`mt-8 ${rangee}`}>
                   {decouvertes.map((a) => (
-                    <CarteActualite key={a.id} a={a} langue={langue} />
+                    <div key={a.id} className="w-[82%] sm:w-auto">
+                      <CarteActualite a={a} langue={langue} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -184,14 +185,14 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
           )}
 
           {premierePage && !filtreActif && enVideo.length > 0 && (
-            <section aria-labelledby="bande-video" className="border-y border-fil bg-craie">
-              <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8 md:py-12">
-                <h2 id="bande-video" className="border-t-[6px] border-encre pt-3 font-condense text-4xl font-bold uppercase leading-none md:text-5xl">
-                  {t.aVoirVideo}
-                </h2>
-                <div className="mt-6 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            <section aria-labelledby="bande-video" className="border-b border-fil bg-creme">
+              <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16">
+                <TitreSection id="bande-video">{t.aVoirVideo}</TitreSection>
+                <div className={`mt-8 ${rangee}`}>
                   {enVideo.map((a) => (
-                    <CarteVideo key={a.id} a={a} langue={langue} />
+                    <div key={a.id} className="w-[82%] sm:w-auto">
+                      <CarteVideo a={a} langue={langue} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -199,20 +200,13 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
           )}
 
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16">
-            <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-0">
-              <div className="lg:pr-10">
-                <h2 className="border-t-[6px] border-encre pt-3 font-condense text-4xl font-bold uppercase leading-none">
-                  {filtreActif ? t.articles : t.dernieres}
-                </h2>
+            <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12">
+              <div>
+                <TitreSection>{filtreActif ? t.articles : t.dernieres}</TitreSection>
                 {articles.length > 0 ? (
-                  <div className="mt-2 grid sm:grid-cols-2">
+                  <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2">
                     {articles.map((a) => (
-                      <div
-                        key={a.id}
-                        className="border-t border-fil py-8 first:border-t-0 sm:[&:nth-child(2)]:border-t-0 sm:[&:nth-child(even)]:border-l sm:[&:nth-child(even)]:pl-7 sm:[&:nth-child(odd)]:pr-7"
-                      >
-                        <CarteActualite a={a} langue={langue} />
-                      </div>
+                      <CarteActualite key={a.id} a={a} langue={langue} />
                     ))}
                   </div>
                 ) : (
@@ -220,16 +214,16 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
                 )}
               </div>
 
-              <aside aria-labelledby="en-bref" className="lg:border-l lg:border-fil lg:pl-8">
-                <h2 id="en-bref" className="border-t-[6px] border-encre pt-3 font-condense text-4xl font-bold uppercase leading-none">
+              <aside aria-labelledby="en-bref" className="lg:sticky lg:top-36 lg:self-start">
+                <TitreSection id="en-bref" niveau={2}>
                   {t.enBref}
-                </h2>
+                </TitreSection>
                 <ul className="mt-4">
                   {enBref.map((a) => (
                     <LigneBreve key={a.id} a={a} langue={langue} />
                   ))}
                 </ul>
-                <div className="mt-8 border border-fil bg-craie p-5 text-sm leading-relaxed text-gris">
+                <div className="mt-8 rounded-2xl border border-fil bg-craie p-5 text-sm leading-relaxed text-gris">
                   <p className="font-display text-xl text-encre">{t.inviteTitre}</p>
                   <p className="mt-2">
                     {fmt(t.inviteTexte, { mail: "artovacorp@gmail.com" })}
@@ -238,9 +232,9 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
               </aside>
             </div>
 
-            <nav aria-label={t.pagesAria} className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-fil pt-6 font-condense text-base font-semibold uppercase tracking-[0.06em]">
+            <nav aria-label={t.pagesAria} className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-fil pt-6 text-sm">
               {page > 1 ? (
-                <Link href={lien({ portee, categorie, page: page - 1 })} className="underline underline-offset-4 hover:text-terracotta">
+                <Link href={lien({ portee, categorie, page: page - 1 })} className="inline-flex min-h-11 items-center rounded-full border border-encre px-6 font-medium transition-colors hover:bg-encre hover:text-creme">
                   {t.plusRecentes}
                 </Link>
               ) : (
@@ -248,7 +242,7 @@ export function VueActualites({ langue, q = "", portee, categorie, page, vedette
               )}
               <span className="text-gris">{nombre(t.publications, total)}</span>
               {suite ? (
-                <Link href={lien({ portee, categorie, page: page + 1 })} className="underline underline-offset-4 hover:text-terracotta">
+                <Link href={lien({ portee, categorie, page: page + 1 })} className="inline-flex min-h-11 items-center rounded-full border border-encre px-6 font-medium transition-colors hover:bg-encre hover:text-creme">
                   {t.plusAnciennes}
                 </Link>
               ) : (

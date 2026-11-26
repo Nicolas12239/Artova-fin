@@ -31,7 +31,7 @@ export async function generateMetadata({
 
 function Onglets({ artiste, next }: { artiste: boolean; next?: string }) {
   const onglet = (actif: boolean) =>
-    `flex-1 py-3 text-center text-[11px] uppercase tracking-[0.18em] transition-colors ${actif ? "bg-encre text-craie" : "text-gris hover:text-encre"}`;
+    `flex-1 py-3 text-center text-xs uppercase tracking-[0.18em] transition-colors ${actif ? "bg-encre text-craie" : "text-gris hover:text-encre"}`;
   return (
     <nav aria-label="Type de compte" className="mx-auto mt-8 flex max-w-md border border-encre/20 p-1">
       <Link
@@ -85,7 +85,7 @@ export default async function PageInscription({
       <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20 md:px-8 md:py-24">
         <div className="text-center">
           <Monogramme className="mx-auto h-12 w-auto" />
-          <p className="mt-6 text-[11px] uppercase tracking-[0.22em] text-terracotta">
+          <p className="mt-6 text-xs uppercase tracking-[0.22em] text-terracotta">
             Espace artiste
           </p>
           <h1 className="mt-3 font-display text-4xl sm:text-5xl md:text-6xl">

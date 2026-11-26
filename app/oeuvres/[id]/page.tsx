@@ -92,7 +92,7 @@ export default async function PageOeuvre({
       />
       <nav
         aria-label="Fil d'Ariane"
-        className="flex flex-wrap items-center gap-2 pb-6 pt-14 text-[11px] uppercase tracking-[0.16em] text-gris md:pt-16"
+        className="flex flex-wrap items-center gap-2 pb-6 pt-14 text-xs uppercase tracking-[0.16em] text-gris md:pt-16"
       >
         <Link href="/" className="hover:text-encre">Accueil</Link>
         <span aria-hidden="true">/</span>
@@ -115,7 +115,7 @@ export default async function PageOeuvre({
         </div>
         <div>
           <p
-            className="text-[11px] uppercase tracking-[0.22em]"
+            className="text-xs uppercase tracking-[0.22em]"
             style={{ color: oeuvre.theme_accent }}
           >
             {oeuvre.type}
@@ -134,15 +134,15 @@ export default async function PageOeuvre({
 
           <dl className="mt-8 max-w-xl">
             <div className="grid grid-cols-2 gap-4 border-t border-fil py-4">
-              <dt className="text-[11px] uppercase tracking-[0.18em] text-gris">Dimensions</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-gris">Dimensions</dt>
               <dd className="text-sm">{oeuvre.dimensions ?? "Non précisées"}</dd>
             </div>
             <div className="grid grid-cols-2 gap-4 border-t border-fil py-4">
-              <dt className="text-[11px] uppercase tracking-[0.18em] text-gris">Technique</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-gris">Technique</dt>
               <dd className="text-sm">{oeuvre.technique ?? "Non précisée"}</dd>
             </div>
             <div className="grid grid-cols-2 gap-4 border-t border-b border-fil py-4">
-              <dt className="text-[11px] uppercase tracking-[0.18em] text-gris">Statut</dt>
+              <dt className="text-xs uppercase tracking-[0.18em] text-gris">Statut</dt>
               <dd className="text-sm">{LIBELLE_STATUT_OEUVRE[oeuvre.statut]}</dd>
             </div>
           </dl>

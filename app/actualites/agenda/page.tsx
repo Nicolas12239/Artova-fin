@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
-import { actualiserSiBesoin } from "@/lib/actualites-actualiser";
+import { actualiserSiBesoin, enqueterSiBesoin } from "@/lib/actualites-actualiser";
 import Link from "next/link";
 import { CarteAgenda } from "@/components/ActualiteCards";
 import { NavActu } from "@/components/NavActu";
+import { TitreSection } from "@/components/TitreSection";
 import { agendaComplet, lienActualite } from "@/lib/actualites";
 import { contenuLangue, dateEditoriale, etatEvenement, type Actualite } from "@/lib/actualites-commun";
 import { TEXTES, avecLangue, langueDe } from "@/lib/actualites-i18n";
@@ -50,13 +51,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 function Bloc({ titre, liste, id, langue }: { titre: string; liste: Actualite[]; id: string; langue: "fr" | "en" | "de" }) {
   if (liste.length === 0) return null;
   return (
-    <section aria-labelledby={id} className="mt-12">
-      <h2 id={id} className="border-t-[6px] border-encre pt-3 font-condense text-4xl font-bold uppercase leading-none">
-        {titre}
-      </h2>
-      <ul className="mt-6 grid gap-px bg-fil [grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
+    <section aria-labelledby={id} className="mt-14">
+      <TitreSection id={id}>{titre}</TitreSection>
+      <ul className="mt-8 grid gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
         {liste.map((a) => (
-          <CarteAgenda key={a.id} a={a} langue={langue} />
+          <CarteAgenda key={a.id} a={a} langue={langue} pleine />
         ))}
       </ul>
     </section>
@@ -70,6 +69,7 @@ export default async function PageAgenda({ searchParams }: Props) {
   const langue = langueDe((await searchParams).lang);
   const t = TEXTES[langue];
   after(() => actualiserSiBesoin());
+  after(() => enqueterSiBesoin());
   const evenements = await agendaComplet().catch(() => []);
   const etat = (a: Actualite) => etatEvenement(a.evenement_debut as string, a.evenement_fin).ton;
   const enCours = evenements.filter((a) => etat(a) === "en_cours");
@@ -108,12 +108,12 @@ export default async function PageAgenda({ searchParams }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees).replace(/</g, "\\u003c") }}
       />
       <NavActu langue={langue} active="agenda" chemin="/actualites/agenda" />
-      <header className="border-b-[5px] border-encre bg-craie">
-        <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6 md:px-8 md:pt-10">
-          <h1 className="font-condense text-[3.2rem] font-bold uppercase leading-[0.92] sm:text-7xl md:text-[6.5rem]">
+      <header className="border-b border-fil bg-craie">
+        <div className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 md:px-8 md:pb-14 md:pt-14">
+          <h1 className="font-display text-[3rem] font-medium leading-[0.96] text-balance sm:text-7xl md:text-[5.5rem]">
             {t.agendaTitre}
           </h1>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-gris">
+          <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-gris">
             {t.agendaIntro} {dateEditoriale(new Date(), langue)}.
           </p>
         </div>
@@ -121,7 +121,7 @@ export default async function PageAgenda({ searchParams }: Props) {
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-2 sm:px-6 md:px-8">
         {evenements.length === 0 ? (
-          <p className="mt-12 border border-fil bg-craie px-6 py-14 text-center text-gris">{t.agendaVide}</p>
+          <p className="mt-12 rounded-2xl border border-fil bg-craie px-6 py-14 text-center text-gris">{t.agendaVide}</p>
         ) : (
           <>
             <Bloc id="en-cours" titre={t.agendaEnCours} liste={enCours} langue={langue} />
@@ -130,7 +130,7 @@ export default async function PageAgenda({ searchParams }: Props) {
           </>
         )}
 
-        <div className="mt-16 border border-fil bg-craie p-6 text-sm leading-relaxed text-gris md:p-8">
+        <div className="mt-16 rounded-3xl border border-fil bg-craie p-6 text-sm leading-relaxed text-gris md:p-8">
           <p className="font-display text-2xl text-encre">{t.agendaInviteTitre}</p>
           <p className="mt-2 max-w-xl">
             {t.agendaInviteTexte}{" "}

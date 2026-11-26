@@ -133,7 +133,7 @@ function LogoApple() {
 
 const champ =
   "w-full border-b border-encre/30 bg-transparent py-3 text-sm outline-none transition-colors focus:border-encre";
-const libelle = "mb-1 block text-[11px] uppercase tracking-[0.18em] text-gris";
+const libelle = "mb-1 block text-xs uppercase tracking-[0.18em] text-gris";
 const boutonSocial =
   "flex h-12 w-full items-center justify-center gap-3 rounded-full text-[14px] font-medium transition-colors disabled:opacity-50";
 const boutonPrincipal =
@@ -333,7 +333,7 @@ export function AuthFirebase({
         )}
       </div>
 
-      <div className="my-8 flex items-center gap-4 text-[11px] uppercase tracking-[0.2em] text-gris">
+      <div className="my-8 flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-gris">
         <span className="h-px flex-1 bg-fil" />
         ou avec votre e-mail
         <span className="h-px flex-1 bg-fil" />

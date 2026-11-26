@@ -63,6 +63,8 @@ export interface Actualite {
   personnes: string | null;
   // Traductions anglaise et allemande (JSON : { en: {titre, resume, contenu}, de: … }).
   traductions: string | null;
+  // Dossier de recherche (JSON : { maj, sources: [{ titre, url }] }), voir lireEnquete.
+  enquete: string | null;
   nb_likes: number;
   nb_commentaires: number;
 }
@@ -265,10 +267,37 @@ export function lireVideos(texte: string | null | undefined): VideoIntegree[] {
 
 // ─── Personnes citées ────────────────────────────────────────────────────────
 
+export type RolePersonne = "artiste" | "commissaire" | "organisateur" | "invite" | "laureat" | "intervenant";
+export const ROLES_PERSONNE: readonly RolePersonne[] = ["artiste", "commissaire", "organisateur", "invite", "laureat", "intervenant"];
+
 export interface PersonneCitee {
   nom: string;
   // Page de l'artiste sur ArTova, quand elle existe.
   slug: string | null;
+  // Ce que la personne a fait dans l'événement (exposant, commissaire, invité…).
+  role?: RolePersonne;
+  // Précision sourcée sur son rôle ou son œuvre (une phrase).
+  note?: string;
+  // Photo de la personne (adresse https) et son crédit ; page où l'on a trouvé l'information.
+  image?: string;
+  credit?: string;
+  url?: string;
+  // Profil public de la personne (Instagram, site…).
+  profil?: string;
+}
+
+// Adresse web acceptée dans un dossier : https uniquement (ou une image déjà hébergée par ArTova).
+export function urlHttps(valeur: unknown, autoriserFichiers = false): string | undefined {
+  if (typeof valeur !== "string") return undefined;
+  const v = valeur.trim();
+  if (autoriserFichiers && /^\/fichiers\/[\w-]+$/.test(v)) return v;
+  if (v.length > 600) return undefined;
+  try {
+    const u = new URL(v);
+    return u.protocol === "https:" ? u.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function lirePersonnes(brut: string | null | undefined): PersonneCitee[] {
@@ -276,11 +305,51 @@ export function lirePersonnes(brut: string | null | undefined): PersonneCitee[] 
   try {
     const v = JSON.parse(brut) as unknown;
     if (!Array.isArray(v)) return [];
+    const texte = (x: unknown, max: number) => (typeof x === "string" && x.trim() ? x.trim().slice(0, max) : undefined);
     return v
-      .filter((x): x is { nom: string; slug?: string | null } => Boolean(x) && typeof (x as { nom?: unknown }).nom === "string")
-      .map((x) => ({ nom: x.nom.slice(0, 80), slug: typeof x.slug === "string" ? x.slug : null }))
-      .slice(0, 20);
+      .filter((x): x is Record<string, unknown> => Boolean(x) && typeof (x as { nom?: unknown }).nom === "string")
+      .map((x) => {
+        const role = ROLES_PERSONNE.find((r) => r === x.role);
+        return {
+          nom: String(x.nom).slice(0, 80),
+          slug: typeof x.slug === "string" ? x.slug : null,
+          ...(role ? { role } : {}),
+          ...(texte(x.note, 240) ? { note: texte(x.note, 240) } : {}),
+          ...(urlHttps(x.image, true) ? { image: urlHttps(x.image, true) } : {}),
+          ...(texte(x.credit, 120) ? { credit: texte(x.credit, 120) } : {}),
+          ...(urlHttps(x.url) ? { url: urlHttps(x.url) } : {}),
+          ...(urlHttps(x.profil) ? { profil: urlHttps(x.profil) } : {}),
+        } satisfies PersonneCitee;
+      })
+      .slice(0, 40);
   } catch {
     return [];
+  }
+}
+
+// ─── Dossier de recherche ────────────────────────────────────────────────────
+
+export interface Enquete {
+  // Date de la dernière recherche (AAAA-MM-JJ).
+  maj: string | null;
+  // Pages consultées pour établir les noms, les rôles et les visuels.
+  sources: { titre: string; url: string }[];
+}
+
+export function lireEnquete(brut: string | null | undefined): Enquete | null {
+  if (!brut) return null;
+  try {
+    const v = JSON.parse(brut) as { maj?: unknown; sources?: unknown };
+    const sources = Array.isArray(v.sources)
+      ? v.sources.flatMap((s: unknown) => {
+          const o = s as { titre?: unknown; url?: unknown };
+          const url = urlHttps(o?.url);
+          const titre = typeof o?.titre === "string" ? o.titre.trim().slice(0, 140) : "";
+          return url && titre ? [{ titre, url }] : [];
+        })
+      : [];
+    return { maj: typeof v.maj === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.maj) ? v.maj : null, sources: sources.slice(0, 12) };
+  } catch {
+    return null;
   }
 }

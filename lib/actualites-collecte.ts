@@ -87,7 +87,7 @@ interface Retenu {
 
 // Rapproche un nom cité d'un artiste de la plateforme : mêmes mots, ou nom court
 // (au moins deux mots) contenu dans le nom complet.
-function artisteCorrespondant(nom: string, artistes: { slug: string; nom: string; mots: string[] }[]): string | null {
+export function artisteCorrespondant(nom: string, artistes: { slug: string; nom: string; mots: string[] }[]): string | null {
   const mots = normaliser(nom).split(" ").filter(Boolean);
   if (mots.length === 0) return null;
   for (const a of artistes) {
