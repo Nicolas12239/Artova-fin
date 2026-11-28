@@ -39,6 +39,27 @@ export function CouvertureActualite({
     // « #haut » à la fin de l'adresse : la photo est recadrée par le haut (retire un
     // bandeau de titre en bas d'un visuel de presse). Le fragment n'est jamais envoyé au serveur.
     const recadre = src.endsWith("#haut");
+    // « #entier » : l'image n'est jamais rognée (œuvres, panoramas) ; un reflet flou
+    // d'elle-même remplit le reste du cadre.
+    if (src.endsWith("#entier")) {
+      return (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" aria-hidden="true" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-75 blur-2xl" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={image}
+            src={src}
+            alt={alt}
+            loading={prioritaire ? "eager" : "lazy"}
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setCassee(true)}
+            className="absolute inset-0 h-full w-full object-contain object-[50%_22%] transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+          />
+        </>
+      );
+    }
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

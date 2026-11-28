@@ -69,7 +69,10 @@ export const ecrireMotsCles = (mots: string[]): string | null => (mots.length > 
 const MOIS = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre"];
 
 export function extraireDates(texte: string, reference: Date): { debut: string; fin: string | null } | null {
-  const n = sansAccents(texte);
+  // « 27.11.2026 » est lu comme « 27 novembre 2026 ».
+  const n = sansAccents(texte)
+    .replace(/’/g, "'")
+    .replace(/\b(\d{1,2})[./](0?[1-9]|1[0-2])[./](20\d\d)\b/g, (_, j: string, m: string, a: string) => `${j} ${MOIS[Number(m) - 1]} ${a}`);
   const mois = MOIS.join("|");
   const date = (jour: string, nomMois: string, annee: string | undefined): string | null => {
     const m = MOIS.indexOf(nomMois);
@@ -88,6 +91,20 @@ export function extraireDates(texte: string, reference: Date): { debut: string; 
     const debut = date(plage[1], plage[2] ?? plage[4], plage[5]);
     const fin = date(plage[3], plage[4], plage[5]);
     if (debut && fin && fin >= debut) return { debut, fin };
+  }
+  // « Exposition jusqu'au 12 décembre » : la fin ; le début est la première autre
+  // date citée (le vernissage), sinon la date de la publication.
+  const jusqua = new RegExp(`\\bjusqu'? ?(?:au|le) (?:\\w+ )?(\\d{1,2})(?:er)? (${mois})(?: (20\\d\\d))?`).exec(n);
+  if (jusqua) {
+    const fin = date(jusqua[1], jusqua[2], jusqua[3]);
+    if (fin) {
+      const autres = [...n.matchAll(new RegExp(`\\b(\\d{1,2})(?:er)? (${mois})(?: (20\\d\\d))?`, "g"))]
+        .map((m) => date(m[1], m[2], m[3]))
+        .filter((d): d is string => d !== null && d < fin)
+        .sort();
+      const debut = autres[0] ?? reference.toISOString().slice(0, 10);
+      return debut < fin ? { debut, fin } : { debut: fin, fin: null };
+    }
   }
   const jour = new RegExp(`\\b(\\d{1,2})(?:er)? (${mois})(?: (20\\d\\d))?`).exec(n);
   if (jour) {

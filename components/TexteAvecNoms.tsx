@@ -5,20 +5,48 @@ import { slugTag } from "@/lib/actualites-tags";
 
 const echapper = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// Transforme la première mention de chaque personne citée en lien vers sa fiche :
-// on peut cliquer un nom dans le texte pour savoir qui c'est.
-export function TexteAvecNoms({
-  texte,
-  noms,
-  vus,
-  langue,
-}: {
+interface Props {
   texte: string;
   noms: string[];
   // Noms déjà liés plus haut dans l'article (un seul lien par nom).
   vus: Set<string>;
   langue: Langue;
-}) {
+}
+
+const ADRESSE = /(https:\/\/[^\s<>"«»]*[^\s<>"«».,;:!?)])/g;
+
+// Texte d'un article : les adresses web deviennent cliquables, et la première
+// mention de chaque personne citée mène à sa fiche.
+export function TexteAvecNoms(props: Props) {
+  return (
+    <>
+      {props.texte.split(ADRESSE).map((partie, i) =>
+        i % 2 === 1 ? (
+          <a
+            key={i}
+            href={partie}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="break-all underline decoration-terracotta/50 underline-offset-[5px] transition-colors hover:text-terracotta"
+          >
+            {partie.replace(/^https:\/\/(www\.)?/, "")}
+          </a>
+        ) : (
+          <Noms key={i} {...props} texte={partie} />
+        ),
+      )}
+    </>
+  );
+}
+
+// Transforme la première mention de chaque personne citée en lien vers sa fiche :
+// on peut cliquer un nom dans le texte pour savoir qui c'est.
+function Noms({
+  texte,
+  noms,
+  vus,
+  langue,
+}: Props) {
   const restants = [...new Set(noms)].filter((n) => n.length >= 4 && !vus.has(n)).sort((a, b) => b.length - a.length);
   if (restants.length === 0) return <>{texte}</>;
   const motif = new RegExp(`(?<![\\p{L}\\p{N}])(${restants.map(echapper).join("|")})(?![\\p{L}\\p{N}])`, "u");
