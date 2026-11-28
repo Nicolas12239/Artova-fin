@@ -5,6 +5,7 @@ import { Header, Footer } from "@/components/Header";
 import { getCurrentUser } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { BandeauInstallation, EnregistrerServiceWorker } from "@/components/ApplicationMobile";
+import { NettoyerBrouillons } from "@/components/BrouillonFormulaire";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -105,6 +106,7 @@ export default async function RootLayout({
         <main>{children}</main>
         <Footer />
         <EnregistrerServiceWorker />
+        <NettoyerBrouillons role={utilisateur?.role ?? null} />
         <BandeauInstallation />
       </body>
     </html>

@@ -1,6 +1,7 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { TAILLE_MAX_ENVOI } from "@/lib/documents";
 
 const FORMATS_WEB = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -49,10 +50,27 @@ type Etat = { erreur?: string; succes?: string } | null;
 // Envoi d'un formulaire avec images : réduction préalable, et pas de remise à
 // zéro du formulaire en cas d'erreur (l'utilisateur garde sa saisie).
 export function useEnvoiAvecImages(
-  actionServeur: (prev: Etat, formData: FormData) => Promise<Etat>,
+  // « never » : chaque action garde son propre type d'état précédent.
+  actionServeur: (prev: never, formData: FormData) => Promise<Etat>,
   { viderApresSucces = false }: { viderApresSucces?: boolean } = {},
 ) {
-  const [etat, action, enCours] = useActionState(actionServeur, null);
+  // Une coupure ou une mise à jour du site ne doit pas faire perdre la saisie :
+  // l'échec devient un message, le formulaire reste tel quel.
+  const [etat, action, enCours] = useActionState(async (prev: Etat, formData: FormData): Promise<Etat> => {
+    try {
+      return await actionServeur(prev as never, formData);
+    } catch (erreur) {
+      unstable_rethrow(erreur); // redirection après réussite : on la laisse faire
+      console.error("[ArTova] Envoi interrompu :", erreur);
+      return { erreur: "L'envoi n'a pas abouti (connexion coupée ou site mis à jour). Votre saisie est conservée : réessayez dans un instant." };
+    }
+  }, null);
+  // Avant que la page soit prête, un envoi la rechargerait : le bouton attend.
+  const prete = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [preparation, setPreparation] = useState(false);
   // L'hébergeur refuse les envois trop lourds : on le dit avant, clairement.
   const [tropLourd, setTropLourd] = useState<string | null>(null);
@@ -82,5 +100,5 @@ export function useEnvoiAvecImages(
     setTropLourd(null);
     startTransition(() => action(formData));
   };
-  return { etat: tropLourd ? { erreur: tropLourd } : etat, onSubmit, enCours: enCours || preparation };
+  return { etat: tropLourd ? { erreur: tropLourd } : etat, onSubmit, enCours: enCours || preparation, prete };
 }

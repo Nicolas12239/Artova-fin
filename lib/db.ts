@@ -65,6 +65,10 @@ async function migrer(): Promise<void> {
     UNIQUE KEY uq_documents_artiste (artiste_id, rubrique)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
+  if (!(await colonneExiste("documents_artistes", "texte"))) {
+    await pool.query("ALTER TABLE documents_artistes ADD COLUMN texte TEXT DEFAULT NULL");
+  }
+
   const colonnesArtistes: [string, string][] = [
     ["utilisateur_id", "INT UNSIGNED DEFAULT NULL, ADD UNIQUE KEY uq_artistes_utilisateur (utilisateur_id)"],
     ["statut", "ENUM('brouillon','en_attente','publie') NOT NULL DEFAULT 'publie'"],

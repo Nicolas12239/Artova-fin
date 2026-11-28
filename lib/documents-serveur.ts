@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { execute, query } from "./db";
 import {
   genreDocument,
+  LONGUEUR_MAX,
   RUBRIQUES_DOCUMENT,
   TAILLE_MAX_DOCUMENT,
   TYPES_DOCUMENT,
@@ -16,6 +17,7 @@ export interface DocumentPret {
   type: string;
   donnees: Buffer;
   public: boolean;
+  texte: string | null;
 }
 
 const LIBELLE: Record<RubriqueDocument, string> = { histoire: "Fichier de votre histoire", parcours: "Fichier de votre parcours" };
@@ -66,6 +68,7 @@ export async function lireDocumentsJoints(formData: FormData): Promise<{ documen
       type: TYPES_DOCUMENT[genre],
       donnees,
       public: formData.get(`doc_${rubrique}_public`) === "1",
+      texte: String(formData.get(`doc_${rubrique}_texte`) ?? "").slice(0, LONGUEUR_MAX[rubrique]) || null,
     });
   }
   return { documents };
@@ -73,7 +76,7 @@ export async function lireDocumentsJoints(formData: FormData): Promise<{ documen
 
 export async function documentsArtiste(artisteId: number): Promise<DocumentArtiste[]> {
   return query<DocumentArtiste>(
-    "SELECT id, rubrique, nom, public FROM documents_artistes WHERE artiste_id = ? ORDER BY rubrique",
+    "SELECT id, rubrique, nom, public, texte FROM documents_artistes WHERE artiste_id = ? ORDER BY rubrique",
     [artisteId],
   );
 }
@@ -88,8 +91,8 @@ export async function enregistrerDocuments(artisteId: number, formData: FormData
     }
     if (nouveau) {
       await execute(
-        "INSERT INTO documents_artistes (id, artiste_id, rubrique, nom, type, taille, public, donnees) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [randomUUID().replaceAll("-", ""), artisteId, rubrique, nouveau.nom, nouveau.type, nouveau.donnees.length, nouveau.public ? 1 : 0, nouveau.donnees],
+        "INSERT INTO documents_artistes (id, artiste_id, rubrique, nom, type, taille, public, donnees, texte) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [randomUUID().replaceAll("-", ""), artisteId, rubrique, nouveau.nom, nouveau.type, nouveau.donnees.length, nouveau.public ? 1 : 0, nouveau.donnees, nouveau.texte],
       );
     } else {
       await execute("UPDATE documents_artistes SET public = ? WHERE artiste_id = ? AND rubrique = ?", [

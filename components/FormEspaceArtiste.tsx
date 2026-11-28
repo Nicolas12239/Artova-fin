@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useEnvoiAvecImages } from "./envoiImages";
 import { DocumentOuTexte } from "./DocumentOuTexte";
+import { BandeauBrouillon, useBrouillon } from "./BrouillonFormulaire";
 import { LONGUEUR_MAX, type DocumentArtiste } from "@/lib/documents";
 import {
   enregistrerMaPage,
@@ -161,9 +162,12 @@ export type PageInitiale = {
 export function ChampsPage({
   initial,
   numeroDepart = 1,
+  memoire,
 }: {
   initial: PageInitiale;
   numeroDepart?: number;
+  // Clé du brouillon (inscription) : le texte venu d'un fichier est retenu avec.
+  memoire?: string;
 }) {
   const [histoire, setHistoire] = useState(initial.histoire);
   const [expositions, setExpositions] = useState(initial.expositions ?? "");
@@ -245,6 +249,7 @@ export function ChampsPage({
       >
         <DocumentOuTexte
           rubrique="histoire"
+          memoire={memoire}
           texteActuel={histoire}
           onTexte={setHistoire}
           onJoint={setHistoireJointe}
@@ -280,6 +285,7 @@ export function ChampsPage({
       >
         <DocumentOuTexte
           rubrique="parcours"
+          memoire={memoire}
           texteActuel={expositions}
           onTexte={setExpositions}
           onJoint={() => {}}
@@ -399,7 +405,9 @@ function BarreEnvoi({
   enCours,
   libelleBouton,
   libelleEnCours,
+  pret = true,
 }: {
+  pret?: boolean;
   etat: Etat;
   enCours: boolean;
   libelleBouton: string;
@@ -408,7 +416,7 @@ function BarreEnvoi({
   return (
     <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-4 border-t border-fil bg-creme/95 px-4 py-5 backdrop-blur sm:flex-row sm:items-center sm:justify-between md:mx-0 md:px-0">
       <Message etat={etat} />
-      <button type="submit" disabled={enCours} className={`${bouton} sm:ml-auto`}>
+      <button type="submit" disabled={enCours || !pret} className={`${bouton} sm:ml-auto`}>
         {enCours ? libelleEnCours : libelleBouton}
       </button>
     </div>
@@ -587,9 +595,11 @@ const PAGE_VIERGE: PageInitiale = {
 };
 
 export function FormInscriptionArtiste({ avecCompte = true }: { avecCompte?: boolean }) {
-  const { etat, onSubmit, enCours } = useFormulaire(inscrireArtiste);
+  const { etat, onSubmit, enCours, prete } = useFormulaire(inscrireArtiste);
+  const { ref, retrouve } = useBrouillon("inscription-artiste");
   return (
-    <form onSubmit={onSubmit}>
+    <form ref={ref} onSubmit={onSubmit}>
+      <BandeauBrouillon cle="inscription-artiste" visible={retrouve} />
       <Section
         numero="01"
         titre={avecCompte ? "Votre compte" : "Vos coordonnées"}
@@ -625,7 +635,7 @@ export function FormInscriptionArtiste({ avecCompte = true }: { avecCompte?: boo
         )}
       </Section>
 
-      <ChampsPage initial={PAGE_VIERGE} numeroDepart={2} />
+      <ChampsPage initial={PAGE_VIERGE} numeroDepart={2} memoire="inscription-artiste" />
 
       <Section
         numero="07"
@@ -646,6 +656,7 @@ export function FormInscriptionArtiste({ avecCompte = true }: { avecCompte?: boo
       <BarreEnvoi
         etat={etat}
         enCours={enCours}
+        pret={prete}
         libelleBouton="Créer ma page d'artiste ↗"
         libelleEnCours="Création de votre page…"
       />

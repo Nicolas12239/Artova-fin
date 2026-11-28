@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useEnvoiAvecImages } from "./envoiImages";
 import { passerCommande } from "@/app/actions/commande";
 
 const champ =
@@ -14,13 +14,11 @@ export function FormCommande({
   oeuvreId: number;
   telephoneInitial?: string | null;
 }) {
-  const [etat, action, enCours] = useActionState(
-    passerCommande.bind(null, oeuvreId),
-    null,
-  );
+  // Envoi « à la main » : en cas d'erreur, rien de ce qui est saisi ne s'efface.
+  const { etat, onSubmit, enCours } = useEnvoiAvecImages(passerCommande.bind(null, oeuvreId));
 
   return (
-    <form action={action} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <div>
         <label htmlFor="telephone" className={libelle}>Téléphone de contact</label>
         <input

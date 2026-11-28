@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { BandeauBrouillon, useBrouillon } from "./BrouillonFormulaire";
+import { useEnvoiAvecImages } from "./envoiImages";
 import { connecter, inscrire } from "@/app/actions/auth";
 import { COMMISSION_ARTOVA } from "@/lib/types";
 
@@ -11,10 +12,11 @@ const bouton =
   "w-full bg-encre px-6 py-4 text-[12px] uppercase tracking-[0.18em] text-craie transition-colors hover:bg-terracotta disabled:opacity-50";
 
 export function FormConnexion({ next }: { next?: string }) {
-  const [etat, action, enCours] = useActionState(connecter, null);
+  // Envoi « à la main » : en cas d'erreur, rien de ce qui est saisi ne s'efface.
+  const { etat, onSubmit, enCours, prete } = useEnvoiAvecImages(connecter);
 
   return (
-    <form action={action} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <input type="hidden" name="next" value={next ?? ""} />
       <div>
         <label htmlFor="email" className={libelle}>Adresse e-mail</label>
@@ -43,7 +45,7 @@ export function FormConnexion({ next }: { next?: string }) {
           {etat.erreur}
         </p>
       )}
-      <button type="submit" disabled={enCours} className={bouton}>
+      <button type="submit" disabled={enCours || !prete} className={bouton}>
         {enCours ? "Connexion…" : "Se connecter ↗"}
       </button>
     </form>
@@ -51,10 +53,12 @@ export function FormConnexion({ next }: { next?: string }) {
 }
 
 export function FormInscription({ next }: { next?: string }) {
-  const [etat, action, enCours] = useActionState(inscrire, null);
+  const { etat, onSubmit, enCours, prete } = useEnvoiAvecImages(inscrire);
+  const { ref, retrouve } = useBrouillon("inscription");
 
   return (
-    <form action={action} className="space-y-6">
+    <form ref={ref} onSubmit={onSubmit} className="space-y-6">
+      <BandeauBrouillon cle="inscription" visible={retrouve} />
       <input type="hidden" name="next" value={next ?? ""} />
       <div>
         <label htmlFor="nom" className={libelle}>Nom complet</label>
@@ -97,7 +101,7 @@ export function FormInscription({ next }: { next?: string }) {
           {etat.erreur}
         </p>
       )}
-      <button type="submit" disabled={enCours} className={bouton}>
+      <button type="submit" disabled={enCours || !prete} className={bouton}>
         {enCours ? "Création…" : "Créer mon compte ↗"}
       </button>
     </form>

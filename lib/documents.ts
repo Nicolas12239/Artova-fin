@@ -38,4 +38,6 @@ export interface DocumentArtiste {
   rubrique: RubriqueDocument;
   nom: string;
   public: number;
+  // Texte qui avait été repris de ce fichier (retiré avec lui sur demande).
+  texte?: string | null;
 }
