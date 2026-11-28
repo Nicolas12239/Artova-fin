@@ -47,7 +47,12 @@ export function empreinteRedaction(a: ArticleRedaction): string {
 
 // Identifiants d'articles de la rédaction qui ont été renommés : leur ancienne
 // fiche est supprimée au démarrage pour éviter les doublons.
-export const CLES_OBSOLETES = ["a-sika-exposition-vendredi"];
+export const CLES_OBSOLETES = [
+  "a-sika-exposition-vendredi",
+  // L'article sur Ebene a changé d'identité quand sa source a été ajoutée :
+  // l'ancienne fiche (sans source) faisait doublon.
+  "ebene-musee-paul-ahyi",
+];
 
 // Les rendez-vous de l'art à Lomé, fin novembre 2026, rédigés en français (texte
 // de base) avec leurs traductions anglaise et allemande. Chaque fiche cite ses

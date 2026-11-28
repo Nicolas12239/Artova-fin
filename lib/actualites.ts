@@ -19,7 +19,7 @@ const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom
 
 export interface FiltreActualites {
   // Page d'accueil (sans filtre) en français ou en allemand : les dépêches
-  // étrangères restées dans leur langue d'origine restent dans l'onglet « Monde ».
+  // étrangères restées dans leur langue d'origine restent dans leur onglet de zone.
   accueil?: boolean;
   portee?: Portee;
   categorie?: Categorie;
@@ -43,7 +43,8 @@ function clauseFiltre(filtre: FiltreActualites): { sql: string; params: Param[] 
   }
   if (filtre.accueil && !filtre.portee && !filtre.categorie && !filtre.q?.trim()) {
     // Non traduit = une version anglaise (le texte d'origine) sans version allemande.
-    conditions.push("NOT (a.portee = 'monde' AND COALESCE(a.traductions, '') LIKE '{\"en\":%' AND COALESCE(a.traductions, '') NOT LIKE '%\"de\":%')");
+    // Ces dépêches restent dans les onglets « Afrique » et « Monde » ; le Togo reste.
+    conditions.push("NOT (a.portee <> 'togo' AND COALESCE(a.traductions, '') LIKE '{\"en\":%' AND COALESCE(a.traductions, '') NOT LIKE '%\"de\":%')");
   }
   const q = filtre.q?.trim().slice(0, 80);
   if (q) {
