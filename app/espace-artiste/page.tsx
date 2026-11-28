@@ -1,3 +1,4 @@
+import { documentsArtiste } from "@/lib/documents-serveur";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -69,9 +70,11 @@ export default async function PageEspaceArtiste({
     image_url: enEdition.image_url,
   };
 
+  const documents = await documentsArtiste(artiste.id);
   const etapes = {
     portrait: Boolean(artiste.portrait_url),
-    histoire: artiste.histoire.length >= 80,
+    // Un fichier téléversé pour l'histoire compte autant qu'un texte saisi.
+    histoire: artiste.histoire.length >= 80 || documents.some((d) => d.rubrique === "histoire"),
     oeuvre: oeuvres.length > 0,
   };
   const pret = etapes.portrait && etapes.histoire && etapes.oeuvre;
@@ -124,7 +127,7 @@ export default async function PageEspaceArtiste({
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   <Etape faite={etapes.portrait}>Ajouter un portrait</Etape>
-                  <Etape faite={etapes.histoire}>Raconter votre histoire (80 caractères min.)</Etape>
+                  <Etape faite={etapes.histoire}>Raconter votre histoire (80 caractères min.) ou téléverser un fichier</Etape>
                   <Etape faite={etapes.oeuvre}>Ajouter au moins une œuvre</Etape>
                 </ul>
                 {params.incomplet && (
@@ -183,6 +186,7 @@ export default async function PageEspaceArtiste({
               formation: artiste.formation,
               techniques: artiste.techniques,
               expositions: artiste.expositions,
+              documents,
             }}
           />
           <aside className="order-first pt-10 lg:order-none">

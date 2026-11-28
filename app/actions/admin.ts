@@ -325,6 +325,7 @@ export async function supprimerArtiste(artisteId: number): Promise<void> {
     .filter((url): url is string => Boolean(url?.startsWith("/fichiers/")))
     .map((url) => url.slice("/fichiers/".length));
 
+  await execute("DELETE FROM documents_artistes WHERE artiste_id = ?", [artisteId]);
   await execute("DELETE FROM oeuvres WHERE artiste_id = ?", [artisteId]);
   await execute("DELETE FROM artistes WHERE id = ?", [artisteId]);
   if (fichiers.length > 0) {

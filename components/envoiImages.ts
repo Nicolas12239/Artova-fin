@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { TAILLE_MAX_ENVOI } from "@/lib/documents";
 
 const FORMATS_WEB = new Set(["image/jpeg", "image/png", "image/webp"]);
 const EXTENSIONS_IMAGES = /\.(jpe?g|png|webp|heic|heif|avif|gif|tiff?|bmp)$/i;
@@ -53,6 +54,8 @@ export function useEnvoiAvecImages(
 ) {
   const [etat, action, enCours] = useActionState(actionServeur, null);
   const [preparation, setPreparation] = useState(false);
+  // L'hébergeur refuse les envois trop lourds : on le dit avant, clairement.
+  const [tropLourd, setTropLourd] = useState<string | null>(null);
   const formulaire = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
@@ -69,7 +72,15 @@ export function useEnvoiAvecImages(
     } finally {
       setPreparation(false);
     }
+    const total = [...formData.values()].reduce((somme, v) => somme + (v instanceof File ? v.size : 0), 0);
+    if (total > TAILLE_MAX_ENVOI) {
+      setTropLourd(
+        `Envoi trop lourd (${(total / 1_048_576).toFixed(1)} Mo, 4 Mo au plus) : retirez un fichier joint ou choisissez des photos plus légères.`,
+      );
+      return;
+    }
+    setTropLourd(null);
     startTransition(() => action(formData));
   };
-  return { etat, onSubmit, enCours: enCours || preparation };
+  return { etat: tropLourd ? { erreur: tropLourd } : etat, onSubmit, enCours: enCours || preparation };
 }

@@ -71,11 +71,9 @@ const texteOptionnel = (max: number) => z.string().trim().max(max).optional().or
 // Page créée par l'artiste lui-même : mêmes champs que l'admin, plus son parcours.
 export const schemaPageArtiste = schemaArtiste.omit({ id: true }).extend({
   nom: z.string().trim().min(2, "Le nom d'artiste doit faire au moins 2 caractères.").max(120),
-  histoire: z
-    .string()
-    .trim()
-    .min(80, "Racontez votre histoire en au moins 80 caractères.")
-    .max(6000, "Votre histoire ne doit pas dépasser 6 000 caractères."),
+  // Le minimum de 80 caractères est vérifié par l'action : un fichier joint peut
+  // remplacer le texte (voir lib/documents.ts).
+  histoire: z.string().trim().max(10_000, "Votre histoire ne doit pas dépasser 10 000 caractères."),
   annee_debut: z.coerce
     .number()
     .int()
@@ -85,7 +83,7 @@ export const schemaPageArtiste = schemaArtiste.omit({ id: true }).extend({
     .or(z.literal("")),
   formation: texteOptionnel(255),
   techniques: texteOptionnel(255),
-  expositions: texteOptionnel(3000),
+  expositions: texteOptionnel(6000),
 });
 
 export const schemaOeuvre = z.object({

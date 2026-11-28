@@ -1,5 +1,6 @@
 "use server";
 
+import { enregistrerDocuments, lireDocumentsJoints } from "@/lib/documents-serveur";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { execute, query } from "@/lib/db";
@@ -173,6 +174,11 @@ export async function inscrireArtiste(
   if (!page.success) {
     return { erreur: page.error.issues[0]?.message ?? "Données invalides." };
   }
+  const joints = await lireDocumentsJoints(formData);
+  if (joints.erreur) return { erreur: joints.erreur };
+  if (page.data.histoire.length < 80 && !joints.documents.some((d) => d.rubrique === "histoire")) {
+    return { erreur: "Racontez votre histoire (80 caractères minimum) ou téléversez un fichier." };
+  }
 
   const oeuvre = schemaOeuvre.safeParse({
     artiste_id: 1,
@@ -265,6 +271,8 @@ export async function inscrireArtiste(
       o.dimensions || null, o.technique || null, o.description, image,
     ],
   );
+
+  await enregistrerDocuments(Number(artiste.insertId), formData, joints.documents);
 
   // Alerte e-mail et notification push à l'équipe pour valider vite la page.
   const [alerteEmail, alertePush] = await Promise.allSettled([

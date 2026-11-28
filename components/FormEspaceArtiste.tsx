@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useEnvoiAvecImages } from "./envoiImages";
+import { DocumentOuTexte } from "./DocumentOuTexte";
+import { LONGUEUR_MAX, type DocumentArtiste } from "@/lib/documents";
 import {
   enregistrerMaPage,
   enregistrerMonOeuvre,
@@ -152,6 +154,8 @@ export type PageInitiale = {
   formation: string | null;
   techniques: string | null;
   expositions: string | null;
+  // Fichiers déjà téléversés (histoire, parcours).
+  documents?: DocumentArtiste[];
 };
 
 export function ChampsPage({
@@ -162,6 +166,10 @@ export function ChampsPage({
   numeroDepart?: number;
 }) {
   const [histoire, setHistoire] = useState(initial.histoire);
+  const [expositions, setExpositions] = useState(initial.expositions ?? "");
+  const fichierDe = (rubrique: DocumentArtiste["rubrique"]) => initial.documents?.find((d) => d.rubrique === rubrique) ?? null;
+  // Un fichier joint pour l'histoire rend le texte facultatif.
+  const [histoireJointe, setHistoireJointe] = useState(Boolean(fichierDe("histoire")));
   const [couleurs, setCouleurs] = useState({
     primaire: initial.theme_primaire,
     accent: initial.theme_accent,
@@ -233,26 +241,33 @@ export function ChampsPage({
       <Section
         numero={numero(2)}
         titre="Votre histoire"
-        description="Racontez-la comme vous le souhaitez : vos débuts, vos influences, ce que vos œuvres disent du Togo. Sautez une ligne pour créer un nouveau paragraphe."
+        description="Écrivez-la ou téléversez un fichier : vos débuts, vos influences, ce que vos œuvres disent du Togo. Sautez une ligne pour créer un nouveau paragraphe."
       >
+        <DocumentOuTexte
+          rubrique="histoire"
+          texteActuel={histoire}
+          onTexte={setHistoire}
+          onJoint={setHistoireJointe}
+          existant={fichierDe("histoire")}
+        />
         <div>
           <label htmlFor="histoire" className={libelle}>Votre histoire</label>
           <textarea
             id="histoire"
             name="histoire"
             rows={12}
-            required
-            minLength={80}
-            maxLength={6000}
+            required={!histoireJointe}
+            minLength={histoireJointe ? undefined : 80}
+            maxLength={LONGUEUR_MAX.histoire}
             value={histoire}
             onChange={(e) => setHistoire(e.target.value)}
             placeholder="J'ai grandi à Lomé, entre le marché d'Adawlato et l'atelier de mon oncle…"
             className="w-full border border-encre/20 bg-craie p-4 text-[15px] leading-7 outline-none transition-colors focus:border-encre"
           />
           <p className={`${aide} flex justify-between`}>
-            <span>80 caractères minimum.</span>
-            <span className={histoire.length > 6000 ? "text-terracotta" : ""}>
-              {histoire.length} / 6000
+            <span>{histoireJointe ? "Facultatif : un fichier est joint." : "80 caractères minimum."}</span>
+            <span className={histoire.length > LONGUEUR_MAX.histoire ? "text-terracotta" : ""}>
+              {histoire.length} / {LONGUEUR_MAX.histoire}
             </span>
           </p>
         </div>
@@ -261,8 +276,15 @@ export function ChampsPage({
       <Section
         numero={numero(3)}
         titre="Parcours"
-        description="Les repères qui rassurent les collectionneurs. Tous ces champs sont facultatifs."
+        description="Les repères qui rassurent les collectionneurs : remplissez les champs ou téléversez votre parcours (CV d'artiste). Tout est facultatif."
       >
+        <DocumentOuTexte
+          rubrique="parcours"
+          texteActuel={expositions}
+          onTexte={setExpositions}
+          onJoint={() => {}}
+          existant={fichierDe("parcours")}
+        />
         <div className="grid gap-7 sm:grid-cols-2">
           <div>
             <label htmlFor="annee_debut" className={libelle}>Artiste depuis (année)</label>
@@ -301,17 +323,23 @@ export function ChampsPage({
           />
         </div>
         <div>
-          <label htmlFor="expositions" className={libelle}>Expositions & distinctions</label>
+          <label htmlFor="expositions" className={libelle}>Parcours, expositions & distinctions</label>
           <textarea
             id="expositions"
             name="expositions"
-            rows={4}
-            maxLength={3000}
+            rows={expositions.length > 300 ? 12 : 4}
+            maxLength={LONGUEUR_MAX.parcours}
             placeholder={"2024 : Biennale de Lomé\n2022 : Prix jeune talent, Institut français"}
-            defaultValue={initial.expositions ?? ""}
+            value={expositions}
+            onChange={(e) => setExpositions(e.target.value)}
             className="w-full border border-encre/20 bg-craie p-4 text-sm leading-6 outline-none transition-colors focus:border-encre"
           />
-          <p className={aide}>Une ligne par exposition ou distinction.</p>
+          <p className={`${aide} flex justify-between gap-4`}>
+            <span>Une ligne par exposition ou distinction.</span>
+            <span className={expositions.length > LONGUEUR_MAX.parcours ? "text-terracotta" : ""}>
+              {expositions.length} / {LONGUEUR_MAX.parcours}
+            </span>
+          </p>
         </div>
       </Section>
 

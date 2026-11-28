@@ -1,3 +1,4 @@
+import { documentsArtiste } from "@/lib/documents-serveur";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +15,19 @@ import { actualitesDeLArtiste } from "@/lib/actualites";
 import { SITE_URL, urlAbsolue } from "@/lib/site";
 import { LIBELLE_DISCIPLINE, type Artiste, type Oeuvre, type OeuvreAvecArtiste } from "@/lib/types";
 
+function LienDocument({ id, texte }: { id: string; texte: string }) {
+  return (
+    <a
+      href={`/documents/${id}`}
+      target="_blank"
+      rel="noopener"
+      className="mt-6 inline-flex min-h-11 items-center rounded-full border border-encre px-5 text-sm font-medium transition-colors hover:bg-encre hover:text-creme"
+    >
+      {texte} ↗
+    </a>
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,7 +43,8 @@ export async function generateMetadata({
   const metier = DISCIPLINES_SEO[a.discipline].singulier;
   return metadonnees({
     titre: `${a.nom}, ${metier}${a.ville ? ` à ${a.ville}` : ""} : œuvres et univers`,
-    description: descriptionCourte(a.note_univers ? `${a.note_univers} ${a.histoire}` : a.histoire),
+    description:
+      descriptionCourte(a.note_univers ? `${a.note_univers} ${a.histoire}` : a.histoire) || `${a.nom}, artiste du Togo sur ArTova.`,
     chemin: `/artistes/${a.slug}`,
     image: a.banniere_url ?? a.portrait_url,
     type: "profile",
@@ -88,6 +103,10 @@ export default async function PageUnivers({
     artiste.formation && { label: "Formation", valeur: artiste.formation },
   ].filter(Boolean) as { label: string; valeur: string }[];
 
+  // Fichiers que l'artiste a choisi de proposer sur sa page.
+  const fichiers = (await documentsArtiste(artiste.id).catch(() => [])).filter((d) => d.public === 1);
+  const histoireFichier = fichiers.find((d) => d.rubrique === "histoire");
+  const parcoursFichier = fichiers.find((d) => d.rubrique === "parcours");
   const actus = artiste.statut === "publie" ? await actualitesDeLArtiste(artiste.slug, 3).catch(() => []) : [];
   const metierSeo = DISCIPLINES_SEO[artiste.discipline].singulier;
   const donneesStructurees = [
@@ -98,7 +117,7 @@ export default async function PageUnivers({
       name: artiste.nom,
       url: `${SITE_URL}/artistes/${artiste.slug}`,
       jobTitle: DISCIPLINES_SEO[artiste.discipline].metier,
-      description: descriptionCourte(artiste.histoire, 300),
+      description: descriptionCourte(artiste.histoire, 300) || undefined,
       image: artiste.portrait_url ? urlAbsolue(artiste.portrait_url) : undefined,
       nationality: { "@type": "Country", name: "Togo" },
       workLocation: artiste.ville ? { "@type": "Place", name: artiste.ville } : undefined,
@@ -243,8 +262,12 @@ export default async function PageUnivers({
                 </p>
               ))}
             </div>
+            {paragraphes.length === 0 && !histoireFichier && (
+              <p className="mt-6 text-sm text-gris">Son histoire sera bientôt racontée ici.</p>
+            )}
+            {histoireFichier && <LienDocument id={histoireFichier.id} texte="Lire son histoire (fichier)" />}
 
-            {(parcours.length > 0 || expositions.length > 0) && (
+            {(parcours.length > 0 || expositions.length > 0 || parcoursFichier) && (
               <div className="mt-12 max-w-2xl">
                 <h2
                   className="font-display text-sm uppercase tracking-[0.22em]"
@@ -284,6 +307,7 @@ export default async function PageUnivers({
                     </ul>
                   </div>
                 )}
+                {parcoursFichier && <LienDocument id={parcoursFichier.id} texte="Voir son parcours (fichier)" />}
               </div>
             )}
           </div>

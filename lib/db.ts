@@ -49,6 +49,22 @@ async function migrer(): Promise<void> {
     PRIMARY KEY (id)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
+  // Fichiers téléversés par les artistes pour leur histoire et leur parcours (un
+  // par rubrique). Lecture contrôlée par app/documents/[id].
+  await pool.query(`CREATE TABLE IF NOT EXISTS documents_artistes (
+    id CHAR(32) NOT NULL,
+    artiste_id INT UNSIGNED NOT NULL,
+    rubrique VARCHAR(10) NOT NULL,
+    nom VARCHAR(160) NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    taille INT UNSIGNED NOT NULL,
+    public TINYINT(1) NOT NULL DEFAULT 0,
+    donnees MEDIUMBLOB NOT NULL,
+    cree_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_documents_artiste (artiste_id, rubrique)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
   const colonnesArtistes: [string, string][] = [
     ["utilisateur_id", "INT UNSIGNED DEFAULT NULL, ADD UNIQUE KEY uq_artistes_utilisateur (utilisateur_id)"],
     ["statut", "ENUM('brouillon','en_attente','publie') NOT NULL DEFAULT 'publie'"],

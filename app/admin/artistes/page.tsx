@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import { changerStatutArtiste } from "@/app/actions/admin";
 import { SupprimerArtiste } from "@/components/SupprimerArtiste";
 import { LIBELLE_DISCIPLINE, LIBELLE_STATUT_ARTISTE, type Artiste } from "@/lib/types";
+import type { DocumentArtiste } from "@/lib/documents";
 
 export const metadata = { title: "Artistes | Administration" };
 
@@ -16,6 +17,10 @@ export default async function PageAdminArtistes({
   const artistes = await query<Artiste & { nb_oeuvres: number }>(
     `SELECT a.*, (SELECT COUNT(*) FROM oeuvres o WHERE o.artiste_id = a.id) AS nb_oeuvres
      FROM artistes a ORDER BY FIELD(a.statut, 'en_attente', 'publie', 'brouillon'), a.nom`,
+  );
+  // Fichiers téléversés par les artistes (histoire, parcours), à relire avant publication.
+  const documents = await query<DocumentArtiste & { artiste_id: number }>(
+    "SELECT id, artiste_id, rubrique, nom, public FROM documents_artistes ORDER BY rubrique",
   );
 
   let initial: ArtisteInitial | undefined;
@@ -89,6 +94,17 @@ export default async function PageAdminArtistes({
                     {artiste.ville ? ` · ${artiste.ville}` : ""} ·{" "}
                     {artiste.nb_oeuvres} œuvre{artiste.nb_oeuvres > 1 ? "s" : ""}
                   </p>
+                  {documents.some((d) => d.artiste_id === artiste.id) && (
+                    <p className="mt-1 flex flex-wrap gap-x-4 text-xs">
+                      {documents
+                        .filter((d) => d.artiste_id === artiste.id)
+                        .map((d) => (
+                          <a key={d.id} href={`/documents/${d.id}`} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center underline underline-offset-4 hover:text-terracotta">
+                            Fichier {d.rubrique === "histoire" ? "histoire" : "parcours"} : {d.nom.length > 36 ? `${d.nom.slice(0, 33)}…` : d.nom}
+                          </a>
+                        ))}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">

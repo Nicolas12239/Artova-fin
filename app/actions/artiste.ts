@@ -1,5 +1,6 @@
 "use server";
 
+import { documentsArtiste, enregistrerDocuments, lireDocumentsJoints } from "@/lib/documents-serveur";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { execute, query } from "@/lib/db";
@@ -62,6 +63,14 @@ export async function enregistrerMaPage(
     return { erreur: parse.error.issues[0]?.message ?? "Données invalides." };
   }
   const d = parse.data;
+  const joints = await lireDocumentsJoints(formData);
+  if (joints.erreur) return { erreur: joints.erreur };
+  const histoireJointe =
+    joints.documents.some((x) => x.rubrique === "histoire") ||
+    (formData.get("retirer_doc_histoire") !== "1" && (await documentsArtiste(artiste.id)).some((x) => x.rubrique === "histoire"));
+  if (d.histoire.length < 80 && !histoireJointe) {
+    return { erreur: "Racontez votre histoire (80 caractères minimum) ou téléversez un fichier." };
+  }
 
   const portrait = await televerser(formData, "portrait", "artiste");
   if (portrait === "invalide") {
@@ -93,6 +102,8 @@ export async function enregistrerMaPage(
     ],
   );
 
+  await enregistrerDocuments(artiste.id, formData, joints.documents);
+
   revalider({ slug });
   if (artiste.slug !== slug) revalidatePath(`/artistes/${artiste.slug}`);
   return { succes: "Votre page a été enregistrée." };
@@ -105,8 +116,9 @@ export async function soumettreMaPage(): Promise<void> {
     "SELECT COUNT(*) AS nb FROM oeuvres WHERE artiste_id = ?",
     [artiste.id],
   );
-  const complete =
-    artiste.portrait_url && artiste.histoire.length >= 80 && Number(nb?.nb ?? 0) > 0;
+  const histoire =
+    artiste.histoire.length >= 80 || (await documentsArtiste(artiste.id)).some((d) => d.rubrique === "histoire");
+  const complete = artiste.portrait_url && histoire && Number(nb?.nb ?? 0) > 0;
   if (!complete) redirect("/espace-artiste?incomplet=1");
 
   await execute("UPDATE artistes SET statut = 'en_attente' WHERE id = ?", [artiste.id]);

@@ -13,6 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     share_target: {
       action: "/admin/actualites/importer",
       method: "GET",
+      enctype: "application/x-www-form-urlencoded",
       params: { title: "titre", text: "texte", url: "lien" },
     },
     scope: "/",
