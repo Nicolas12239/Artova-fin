@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { actualiteALaUne } from "./actualites";
 import { imageAccessible } from "./actualites-recherche";
 import { redigerBilan, type ArticleBilan } from "./bilan-regles";
@@ -65,14 +64,6 @@ export async function preparerBilan() {
     artistesEnAttente: artistes.map((a) => a.nom),
     notificationsEnAttente: Number(attente[0]?.n ?? 0),
   });
-}
-
-// Un bilan par jour au plus (le passage automatique) ; l'administration peut en
-// demander un à tout moment.
-export async function dejaEnvoyeAujourdhui(): Promise<boolean> {
-  const cle = createHash("sha1").update(`bilan:${new Date().toISOString().slice(0, 10)}`).digest("hex");
-  const r = await query<{ n: number }>("SELECT 1 AS n FROM actualites_vues WHERE empreinte = ?", [cle]);
-  return r.length > 0;
 }
 
 export async function envoyerBilan(): Promise<{ points: number; envoye: boolean }> {

@@ -65,9 +65,17 @@ export async function passerCommande(
     oeuvre.id,
   ]);
 
-  // Email, push et WhatsApp partent en parallèle : l'échec de l'un n'empêche
-  // ni les autres ni l'enregistrement de la commande.
-  const [email, push, whatsapp] = await Promise.allSettled([
+  // Push, email et WhatsApp : l'échec de l'un n'empêche ni les autres ni
+  // l'enregistrement de la commande.
+  sendCommandePush({
+    reference,
+    oeuvreTitre: oeuvre.titre,
+    artisteNom: oeuvre.artiste_nom,
+    prixFcfa: oeuvre.prix_fcfa,
+    clientNom: utilisateur.nom,
+    ville,
+  });
+  const [email, whatsapp] = await Promise.allSettled([
     sendCommandeEmail({
       reference,
       oeuvreTitre: oeuvre.titre,
@@ -80,14 +88,6 @@ export async function passerCommande(
       ville,
       adresse: adresse || null,
       message: message || null,
-    }),
-    sendCommandePush({
-      reference,
-      oeuvreTitre: oeuvre.titre,
-      artisteNom: oeuvre.artiste_nom,
-      prixFcfa: oeuvre.prix_fcfa,
-      clientNom: utilisateur.nom,
-      ville,
     }),
     sendCommandeWhatsapp({
       reference,
@@ -104,9 +104,6 @@ export async function passerCommande(
   ]);
   if (email.status === "rejected") {
     console.error("[ArTova] Échec d'envoi de l'email de commande :", email.reason);
-  }
-  if (push.status === "rejected") {
-    console.error("[ArTova] Échec de la notification push de commande :", push.reason);
   }
   if (whatsapp.status === "rejected") {
     console.error("[ArTova] Échec de la notification WhatsApp de commande :", whatsapp.reason);

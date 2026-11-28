@@ -138,12 +138,12 @@ export async function enregistrerArtiste(
       ],
     );
     // L'équipe est prévenue de toute nouvelle page, y compris créée ici.
-    await sendNouvelArtistePush({
+    sendNouvelArtistePush({
       nom: donnees.nom,
       discipline: LIBELLE_DISCIPLINE[donnees.discipline],
       ville: donnees.ville || null,
       motif: "administration",
-    }).catch((erreur) => console.error("[ArTova] Notification de création de page :", erreur));
+    });
   }
 
   revalidatePath("/admin/artistes");

@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { execute, query } from "./db";
 import { formatFcfa } from "./format";
 import { envoyerPush, getSiteUrl, type Notification } from "./ntfy";
@@ -71,6 +72,13 @@ export async function notifier(type: string, n: Notification): Promise<boolean> 
   return expedier({ id, ...ligne });
 }
 
+// Part après la réponse : la personne qui s'inscrit ou commande n'attend pas ntfy.
+function notifierEnsuite(type: string, n: Notification): void {
+  after(() =>
+    notifier(type, n).catch((erreur) => console.error(`[ArTova] Notification « ${type} » non envoyée :`, erreur)),
+  );
+}
+
 export async function renvoyerEnAttente(limite = 5): Promise<number> {
   const attente = await query<Ligne>(
     `SELECT id, titre, message, lien, etiquettes FROM notifications
@@ -89,16 +97,16 @@ export async function dernieresNotifications(limite = 8): Promise<NotificationNo
   );
 }
 
-export async function sendCommandePush(infos: {
+export function sendCommandePush(infos: {
   reference: string;
   oeuvreTitre: string;
   artisteNom: string;
   prixFcfa: number;
   clientNom: string;
   ville: string;
-}): Promise<boolean> {
+}): void {
   const site = getSiteUrl();
-  return notifier("commande", {
+  notifierEnsuite("commande", {
     titre: `Nouvelle commande ${infos.reference}`,
     message: [
       `« ${infos.oeuvreTitre} » de ${infos.artisteNom}`,
@@ -110,12 +118,12 @@ export async function sendCommandePush(infos: {
   });
 }
 
-export async function sendNouvelArtistePush(infos: {
+export function sendNouvelArtistePush(infos: {
   nom: string;
   discipline: string;
   ville: string | null;
   motif: "inscription" | "soumission" | "administration";
-}): Promise<boolean> {
+}): void {
   const site = getSiteUrl();
   const titres = {
     inscription: `Nouvel artiste à valider : ${infos.nom}`,
@@ -127,7 +135,7 @@ export async function sendNouvelArtistePush(infos: {
     soumission: "A soumis sa page pour publication.",
     administration: "Page créée depuis l'administration.",
   };
-  return notifier("artiste", {
+  notifierEnsuite("artiste", {
     titre: titres[infos.motif],
     message: [
       `${infos.discipline}${infos.ville ? `, ${infos.ville}` : ""}`,

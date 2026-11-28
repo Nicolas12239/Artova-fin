@@ -122,16 +122,12 @@ export async function soumettreMaPage(): Promise<void> {
   if (!complete) redirect("/espace-artiste?incomplet=1");
 
   await execute("UPDATE artistes SET statut = 'en_attente' WHERE id = ?", [artiste.id]);
-  try {
-    await sendNouvelArtistePush({
-      nom: artiste.nom,
-      discipline: LIBELLE_DISCIPLINE[artiste.discipline],
-      ville: artiste.ville,
-      motif: "soumission",
-    });
-  } catch (erreur) {
-    console.error("[ArTova] Échec de la notification de soumission :", erreur);
-  }
+  sendNouvelArtistePush({
+    nom: artiste.nom,
+    discipline: LIBELLE_DISCIPLINE[artiste.discipline],
+    ville: artiste.ville,
+    motif: "soumission",
+  });
   revalidatePath("/espace-artiste");
   revalidatePath("/admin");
   revalidatePath("/admin/artistes");

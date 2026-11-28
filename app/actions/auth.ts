@@ -274,27 +274,23 @@ export async function inscrireArtiste(
 
   await enregistrerDocuments(Number(artiste.insertId), formData, joints.documents);
 
-  // Alerte e-mail et notification push à l'équipe pour valider vite la page.
-  const [alerteEmail, alertePush] = await Promise.allSettled([
-    sendNouvelArtisteEmail({
+  // Notification push et alerte e-mail à l'équipe pour valider vite la page.
+  sendNouvelArtistePush({
+    nom: p.nom,
+    discipline: LIBELLE_DISCIPLINE[p.discipline],
+    ville: p.ville || null,
+    motif: "inscription",
+  });
+  try {
+    await sendNouvelArtisteEmail({
       nom: p.nom,
       discipline: LIBELLE_DISCIPLINE[p.discipline],
       ville: p.ville || null,
       email,
       telephone: compte.telephone,
-    }),
-    sendNouvelArtistePush({
-      nom: p.nom,
-      discipline: LIBELLE_DISCIPLINE[p.discipline],
-      ville: p.ville || null,
-      motif: "inscription",
-    }),
-  ]);
-  if (alerteEmail.status === "rejected") {
-    console.error("[ArTova] Échec de l'e-mail nouvel artiste :", alerteEmail.reason);
-  }
-  if (alertePush.status === "rejected") {
-    console.error("[ArTova] Échec de la notification nouvel artiste :", alertePush.reason);
+    });
+  } catch (erreur) {
+    console.error("[ArTova] Échec de l'e-mail nouvel artiste :", erreur);
   }
 
   await openSession({ id: utilisateurId, role: "artiste" });
