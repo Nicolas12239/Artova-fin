@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
-import { envoyerAlertesTest, envoyerEmailTest } from "@/app/actions/admin";
+import { envoyerAlertesTest, envoyerBilanMaintenant, envoyerEmailTest, renvoyerNotifications } from "@/app/actions/admin";
+import { dernieresNotifications } from "@/lib/notifications";
 import { formaterNumero, numeroWhatsapp } from "@/lib/whatsapp";
 import { canalNtfy } from "@/lib/ntfy";
 import { destinatairesArtova } from "@/lib/email";
@@ -16,7 +17,7 @@ function Resultat({ valeur }: { valeur?: string }) {
   if (valeur === "erreur") {
     return (
       <p role="alert" className="mt-3 border-l-2 border-terracotta pl-3 text-sm text-terracotta">
-        Échec de l&apos;envoi (détail dans les journaux Vercel).
+        Échec de l&apos;envoi : le détail est dans le journal ci-dessous (ou les journaux Vercel).
       </p>
     );
   }
@@ -29,10 +30,11 @@ function Resultat({ valeur }: { valeur?: string }) {
 export default async function PageAdmin({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; push?: string; whatsapp?: string }>;
+  searchParams: Promise<{ email?: string; push?: string; whatsapp?: string; bilan?: string; renvoyees?: string }>;
 }) {
-  const { email, push, whatsapp } = await searchParams;
+  const { email, push, whatsapp, bilan, renvoyees } = await searchParams;
   const ntfy = canalNtfy();
+  const journal = await dernieresNotifications(8).catch(() => []);
   const [comptes, commandes, oeuvreStats, nbCommandes] = await Promise.all([
     query<{ nb_clients: number }>(
       "SELECT COUNT(*) AS nb_clients FROM utilisateurs WHERE role = 'client'",
@@ -211,6 +213,49 @@ export default async function PageAdmin({
             Envoyer une alerte de test
           </button>
         </form>
+
+        <div className="mt-8 border-t border-encre/10 pt-6">
+          <h3 className="font-display text-xl">Bilan quotidien et journal des notifications</h3>
+          <p className="mt-2 text-sm text-encre/70">
+            Chaque matin vers 7 h, ArTova envoie sur ntfy le bilan d&apos;Actu art. Les nouvelles pages d&apos;artistes et les
+            commandes sont signalées aussitôt ; un envoi refusé est retenté pendant deux jours.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <form action={envoyerBilanMaintenant}>
+              <button type="submit" className="border border-encre/25 px-4 py-2 text-xs tracking-wide hover:border-terracotta hover:text-terracotta">
+                Envoyer le bilan maintenant
+              </button>
+            </form>
+            <form action={renvoyerNotifications}>
+              <button type="submit" className="border border-encre/25 px-4 py-2 text-xs tracking-wide hover:border-terracotta hover:text-terracotta">
+                Renvoyer les notifications en attente
+              </button>
+            </form>
+          </div>
+          {bilan && (
+            <p role="status" className="mt-3 border-l-2 border-encre/30 pl-3 text-sm">
+              {bilan === "ok" ? "Bilan envoyé." : bilan === "attente" ? "Bilan préparé, envoi en attente : voir le journal." : "Le bilan a échoué."}
+            </p>
+          )}
+          {renvoyees !== undefined && (
+            <p role="status" className="mt-3 border-l-2 border-encre/30 pl-3 text-sm">{renvoyees} notification(s) renvoyée(s).</p>
+          )}
+          {journal.length > 0 ? (
+            <ul className="mt-5 divide-y divide-encre/10 border-y border-encre/10 text-sm">
+              {journal.map((n) => (
+                <li key={n.id} className="py-2">
+                  <span className={n.envoyee_le ? "text-[#3f7d4e]" : "text-terracotta"}>{n.envoyee_le ? "Envoyée" : "En attente"}</span>
+                  {" · "}
+                  {n.titre}
+                  <span className="text-encre/50"> · {formatDateHeureFr(n.cree_le)}</span>
+                  {!n.envoyee_le && n.derniere_erreur && <span className="block break-words text-xs text-terracotta">{n.derniere_erreur}</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-encre/60">Aucune notification pour l&apos;instant.</p>
+          )}
+        </div>
       </section>
     </>
   );

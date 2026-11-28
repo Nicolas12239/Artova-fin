@@ -65,6 +65,23 @@ async function migrer(): Promise<void> {
     UNIQUE KEY uq_documents_artiste (artiste_id, rubrique)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
+  // Alertes à l'équipe : notées avant l'envoi, renvoyées si ntfy refuse.
+  await pool.query(`CREATE TABLE IF NOT EXISTS notifications (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    type VARCHAR(20) NOT NULL,
+    titre VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    lien VARCHAR(300) DEFAULT NULL,
+    etiquettes VARCHAR(120) DEFAULT NULL,
+    cree_le TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    essai_le TIMESTAMP NULL DEFAULT NULL,
+    envoyee_le TIMESTAMP NULL DEFAULT NULL,
+    tentatives SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    derniere_erreur VARCHAR(255) DEFAULT NULL,
+    PRIMARY KEY (id),
+    KEY idx_notifications_attente (envoyee_le, cree_le)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
   if (!(await colonneExiste("documents_artistes", "texte"))) {
     await pool.query("ALTER TABLE documents_artistes ADD COLUMN texte TEXT DEFAULT NULL");
   }

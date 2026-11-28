@@ -21,7 +21,7 @@ import {
 } from "@/lib/validation";
 import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
 import { sendNouvelArtisteEmail } from "@/lib/email";
-import { sendNouvelArtistePush } from "@/lib/ntfy";
+import { sendNouvelArtistePush } from "@/lib/notifications";
 import { COMMISSION_ARTOVA, LIBELLE_DISCIPLINE } from "@/lib/types";
 import type { Utilisateur } from "@/lib/types";
 

@@ -7,7 +7,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
 import { destinatairesArtova, envoyerEmail } from "@/lib/email";
 import { envoyerWhatsapp } from "@/lib/whatsapp";
-import { envoyerPush, getSiteUrl } from "@/lib/ntfy";
+import { getSiteUrl } from "@/lib/ntfy";
+import { notifier, renvoyerEnAttente, sendNouvelArtistePush } from "@/lib/notifications";
+import { envoyerBilan } from "@/lib/bilan";
+import { LIBELLE_DISCIPLINE } from "@/lib/types";
 import {
   schemaArtiste,
   schemaOeuvre,
@@ -134,6 +137,13 @@ export async function enregistrerArtiste(
         donnees.theme_accent, donnees.theme_fond, donnees.motif, portrait_url,
       ],
     );
+    // L'équipe est prévenue de toute nouvelle page, y compris créée ici.
+    await sendNouvelArtistePush({
+      nom: donnees.nom,
+      discipline: LIBELLE_DISCIPLINE[donnees.discipline],
+      ville: donnees.ville || null,
+      motif: "administration",
+    }).catch((erreur) => console.error("[ArTova] Notification de création de page :", erreur));
   }
 
   revalidatePath("/admin/artistes");
@@ -273,7 +283,7 @@ export async function envoyerAlertesTest(): Promise<void> {
   const site = getSiteUrl();
   const [push, whatsapp] = await Promise.all([
     resultatEnvoi(
-      envoyerPush({
+      notifier("test", {
         titre: "ArTova : notification de test",
         message: "Vous recevrez une alerte comme celle-ci à chaque nouvelle commande.",
         lien: site ? `${site}/admin` : undefined,
@@ -365,4 +375,22 @@ export async function supprimerArtiste(artisteId: number): Promise<void> {
   redirect(
     `/admin/artistes?suppression=ok&compte=${compte}&nom=${encodeURIComponent(artiste.nom)}`,
   );
+}
+
+// Demande un bilan d'Actu art tout de suite (en plus de celui du matin).
+export async function envoyerBilanMaintenant(): Promise<void> {
+  await exigeraAdmin();
+  let resultat = "erreur";
+  try {
+    resultat = (await envoyerBilan()).envoye ? "ok" : "attente";
+  } catch (erreur) {
+    console.error("[ArTova] Bilan demandé depuis l'administration :", erreur);
+  }
+  redirect(`/admin?bilan=${resultat}`);
+}
+
+export async function renvoyerNotifications(): Promise<void> {
+  await exigeraAdmin();
+  const n = await renvoyerEnAttente(10);
+  redirect(`/admin?renvoyees=${n}`);
 }

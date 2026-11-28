@@ -28,6 +28,12 @@ Pour recevoir les notifications ntfy en production, ajoutez `NTFY_TOPIC` aux
 variables d'environnement du projet Vercel (au minimum pour l'environnement
 Production). Utilisez exactement le même canal dans l'application ntfy sur votre
 téléphone ; choisissez un nom long et aléatoire, car ce nom tient lieu de secret.
+`NTFY_TOKEN` (facultatif, conseillé sur Vercel) : jeton d'accès d'un compte
+ntfy gratuit. Sans lui, le quota de ntfy.sh se compte par adresse, et les
+serveurs de l'hébergeur partagent les leurs : des envois peuvent être refusés
+(erreur 429). Les alertes sont notées en base et renvoyées pendant deux jours ;
+l'état de chacune est visible dans l'administration. Un bilan d'Actu art part
+chaque matin (`/api/cron/bilan`, 7 h UTC).
 `NTFY_SERVER` est facultative et vaut `https://ntfy.sh` par défaut. Après avoir
 ajouté ou modifié ces variables, redéployez l'application. Dans l'administration,
 le bouton « Envoyer une alerte de test » permet de vérifier la réception ; en cas

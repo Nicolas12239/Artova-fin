@@ -3,12 +3,15 @@ import { reserverCollecte, reserverEnquete } from "./actualites-actualisation";
 import { iaDisponible } from "./actualites-ia";
 import { candidatsEnquete, enqueterActualite, reclamerEnquete } from "./actualites-recherche";
 import { collecterReseaux } from "./actualites-social";
+import { renvoyerEnAttente } from "./notifications";
 
 // À appeler depuis `after()` d'une page publique : lance la collecte si la dernière
 // date de plus de 30 minutes. Ne lève jamais d'erreur (le lecteur n'est pas concerné).
 export async function actualiserSiBesoin(): Promise<void> {
   try {
     if (await reserverCollecte()) {
+      // Au passage, les alertes restées en attente (ntfy saturé) repartent.
+      await renvoyerEnAttente(3).catch(() => 0);
       // Presse et réseaux sociaux en même temps : l'un en panne n'arrête pas l'autre.
       const [presse, reseaux] = await Promise.allSettled([
         collecterActualites({ budgetMs: 52_000 }),

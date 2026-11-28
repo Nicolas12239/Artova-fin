@@ -8,7 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getArtistePourUtilisateur, slugUnique } from "@/lib/artistes";
 import { MESSAGE_IMAGE_INVALIDE, saveUpload } from "@/lib/upload";
 import { schemaOeuvre, schemaPageArtiste } from "@/lib/validation";
-import { sendNouvelArtistePush } from "@/lib/ntfy";
+import { sendNouvelArtistePush } from "@/lib/notifications";
 import { LIBELLE_DISCIPLINE, type Artiste } from "@/lib/types";
 
 export type EtatArtiste = { erreur?: string; succes?: string } | null;

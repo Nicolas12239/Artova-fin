@@ -6,7 +6,7 @@ import { execute, query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { sendCommandeEmail } from "@/lib/email";
 import { sendCommandeWhatsapp } from "@/lib/whatsapp";
-import { sendCommandePush } from "@/lib/ntfy";
+import { sendCommandePush } from "@/lib/notifications";
 import { schemaCommande } from "@/lib/validation";
 import type { OeuvreAvecArtiste } from "@/lib/types";
 
