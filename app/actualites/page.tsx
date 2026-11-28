@@ -5,7 +5,7 @@ import { VueActualites } from "@/components/VueActualites";
 import { avecLangue, langueDe } from "@/lib/actualites-i18n";
 import { getCurrentUser } from "@/lib/auth";
 import {
-  actualiteALaUne,
+  actualiteALaUne, varierSources,
   actualitesEnVideo,
   agendaLome,
   decouvertesDuJour,
@@ -72,22 +72,30 @@ export default async function PageActualites({
   const categorie = estCategorie(params.categorie) ? params.categorie : undefined;
   const page = Math.min(200, Math.max(1, parseInt(params.page ?? "1", 10) || 1));
   const q = (params.q ?? "").trim().slice(0, 80);
-  const filtre = { portee, categorie, q: q || undefined };
+  const accueil = !portee && !categorie && !q && langue !== "en";
+  const filtre = { portee, categorie, q: q || undefined, accueil };
 
   const [utilisateur, vedette, total, agenda, enBref, enVideo, decouvertes] = await Promise.all([
     getCurrentUser(),
     q ? Promise.resolve(null) : actualiteALaUne(filtre),
     compterActualites(filtre),
     page === 1 ? agendaLome(4).catch(() => []) : Promise.resolve([]),
-    listerActualites(filtre, { limite: 8 }),
+    listerActualites(filtre, { limite: 40 }).then((l) => varierSources(l, 2, 8)),
     page === 1 ? actualitesEnVideo(3).catch(() => []) : Promise.resolve([]),
     page === 1 && !portee && !categorie && !q ? decouvertesDuJour(3).catch(() => []) : Promise.resolve([]),
   ]);
-  const articles = await listerActualites(filtre, {
-    limite: TAILLE_PAGE,
-    decalage: (page - 1) * TAILLE_PAGE,
-    sauf: vedette?.id,
-  });
+  // Accueil : la première page varie les sources ; les suivantes déroulent, sans
+  // doublon, ce qu'elle n'a pas montré (au-delà des 60 plus récentes : tout, dans l'ordre).
+  const recentes = accueil ? await listerActualites(filtre, { limite: 60, sauf: vedette?.id }) : [];
+  const premiere = varierSources(recentes, 3, TAILLE_PAGE);
+  const montrees = new Set(premiere.map((x) => x.id));
+  const restantes = recentes.filter((x) => !montrees.has(x.id));
+  const articles =
+    accueil && page === 1
+      ? premiere
+      : accueil && (page - 1) * TAILLE_PAGE <= restantes.length
+        ? restantes.slice((page - 2) * TAILLE_PAGE, (page - 1) * TAILLE_PAGE)
+        : await listerActualites(filtre, { limite: TAILLE_PAGE, decalage: (page - 1) * TAILLE_PAGE, sauf: vedette?.id });
   const totalGrille = total - (vedette ? 1 : 0);
 
   return (

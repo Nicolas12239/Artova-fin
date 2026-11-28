@@ -10,6 +10,24 @@ export interface SourceParDefaut {
   filtrer: boolean;
 }
 
+// Comptes et mots-dièse des réseaux sociaux suivis au départ. Lus par les voies
+// officielles uniquement (voir lib/actualites-social.ts) : ils attendent la
+// connexion Meta pour Instagram ; l'administration en ajoute et en retire.
+export const SOURCES_SOCIALES_PAR_DEFAUT: {
+  plateforme: "instagram" | "instagram_hashtag" | "facebook" | "youtube";
+  identifiant: string;
+  nom: string;
+  portee: Portee;
+  filtrer: boolean;
+}[] = [
+  { plateforme: "instagram", identifiant: "artova.corp", nom: "ArTova", portee: "togo", filtrer: false },
+  { plateforme: "instagram", identifiant: "ablasikaakpaloo", nom: "A. Sika", portee: "togo", filtrer: false },
+  { plateforme: "instagram", identifiant: "agnassanmuseepaulahyi", nom: "Musée Agnassan Paul Ahyi", portee: "togo", filtrer: false },
+  { plateforme: "instagram_hashtag", identifiant: "arttogolais", nom: "#arttogolais", portee: "togo", filtrer: false },
+  { plateforme: "instagram_hashtag", identifiant: "artistetogolais", nom: "#artistetogolais", portee: "togo", filtrer: false },
+  { plateforme: "instagram_hashtag", identifiant: "togoart", nom: "#togoart", portee: "togo", filtrer: true },
+];
+
 // Flux RSS publics, vérifiés le 25/11/2026. Un flux RSS est publié par le média
 // pour être repris : on en garde le titre, un résumé court et le lien vers
 // l'article d'origine, toujours cité. Instagram et TikTok n'offrent pas de flux
@@ -30,6 +48,13 @@ export const SOURCES_PAR_DEFAUT: SourceParDefaut[] = [
   { nom: "Flash Info Togo", url_flux: "https://flashinfotogo.com/feed/", portee: "togo", langue: "fr", filtrer: true },
   { nom: "Culture au pluriel", url_flux: "https://cultureaupluriel.wordpress.com/feed/", portee: "togo", langue: "fr", filtrer: true },
   { nom: "Le Nouveau Reporter", url_flux: "https://lenouveaureporter.com/feed/", portee: "togo", langue: "fr", filtrer: true },
+  // Rubriques culture (ajoutées le 28/11/2026) : plus d'actualité togolaise de l'art.
+  { nom: "La Cinquième Culture", url_flux: "https://www.lacinquieme.tg/category/culture/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Icilome Culture", url_flux: "https://icilome.com/category/culture/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Gakogoe", url_flux: "https://www.gakogoe.tg/category/culture/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "AfreePress Culture", url_flux: "https://afreepress.net/category/culture/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "Le Clik", url_flux: "https://leclik.tg/feed/", portee: "togo", langue: "fr", filtrer: true },
+  { nom: "L'émissaire", url_flux: "https://lemissaire.tg/category/culture/feed/", portee: "togo", langue: "fr", filtrer: true },
   // Afrique
   { nom: "ART AFRICA", url_flux: "https://www.artafricamagazine.org/feed/", portee: "afrique", langue: "en", filtrer: false },
   { nom: "Africa Blooming", url_flux: "https://africablooming.com/feed/", portee: "afrique", langue: "en", filtrer: true },

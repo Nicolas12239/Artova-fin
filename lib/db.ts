@@ -4,6 +4,8 @@ import { SOURCES_PAR_DEFAUT } from "./actualites-sources";
 import { ARTICLES_REDACTION, CLES_OBSOLETES, empreinteRedaction } from "./actualites-redaction";
 import { ARTICLES_DECOUVERTES } from "./actualites-decouvertes";
 import { ARTICLES_ENQUETES } from "./actualites-enquetes";
+import { ecrireMotsCles, extraireMotsCles } from "./actualites-motscles";
+import { SOURCES_SOCIALES_PAR_DEFAUT } from "./actualites-sources";
 import { lirePersonnes } from "./actualites-commun";
 import { slugTag } from "./actualites-tags";
 
@@ -245,12 +247,30 @@ async function migrerActualites(): Promise<void> {
     ["traductions", "MEDIUMTEXT DEFAULT NULL"],
     ["enquete", "TEXT DEFAULT NULL"],
     ["enquete_le", "TIMESTAMP NULL DEFAULT NULL"],
+    ["mots_cles", "TEXT DEFAULT NULL"],
     ["revision", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"],
   ] as const) {
     if (!(await colonneExiste("actualites", colonne))) {
       await pool.query(`ALTER TABLE actualites ADD COLUMN ${colonne} ${definition}`);
     }
   }
+
+  // Comptes et mots-dièse des réseaux sociaux suivis (voir lib/actualites-social.ts).
+  await table(
+    "sources_sociales",
+    `id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+     plateforme VARCHAR(20) NOT NULL,
+     identifiant VARCHAR(160) NOT NULL,
+     nom VARCHAR(160) NOT NULL,
+     portee VARCHAR(10) NOT NULL DEFAULT 'togo',
+     filtrer TINYINT(1) NOT NULL DEFAULT 0,
+     actif TINYINT(1) NOT NULL DEFAULT 1,
+     derniere_collecte TIMESTAMP NULL DEFAULT NULL,
+     derniere_erreur VARCHAR(255) DEFAULT NULL,
+     nb_publications INT UNSIGNED NOT NULL DEFAULT 0,
+     PRIMARY KEY (id),
+     UNIQUE KEY uq_sources_sociales (plateforme, identifiant)`,
+  );
 
   const dejaVu = async (empreinte: string): Promise<boolean> => {
     const [rows] = await pool.query("SELECT 1 FROM actualites_vues WHERE empreinte = ? LIMIT 1", [empreinte]);
@@ -267,6 +287,17 @@ async function migrerActualites(): Promise<void> {
     await pool.query(
       "INSERT IGNORE INTO sources_actualites (nom, url_flux, portee, langue, filtrer) VALUES (?, ?, ?, ?, ?)",
       [s.nom, s.url_flux, s.portee, s.langue, s.filtrer ? 1 : 0],
+    );
+    await marquer(cle);
+  }
+
+  // Comptes sociaux de départ (posés une fois ; l'administration les gère ensuite).
+  for (const s of SOURCES_SOCIALES_PAR_DEFAUT) {
+    const cle = createHash("sha1").update(`social:${s.plateforme}:${s.identifiant}`).digest("hex");
+    if (await dejaVu(cle)) continue;
+    await pool.query(
+      "INSERT IGNORE INTO sources_sociales (plateforme, identifiant, nom, portee, filtrer) VALUES (?, ?, ?, ?, ?)",
+      [s.plateforme, s.identifiant, s.nom, s.portee, s.filtrer ? 1 : 0],
     );
     await marquer(cle);
   }
@@ -323,6 +354,16 @@ async function migrerActualites(): Promise<void> {
     const idInsere = Number((insere as { insertId?: number }).insertId ?? 0);
     if (idInsere > 0) await poserTagsInterne(idInsere, a.personnes ? JSON.stringify(a.personnes) : null);
     await marquer(empreinte);
+  }
+
+  // Mots retenus des articles qui n'en ont pas encore (par paquets, au démarrage).
+  const [sansMots] = await pool.query(
+    "SELECT id, titre, resume, contenu, lieu FROM actualites WHERE mots_cles IS NULL LIMIT 300",
+  );
+  for (const r of sansMots as { id: number; titre: string; resume: string; contenu: string | null; lieu: string | null }[]) {
+    const mots = ecrireMotsCles(extraireMotsCles([r.titre, r.resume, r.contenu ?? "", r.lieu ?? ""].join("\n")));
+    // Chaîne vide : « examiné, rien à retenir » (l'article n'est pas repris).
+    await pool.query("UPDATE actualites SET mots_cles = ? WHERE id = ?", [mots ?? "", r.id]);
   }
 }
 

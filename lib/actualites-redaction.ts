@@ -238,11 +238,11 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
   },
   {
     cle: "a-sika-exposition-collective-vendredi",
-    titre: "A. Sika : une exposition collective ce vendredi à Lomé",
+    titre: "A. Sika, à l'affiche d'une exposition collective le 27 novembre à Lomé",
     resume:
-      "L'artiste plasticienne togolaise A. Sika participe à une exposition collective ce vendredi 27 novembre 2026 à Lomé. Autodidacte, elle explore la frontière entre lumière et ombre, entre structure et accident.",
+      "L'artiste plasticienne togolaise A. Sika était annoncée à une exposition collective le vendredi 27 novembre 2026 à Lomé. Autodidacte, elle explore la frontière entre lumière et ombre, entre structure et accident.",
     contenu: [
-      "L'artiste plasticienne A. Sika participe à une exposition collective ce vendredi 27 novembre 2026 à Lomé. Le lieu exact, les horaires et la liste des artistes seront publiés ici dès leur confirmation.",
+      "L'artiste plasticienne A. Sika était annoncée à une exposition collective le vendredi 27 novembre 2026 à Lomé. Le lieu exact, les horaires et la liste des artistes n'ont pas été communiqués à ArTova ; le compte rendu sera ajouté ici dès qu'il sera disponible.",
       "Autodidacte, A. Sika revendique une liberté qui se lit dans sa démarche comme dans son rapport à ses œuvres : sa pratique échappe aux conventions techniques et fait de l'expérimentation un fil conducteur. Son originalité tient à l'association de matériaux et de couleurs qui, en apparence, s'opposent. De cette tension naît une esthétique singulière, où le désordre se mue en ordre.",
       "Elle explore la frontière entre lumière et ombre, entre structure et accident, et résume sa démarche d'une phrase : « De l'apparent désordre naît l'organisation… ». Deux de ses œuvres sont à découvrir sur ArTova : « Nâ – La danse des perles » et « Wadjawadja ».",
       "Son parcours compte de nombreuses expositions collectives : la Biennale de Dakar en 2018 (village des arts), « Nexus » (peinture et sculpture) au Goethe-Institut de Lomé en 2020, le Palais de Lomé en avril 2021 puis en mai 2023 avec « Dig Where You Stand », la galerie de l'hôtel Sarakawa en janvier 2023, et la Roumanie en 2024 avec l'association Karp Kamina et INTER Art. Elle a aussi animé un atelier de création en 2025. Ce parcours est tiré de sa fiche sur ArTova.",
@@ -255,31 +255,30 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     portee: "togo",
     categorie: "expositions",
     importance: 10,
-    a_la_une: true,
     publie_le: "2026-11-25T12:00:00Z",
     evenement_debut: "2026-11-27",
     lieu: "Lomé",
     artiste_slug: "a-sika",
-    revision: 6,
-    personnes: [{ nom: "A. Sika", slug: "a-sika", role: "artiste", note: "Participe à l'exposition collective du vendredi 27 novembre 2026 à Lomé." }],
+    revision: 7,
+    personnes: [{ nom: "A. Sika", slug: "a-sika", role: "artiste", note: "Annoncée à l'exposition collective du 27 novembre 2026 à Lomé." }],
     traductions: {
       en: {
-        titre: "A. Sika: a group exhibition this Friday in Lomé",
+        titre: "A. Sika, billed for a group exhibition on 27 November in Lomé",
         resume:
-          "Togolese visual artist A. Sika takes part in a group exhibition this Friday, 27 November 2026, in Lomé. Self-taught, she explores the border between light and shadow, between structure and accident.",
+          "Togolese visual artist A. Sika was billed for a group exhibition on Friday 27 November 2026 in Lomé. Self-taught, she explores the border between light and shadow, between structure and accident.",
         contenu: [
-          "Visual artist A. Sika takes part in a group exhibition this Friday, 27 November 2026, in Lomé. The exact venue, opening hours and list of artists will be published here as soon as they are confirmed.",
+          "Visual artist A. Sika was billed for a group exhibition on Friday 27 November 2026 in Lomé. The exact venue, opening hours and list of artists have not been communicated to ArTova; the report will be added here as soon as it is available.",
           "Self-taught, A. Sika claims a freedom that shows in her approach as much as in her relationship to her works: her practice escapes technical conventions and makes experimentation its common thread. Her originality lies in combining materials and colours that seem, at first sight, to oppose each other. From this tension comes a singular aesthetic in which disorder turns into order.",
           "She explores the border between light and shadow, between structure and accident, and sums up her approach in one line: “Out of apparent disorder, organisation is born…”. Two of her works can be discovered on ArTova: “Nâ – La danse des perles” (“The Dance of the Pearls”) and “Wadjawadja”.",
           "Her career includes many group exhibitions: the Dakar Biennale in 2018 (Village of the Arts), “Nexus” (painting and sculpture) at the Goethe-Institut in Lomé in 2020, the Palais de Lomé in April 2021 and again in May 2023 with “Dig Where You Stand”, the gallery of the Sarakawa hotel in January 2023, and Romania in 2024 with the Karp Kamina association and INTER Art. She also led a creative workshop in 2025. This background is taken from her profile on ArTova.",
         ].join("\n\n"),
       },
       de: {
-        titre: "A. Sika: eine Gruppenausstellung an diesem Freitag in Lomé",
+        titre: "A. Sika, angekündigt für eine Gruppenausstellung am 27. November in Lomé",
         resume:
-          "Die togoische Künstlerin A. Sika nimmt an diesem Freitag, dem 27. November 2026, an einer Gruppenausstellung in Lomé teil. Als Autodidaktin erkundet sie die Grenze zwischen Licht und Schatten, zwischen Struktur und Zufall.",
+          "Die togoische Künstlerin A. Sika war für eine Gruppenausstellung am Freitag, dem 27. November 2026, in Lomé angekündigt. Als Autodidaktin erkundet sie die Grenze zwischen Licht und Schatten, zwischen Struktur und Zufall.",
         contenu: [
-          "Die bildende Künstlerin A. Sika nimmt an diesem Freitag, dem 27. November 2026, an einer Gruppenausstellung in Lomé teil. Genauer Ort, Öffnungszeiten und die Liste der Künstler werden hier veröffentlicht, sobald sie bestätigt sind.",
+          "Die bildende Künstlerin A. Sika war für eine Gruppenausstellung am Freitag, dem 27. November 2026, in Lomé angekündigt. Genauer Ort, Öffnungszeiten und die Liste der Künstler wurden ArTova nicht mitgeteilt; der Bericht wird hier ergänzt, sobald er vorliegt.",
           "Als Autodidaktin beansprucht A. Sika eine Freiheit, die sich in ihrer Herangehensweise wie im Verhältnis zu ihren Werken zeigt: Ihre Praxis entzieht sich technischen Konventionen und macht das Experiment zum roten Faden. Ihre Originalität liegt in der Verbindung von Materialien und Farben, die einander scheinbar widersprechen. Aus dieser Spannung entsteht eine eigenwillige Ästhetik, in der sich Unordnung in Ordnung verwandelt.",
           "Sie erkundet die Grenze zwischen Licht und Schatten, zwischen Struktur und Zufall und fasst ihre Haltung in einem Satz zusammen: „Aus scheinbarer Unordnung entsteht Ordnung …“. Zwei ihrer Werke sind auf ArTova zu entdecken: „Nâ – La danse des perles“ („Der Tanz der Perlen“) und „Wadjawadja“.",
           "Ihr Werdegang umfasst zahlreiche Gruppenausstellungen: die Biennale von Dakar 2018 (Village des Arts), „Nexus“ (Malerei und Skulptur) im Goethe-Institut Lomé 2020, der Palais de Lomé im April 2021 und erneut im Mai 2023 mit „Dig Where You Stand“, die Galerie des Hotels Sarakawa im Januar 2023 sowie Rumänien 2024 mit dem Verein Karp Kamina und INTER Art. 2025 leitete sie außerdem einen Kreativworkshop. Dieser Werdegang stammt aus ihrem Profil auf ArTova.",
@@ -336,12 +335,12 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     cle: "portrait-a-sika",
     titre: "A. Sika, portrait d'une plasticienne autodidacte de Lomé",
     resume:
-      "Atelier à Wognomé, masterclass avec Kossi Assou en 2024, rencontre à Lomé Accueil en 2026 : retour sur le parcours de l'artiste plasticienne A. Sika, qui expose ce vendredi.",
+      "Atelier à Wognomé, masterclass avec Kossi Assou en 2024, rencontre à Lomé Accueil en 2026 : retour sur le parcours de l'artiste plasticienne A. Sika.",
     contenu: [
       "En 2018, la presse togolaise (Togotopnews, repris par Habari RDC) la rencontrait à Wognomé, en banlieue de Lomé, dans une grande maison transformée en atelier d'art plastique, où les traces d'encre gagnent le salon, la cuisine, les chambres et la terrasse. Plasticienne depuis sept ans à l'époque, elle y travaillait avec minutie, nuit et jour.",
       "Autodidacte, elle a poursuivi sa formation au fil des ateliers. Le 5 octobre 2024, elle figurait parmi les six artistes réunis par Kossi Assou, formateur et « trésor humain vivant » désigné par le ministère togolais de la Culture, pour une masterclass de suivi et d'évaluation à Djassémé, dans le cadre du soutien de l'ICESCO aux artistes plasticiens du Togo. Chacun y a présenté une toile en lien avec les exigences de l'exercice.",
       "Le 15 janvier 2026, l'association Lomé Accueil l'invitait, avec l'artiste Tessi Kodjovi, à ses rencontres avec les artistes togolais dans leur lieu de créativité : un jardin-musée où leurs créations deviennent des actes thérapeutiques (rencontre réservée aux membres de l'association).",
-      "Sur Instagram (@ablasikaakpaloo), elle résume sa démarche : « L'art est mon langage, la matière mon expression. Des créations qui interrogent, racontent et transmettent. » Elle participe ce vendredi 27 novembre 2026 à une exposition collective à Lomé (voir notre article). Ses œuvres sont à découvrir sur sa page ArTova.",
+      "Sur Instagram (@ablasikaakpaloo), elle résume sa démarche : « L'art est mon langage, la matière mon expression. Des créations qui interrogent, racontent et transmettent. » Elle était annoncée à une exposition collective à Lomé le 27 novembre 2026 (voir notre article). Ses œuvres sont à découvrir sur sa page ArTova.",
     ].join("\n\n"),
     source_nom: "ArTova",
     url_source: "https://lenouveaureporter.com/une-masterclass-de-suivi-evaluation-au-benefice-de-six-artistes-plasticiens-du-togo-organisee-et-animee-par-lartiste-kossi-assou-a-djasseme/",
@@ -354,29 +353,29 @@ export const ARTICLES_REDACTION: ArticleRedaction[] = [
     publie_le: "2026-11-25T13:00:00Z",
     artiste_slug: "a-sika",
     personnes: [{ nom: "A. Sika", slug: "a-sika", role: "artiste", note: "Plasticienne autodidacte de Lomé, installée à Wognomé." }, { nom: "Kossi Assou", role: "intervenant", note: "Formateur ; a réuni six artistes, dont A. Sika, pour une masterclass le 5 octobre 2024." }, { nom: "Tessi Kodjovi", role: "invite", note: "Artiste associé, avec A. Sika, aux rencontres de Lomé Accueil du 15 janvier 2026." }],
-    revision: 3,
+    revision: 4,
     videos: "https://www.instagram.com/ablasikaakpaloo/",
     traductions: {
       en: {
         titre: "A. Sika, portrait of a self-taught visual artist from Lomé",
         resume:
-          "A studio in Wognomé, a masterclass with Kossi Assou in 2024, a meeting at Lomé Accueil in 2026: a look back at the career of visual artist A. Sika, who exhibits this Friday.",
+          "A studio in Wognomé, a masterclass with Kossi Assou in 2024, a meeting at Lomé Accueil in 2026: a look back at the career of visual artist A. Sika.",
         contenu: [
           "In 2018, the Togolese press (Togotopnews, republished by Habari RDC) met her in Wognomé, on the outskirts of Lomé, in a large house turned into a visual arts studio, where ink traces spread through the living room, the kitchen, the bedrooms and the terrace. A visual artist for seven years at the time, she worked there meticulously, day and night.",
           "Self-taught, she has continued to train through workshops. On 5 October 2024 she was one of six artists gathered by Kossi Assou, a trainer and “living human treasure” named by Togo’s Ministry of Culture, for a follow-up and evaluation masterclass in Djassémé, as part of ICESCO’s support for visual artists in Togo. Each of them presented a canvas related to the requirements of the exercise.",
           "On 15 January 2026, the Lomé Accueil association invited her, with artist Tessi Kodjovi, to its meetings with Togolese artists in their creative spaces: a garden-museum where their creations become therapeutic acts (a meeting reserved for the association’s members).",
-          "On Instagram (@ablasikaakpaloo) she sums up her approach: “Art is my language, matter my expression. Creations that question, tell and pass on.” She takes part this Friday, 27 November 2026, in a group exhibition in Lomé (see our article). Her works can be discovered on her ArTova page.",
+          "On Instagram (@ablasikaakpaloo) she sums up her approach: “Art is my language, matter my expression. Creations that question, tell and pass on.” She was billed for a group exhibition in Lomé on 27 November 2026 (see our article). Her works can be discovered on her ArTova page.",
         ].join("\n\n"),
       },
       de: {
         titre: "A. Sika, Porträt einer autodidaktischen Künstlerin aus Lomé",
         resume:
-          "Ein Atelier in Wognomé, 2024 eine Masterclass bei Kossi Assou, 2026 ein Treffen bei Lomé Accueil: ein Rückblick auf den Werdegang der bildenden Künstlerin A. Sika, die an diesem Freitag ausstellt.",
+          "Ein Atelier in Wognomé, 2024 eine Masterclass bei Kossi Assou, 2026 ein Treffen bei Lomé Accueil: ein Rückblick auf den Werdegang der bildenden Künstlerin A. Sika.",
         contenu: [
           "2018 traf die togoische Presse (Togotopnews, von Habari RDC übernommen) sie in Wognomé, am Stadtrand von Lomé, in einem großen Haus, das zu einem Atelier für bildende Kunst umgebaut worden war und in dem sich die Tintenspuren durch Wohnzimmer, Küche, Schlafzimmer und Terrasse ziehen. Damals seit sieben Jahren als Künstlerin tätig, arbeitete sie dort sorgfältig, Tag und Nacht.",
           "Als Autodidaktin bildet sie sich in Workshops weiter. Am 5. Oktober 2024 gehörte sie zu den sechs Künstlern, die Kossi Assou, Ausbilder und vom togoischen Kulturministerium ernannter „lebender menschlicher Schatz“, in Djassémé zu einer Masterclass zur Nachverfolgung und Auswertung versammelte, im Rahmen der Unterstützung der ICESCO für bildende Künstler in Togo. Jeder stellte eine Leinwand passend zu den Anforderungen der Übung vor.",
           "Am 15. Januar 2026 lud der Verein Lomé Accueil sie gemeinsam mit dem Künstler Tessi Kodjovi zu seinen Begegnungen mit togoischen Künstlern an ihren Schaffensorten ein: ein Garten-Museum, in dem ihre Werke zu therapeutischen Handlungen werden (Treffen nur für Vereinsmitglieder).",
-          "Auf Instagram (@ablasikaakpaloo) fasst sie ihre Haltung zusammen: „Kunst ist meine Sprache, Materie mein Ausdruck. Werke, die hinterfragen, erzählen und weitergeben.“ An diesem Freitag, dem 27. November 2026, nimmt sie an einer Gruppenausstellung in Lomé teil (siehe unseren Artikel). Ihre Werke sind auf ihrer ArTova-Seite zu entdecken.",
+          "Auf Instagram (@ablasikaakpaloo) fasst sie ihre Haltung zusammen: „Kunst ist meine Sprache, Materie mein Ausdruck. Werke, die hinterfragen, erzählen und weitergeben.“ Für den 27. November 2026 war sie für eine Gruppenausstellung in Lomé angekündigt (siehe unseren Artikel). Ihre Werke sind auf ihrer ArTova-Seite zu entdecken.",
         ].join("\n\n"),
       },
     },

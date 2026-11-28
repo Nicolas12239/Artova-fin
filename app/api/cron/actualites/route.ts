@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { collecterActualites } from "@/lib/actualites-collecte";
+import { collecterReseaux } from "@/lib/actualites-social";
 
 export const dynamic = "force-dynamic";
 // 60 s est le plafond de tous les forfaits Vercel ; la collecte s'arrête d'elle-même avant.
@@ -18,7 +19,14 @@ function autorise(request: Request): boolean {
 export async function GET(request: Request) {
   if (!autorise(request)) return new Response("Non autorisé", { status: 401 });
   try {
-    return Response.json(await collecterActualites({ budgetMs: 50_000 }));
+    const [presse, reseaux] = await Promise.all([
+      collecterActualites({ budgetMs: 50_000 }),
+      collecterReseaux({ budgetMs: 45_000 }).catch((erreur) => {
+        console.error("[ArTova] Collecte des réseaux :", erreur);
+        return null;
+      }),
+    ]);
+    return Response.json({ ...presse, reseaux });
   } catch (erreur) {
     console.error("[ArTova] Collecte des actualités :", erreur);
     return Response.json({ erreur: "La collecte a échoué." }, { status: 500 });

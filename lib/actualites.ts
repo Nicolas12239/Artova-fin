@@ -13,11 +13,14 @@ const SCORE = `(a.importance + CASE a.portee WHEN 'togo' THEN 2 WHEN 'afrique' T
 const COLONNES = `a.id, a.titre, a.resume, a.contenu, a.url_source, a.source_nom, a.image_url,
   a.portee, a.categorie, a.importance, a.a_la_une, a.statut, a.origine, a.publie_le,
   DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut,
-  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.personnes, a.traductions, a.enquete,
+  DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu, a.videos, a.artiste_slug, a.images, a.credit_image, a.personnes, a.traductions, a.enquete, a.mots_cles,
   (SELECT COUNT(*) FROM actualites_likes l WHERE l.actualite_id = a.id) AS nb_likes,
   (SELECT COUNT(*) FROM actualites_commentaires c WHERE c.actualite_id = a.id AND c.statut = 'publie') AS nb_commentaires`;
 
 export interface FiltreActualites {
+  // Page d'accueil (sans filtre) en français ou en allemand : les dépêches
+  // étrangères restées dans leur langue d'origine restent dans l'onglet « Monde ».
+  accueil?: boolean;
   portee?: Portee;
   categorie?: Categorie;
   // Recherche libre : titre, résumé, texte, noms cités et traductions.
@@ -38,33 +41,58 @@ function clauseFiltre(filtre: FiltreActualites): { sql: string; params: Param[] 
     conditions.push("a.categorie = ?");
     params.push(filtre.categorie);
   }
+  if (filtre.accueil && !filtre.portee && !filtre.categorie && !filtre.q?.trim()) {
+    // Non traduit = une version anglaise (le texte d'origine) sans version allemande.
+    conditions.push("NOT (a.portee = 'monde' AND COALESCE(a.traductions, '') LIKE '{\"en\":%' AND COALESCE(a.traductions, '') NOT LIKE '%\"de\":%')");
+  }
   const q = filtre.q?.trim().slice(0, 80);
   if (q) {
     const motif = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
     conditions.push(
-      "(a.titre LIKE ? OR a.resume LIKE ? OR a.contenu LIKE ? OR a.personnes LIKE ? OR a.lieu LIKE ? OR a.traductions LIKE ?)",
+      "(a.titre LIKE ? OR a.resume LIKE ? OR a.contenu LIKE ? OR a.personnes LIKE ? OR a.lieu LIKE ? OR a.traductions LIKE ? OR a.mots_cles LIKE ?)",
     );
-    params.push(motif, motif, motif, motif, motif, motif);
+    params.push(motif, motif, motif, motif, motif, motif, motif);
   }
   return { sql: conditions.join(" AND "), params };
 }
 
-// L'actualité la plus forte des derniers jours : épinglée par l'équipe d'abord,
-// sinon la mieux notée. Retombe sur la plus récente quand rien n'est frais.
+// La une : un rendez-vous encore en cours ou à venir, ou une information de la
+// semaine. Un article épinglé par l'équipe passe devant tant qu'il reste actuel ;
+// puis le Togo, puis les articles illustrés, puis les mieux notés. La une se
+// renouvelle ainsi d'elle-même : un événement terminé la quitte.
 export async function actualiteALaUne(filtre: FiltreActualites = {}): Promise<Actualite | null> {
   const { sql, params } = clauseFiltre(filtre);
-  const frais = await query<Actualite>(
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const actuelles = await query<Actualite>(
     `SELECT ${COLONNES} FROM actualites a
-     WHERE ${sql} AND a.publie_le >= ?
-     ORDER BY a.a_la_une DESC, ${SCORE} DESC, a.publie_le DESC LIMIT 1`,
-    [...params, new Date(Date.now() - 4 * 86_400_000)],
+     WHERE ${sql} AND (
+       (a.evenement_debut IS NOT NULL AND COALESCE(a.evenement_fin, a.evenement_debut) >= ? AND a.publie_le >= ?)
+       OR (a.evenement_debut IS NULL AND a.publie_le >= ?))
+     ORDER BY a.a_la_une DESC, (a.portee = 'togo') DESC, (a.image_url IS NOT NULL) DESC, ${SCORE} DESC, a.publie_le DESC LIMIT 1`,
+    [...params, aujourdhui, new Date(Date.now() - 30 * 86_400_000), new Date(Date.now() - 5 * 86_400_000)],
   );
-  if (frais[0]) return frais[0];
+  if (actuelles[0]) return actuelles[0];
   const recent = await query<Actualite>(
-    `SELECT ${COLONNES} FROM actualites a WHERE ${sql} ORDER BY a.a_la_une DESC, a.publie_le DESC LIMIT 1`,
+    `SELECT ${COLONNES} FROM actualites a WHERE ${sql} ORDER BY a.publie_le DESC LIMIT 1`,
     params,
   );
   return recent[0] ?? null;
+}
+
+// Évite qu'un seul média occupe tout un bloc : au plus `max` articles par source,
+// dans l'ordre reçu.
+export function varierSources(liste: Actualite[], max: number, limite: number): Actualite[] {
+  const compte = new Map<string, number>();
+  const gardes: Actualite[] = [];
+  for (const a of liste) {
+    const n = compte.get(a.source_nom) ?? 0;
+    // Les articles de la rédaction ArTova ne sont pas limités.
+    if (a.source_nom !== "ArTova" && n >= max) continue;
+    compte.set(a.source_nom, n + 1);
+    gardes.push(a);
+    if (gardes.length >= limite) break;
+  }
+  return gardes;
 }
 
 // Du plus récent au plus ancien, jour par jour ; dans une même journée, l'actualité

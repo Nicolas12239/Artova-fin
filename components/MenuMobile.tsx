@@ -32,7 +32,7 @@ export function MenuMobile({
     const html = document.documentElement;
     const avant = html.style.overflow;
     html.style.overflow = "hidden";
-    const fermer = (e: KeyboardEvent) => e.key === "Escape" && setOuvert(false);
+    const fermer = (e: KeyboardEvent) => e.key === "Escape" && setOuvertPour(null);
     window.addEventListener("keydown", fermer);
     return () => {
       html.style.overflow = avant;

@@ -65,6 +65,8 @@ export interface Actualite {
   traductions: string | null;
   // Dossier de recherche (JSON : { maj, sources: [{ titre, url }] }), voir lireEnquete.
   enquete: string | null;
+  // Mots retenus (séparés par « | »), voir lib/actualites-motscles.ts.
+  mots_cles: string | null;
   nb_likes: number;
   nb_commentaires: number;
 }
@@ -194,7 +196,7 @@ export function contenuLangue(
 
 // ─── Vidéos intégrées ────────────────────────────────────────────────────────
 
-export type PlateformeVideo = "tiktok" | "instagram" | "youtube";
+export type PlateformeVideo = "tiktok" | "instagram" | "youtube" | "facebook";
 
 export interface VideoIntegree {
   plateforme: PlateformeVideo;
@@ -208,7 +210,7 @@ export interface VideoIntegree {
   profil?: boolean;
 }
 
-// Reconnaît une adresse de vidéo TikTok, Instagram ou YouTube. Les liens courts
+// Reconnaît une adresse de publication TikTok, Instagram, YouTube ou Facebook. Les liens courts
 // (vm.tiktok.com) ne sont pas acceptés : ils cachent l'identifiant de la vidéo.
 export function lireVideo(brut: string): VideoIntegree | null {
   let u: URL;
@@ -217,7 +219,26 @@ export function lireVideo(brut: string): VideoIntegree | null {
   } catch {
     return null;
   }
-  const hote = u.hostname.replace(/^www\.|^m\./, "");
+  const hote = u.hostname.replace(/^www\.|^m\.|^web\./, "");
+  if (hote === "facebook.com") {
+    // Publications publiques d'une page : texte, photos ou vidéo, via le module officiel.
+    const video = /\/(videos|reel)\/|^\/watch\/?$/.test(u.pathname);
+    if (!video && !/\/(posts|photos)\/|^\/(photo|photo\.php|permalink\.php|story\.php)\/?$|\/groups\/[^/]+\/posts\//.test(u.pathname)) return null;
+    // Seuls les paramètres qui désignent la publication sont gardés.
+    const utile = new URLSearchParams();
+    for (const cle of ["v", "fbid", "story_fbid", "id", "set"]) {
+      const v = u.searchParams.get(cle);
+      if (v) utile.set(cle, v);
+    }
+    const url = `https://www.facebook.com${u.pathname}${utile.size ? `?${utile}` : ""}`;
+    const module = video ? "video.php" : "post.php";
+    return {
+      plateforme: "facebook",
+      url,
+      lecteur: `https://www.facebook.com/plugins/${module}?href=${encodeURIComponent(url)}&show_text=true&width=500`,
+      vertical: true,
+    };
+  }
   if (hote === "tiktok.com") {
     const m = /\/video\/(\d{8,25})/.exec(u.pathname);
     return m ? { plateforme: "tiktok", url: `https://www.tiktok.com${u.pathname}`, lecteur: `https://www.tiktok.com/embed/v2/${m[1]}`, vertical: true } : null;

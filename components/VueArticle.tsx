@@ -10,6 +10,7 @@ import { TexteAvecNoms } from "./TexteAvecNoms";
 import { NavActu } from "./NavActu";
 import { ProgressionLecture } from "./ProgressionLecture";
 import { TitreSection } from "./TitreSection";
+import { lireMotsCles } from "@/lib/actualites-motscles";
 import { VideosActualite } from "./VideosActualite";
 import { retirerCommentaire } from "@/app/actions/actualites";
 import { formatDateHeureFr } from "@/lib/format";
@@ -63,6 +64,10 @@ export function VueArticle({
   const mots = `${c.resume} ${c.contenu ?? ""}`.split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(mots / 210));
   const redaction = a.source_nom === "ArTova";
+  // Publication reprise d'un réseau social : le lecteur intégré passe d'abord,
+  // puis le texte tel qu'il a été publié.
+  const social = /^(.*) · (Instagram|TikTok|Facebook|YouTube)$/.exec(a.source_nom);
+  const motsRetenus = lireMotsCles(a.mots_cles);
   // Les portraits de la rubrique « Découvertes » ont une photo de personne : format portrait.
   const portrait = a.categorie === "decouverte" && Boolean(a.image_url);
   const credit = a.credit_image ?? a.source_nom;
@@ -176,6 +181,9 @@ export function VueArticle({
           </nav>
         )}
 
+        {social && <div className="-mt-6 mb-10"><VideosActualite videos={a.videos} titre={c.titre} langue={langue} /></div>}
+        {social && blocs.length > 0 && <p className="mb-4 text-sm font-medium text-terracotta">{fmt(t.textePublie, { compte: social[1] })}</p>}
+        <div className={social ? "break-words border-l-2 border-terracotta pl-5" : undefined}>
         {blocs.map((b, i) =>
           "titre" in b && b.titre ? (
             <TitreSection key={b.id} id={b.id} className="mt-14">
@@ -184,18 +192,37 @@ export function VueArticle({
           ) : (
             <p
               key={i}
-              className={`text-[18px] leading-[1.8] text-encre/85 ${i > 0 ? "mt-6" : ""} ${i === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-terracotta" : ""}`}
+              className={`text-[18px] leading-[1.8] text-encre/85 ${i > 0 ? "mt-6" : ""} ${i === 0 && !social ? "first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-terracotta" : ""}`}
             >
               <TexteAvecNoms texte={typo("texte" in b ? (b.texte ?? "") : "")} noms={nomsCites} vus={nomsLies} langue={langue} />
             </p>
           ),
+        )}
+        </div>
+
+        {motsRetenus.length > 0 && (
+          <section aria-labelledby="mots-retenus" className="mt-12">
+            <h2 id="mots-retenus" className="text-sm font-medium text-gris">{t.motsRetenus}</h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {motsRetenus.map((m) => (
+                <li key={m}>
+                  <Link
+                    href={avecLangue(`/actualites?q=${encodeURIComponent(m)}`, langue)}
+                    className="inline-flex min-h-11 items-center rounded-full border border-fil bg-craie px-4 text-sm transition-colors hover:border-encre hover:bg-encre hover:text-creme"
+                  >
+                    {m}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <DossierActualite personnes={personnes} enquete={a.enquete} langue={langue} />
 
         <GalerieActualite images={a.images} titre={c.titre} credit={credit} langue={langue} />
 
-        <VideosActualite videos={a.videos} titre={c.titre} langue={langue} />
+        {!social && <VideosActualite videos={a.videos} titre={c.titre} langue={langue} />}
 
         {artiste && (
           <Link
@@ -217,7 +244,7 @@ export function VueArticle({
         {a.url_source && (
           <div className="mt-10 border-y border-fil py-6">
             <p className="text-sm text-gris">
-              {redaction ? t.sourcePourAllerPlusLoin : fmt(t.sourceResume, { source: a.source_nom })}
+              {redaction ? t.sourcePourAllerPlusLoin : social ? fmt(t.publicationRelais, { compte: social[1] }) : fmt(t.sourceResume, { source: a.source_nom })}
             </p>
             <a
               href={a.url_source}
@@ -225,7 +252,7 @@ export function VueArticle({
               rel="noopener noreferrer nofollow"
               className="mt-4 inline-flex min-h-11 items-center rounded-full bg-encre px-6 text-sm font-medium text-creme transition-colors hover:bg-terracotta"
             >
-              {redaction ? t.consulterSource : fmt(t.lireSource, { source: a.source_nom })}
+              {redaction ? t.consulterSource : social ? `${t.voirSur} ${social[2]} ↗` : fmt(t.lireSource, { source: a.source_nom })}
             </a>
           </div>
         )}

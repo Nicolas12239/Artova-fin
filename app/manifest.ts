@@ -8,6 +8,13 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "Peintres, plasticiens et sculpteurs du Togo : découvrez leurs histoires et commandez leurs œuvres.",
     start_url: "/?source=app",
+    // « Partager vers ArTova » (Android, application installée depuis Chrome) :
+    // un post Instagram, TikTok ou Facebook arrive sur la page de reprise.
+    share_target: {
+      action: "/admin/actualites/importer",
+      method: "GET",
+      params: { title: "titre", text: "texte", url: "lien" },
+    },
     scope: "/",
     display: "standalone",
     orientation: "portrait",

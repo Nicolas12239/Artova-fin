@@ -16,6 +16,7 @@ import {
 } from "./actualites-flux";
 import { enrichir, ErreurIAFatale, iaDisponible, type FicheIA, type PublicationBrute } from "./actualites-ia";
 import type { Categorie } from "./actualites-commun";
+import { ecrireMotsCles, extraireMotsCles } from "./actualites-motscles";
 import type { Portee } from "./actualites-sources";
 
 export interface SourceActualite {
@@ -47,6 +48,8 @@ export interface RapportCollecte {
 }
 
 const AGE_MAX_JOURS = 7;
+// La presse togolaise parle d'arts visuels moins souvent : on remonte plus loin.
+const AGE_MAX_JOURS_TOGO = 30;
 const MAX_PAR_SOURCE = 5;
 // Deux publications par appel : chaque fiche contient un article développé et
 // ses traductions, donc beaucoup de texte à produire.
@@ -177,7 +180,8 @@ export async function collecterActualites({
     rapport.lues += entrees.length;
     for (const entree of entrees) {
       const date = entree.date && entree.date.getTime() <= maintenant + 3_600_000 ? entree.date : new Date(maintenant);
-      if (maintenant - date.getTime() > AGE_MAX_JOURS * 86_400_000) continue;
+      const ageMax = source.portee === "togo" ? AGE_MAX_JOURS_TOGO : AGE_MAX_JOURS;
+      if (maintenant - date.getTime() > ageMax * 86_400_000) continue;
       if (source.filtrer) {
         // Presse togolaise : filtre large si l'IA trie ensuite, strict sinon.
         const large = source.portee === "togo" && rapport.ia === "active";
@@ -352,13 +356,15 @@ export async function collecterActualites({
     const ajout = await execute(
       `INSERT IGNORE INTO actualites
        (empreinte, titre, resume, contenu, url_source, source_nom, image_url, credit_image, images, videos, personnes,
-        artiste_slug, evenement_debut, evenement_fin, lieu, portee, categorie, importance, origine, source_id, publie_le, traductions)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'auto', ?, ?, ?)`,
+        artiste_slug, evenement_debut, evenement_fin, lieu, portee, categorie, importance, origine, source_id, publie_le, traductions, mots_cles)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'auto', ?, ?, ?, ?)`,
       [
         r.candidat.empreinte, r.titre, r.resume, r.contenu, r.candidat.entree.lien, r.candidat.source.nom,
         r.image, r.image || r.images ? r.candidat.source.nom : null, r.images, r.videos, r.personnes,
         r.artisteSlug, r.evenement?.debut ?? null, r.evenement?.fin ?? null, r.evenement?.lieu ?? null,
         r.portee, r.categorie, r.importance, r.candidat.source.id, r.candidat.date, r.traductions,
+        // Mots retenus, tirés du titre, du texte et de l'extrait d'origine.
+        ecrireMotsCles(extraireMotsCles([r.titre, r.resume, r.contenu ?? "", r.candidat.entree.titre, r.candidat.entree.extrait, r.evenement?.lieu ?? ""].join("\n"))) ?? "",
       ],
     );
     if (ajout.affectedRows > 0) {

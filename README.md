@@ -52,9 +52,40 @@ toujours citée).
   modèle (par défaut `claude-opus-5-5` ; `claude-haiku-5-5` coûte nettement moins)
   et `ACTUALITES_MAX_PAR_COLLECTE` plafonne le nombre de publications analysées
   par jour (40 par défaut).
-- Instagram et TikTok n'offrent pas de flux public exploitable : leurs
-  informations arrivent par les médias qui les relaient, ou par la publication
-  manuelle de l'administration (lien de la source, image, deux phrases).
+- La collecte tourne aussi à la demande des visites (toutes les 30 minutes au
+  plus), et suit les réseaux sociaux ci-dessous.
+
+### Réseaux sociaux
+
+Les réseaux sont lus par leurs voies officielles uniquement (aucune page n'est
+aspirée en contournant une connexion). Gestion : Administration › Actualités ›
+Réseaux sociaux.
+
+| Réseau | Ce qui est automatique | Ce qu'il faut |
+| --- | --- | --- |
+| YouTube | Nouvelles vidéos des chaînes suivies | Rien |
+| Instagram, comptes professionnels | Publications, photos, vidéos, légendes | `META_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ID` |
+| Instagram, mots-dièse | Publications des dernières 24 h (30 mots par semaine) | Les mêmes, plus « Instagram Public Content Access » (App Review) |
+| Facebook, pages | Publications des pages accessibles au jeton | `FACEBOOK_PAGE_TOKEN` ou `META_ACCESS_TOKEN` ; les pages d'autrui exigent une validation Meta |
+| TikTok | Rien : aucun accès aux comptes d'autrui | Ajout par lien |
+
+**Ajout par lien** (sans clé) : coller l'adresse d'une publication Instagram,
+TikTok, Facebook ou YouTube. Sur Android, ArTova installée depuis Chrome figure
+dans le menu « Partager » (l'APK déjà signé doit être reconstruit pour cela ;
+iPhone ne propose pas ce partage aux sites).
+
+**Connexion à Meta** : passer le compte Instagram d'ArTova en compte
+professionnel relié à une page Facebook ; créer une application sur
+developers.facebook.com (autorisations `instagram_basic`,
+`pages_read_engagement`, au besoin `instagram_manage_insights`) ; générer un
+jeton de longue durée ; relever l'identifiant du compte Instagram
+professionnel ; ajouter les variables sur Vercel et redéployer. Un jeton de
+longue durée expire (environ 60 jours pour un jeton utilisateur) : le renouveler
+quand l'administration signale une erreur « Meta ».
+
+Chaque publication reprise garde son auteur et son lien d'origine, est affichée
+avec le lecteur officiel du réseau, et reçoit ses « mots retenus » (mots-dièse,
+lieux, termes de l'art) ; une date annoncée dans la légende l'inscrit à l'agenda.
 - Les lecteurs connectés peuvent aimer, commenter et partager ; l'administration
   peut masquer, mettre à la une, supprimer, ajouter des sources et modérer.
 

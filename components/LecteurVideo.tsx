@@ -3,12 +3,13 @@
 import { useState } from "react";
 import type { VideoIntegree } from "@/lib/actualites-commun";
 
-const NOMS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube" } as const;
+const NOMS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook" } as const;
 
 function taille(v: VideoIntegree): string {
   if (v.plateforme === "tiktok") return "h-[740px] w-[325px] max-w-full";
   if (v.plateforme === "instagram" && v.profil) return "h-[780px] w-[540px] max-w-full";
   if (v.plateforme === "instagram") return "h-[640px] w-[400px] max-w-full";
+  if (v.plateforme === "facebook") return "h-[620px] w-[500px] max-w-full";
   return "aspect-video w-full";
 }
 

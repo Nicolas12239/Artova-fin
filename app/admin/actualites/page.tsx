@@ -10,6 +10,8 @@ import {
 } from "@/app/actions/actualites";
 import { query } from "@/lib/db";
 import { iaDisponible } from "@/lib/actualites-ia";
+import { ReseauxSociauxAdmin } from "@/components/ReseauxSociauxAdmin";
+import type { SourceSociale } from "@/lib/actualites-social";
 import type { SourceActualite } from "@/lib/actualites-collecte";
 import { CATEGORIES, LIBELLE_PORTEE, actualiteParId, ilYa, lienActualite, type Actualite } from "@/lib/actualites";
 
@@ -26,7 +28,8 @@ export default async function PageAdminActualites({
 }) {
   const { modifier } = await searchParams;
   const aModifier = Number(modifier) > 0 ? await actualiteParId(Number(modifier)) : null;
-  const [articles, sources, commentaires, artistes, bilan] = await Promise.all([
+  const [articles, sources, commentaires, artistes, bilan, reseaux] = await Promise.all([
+
     query<Actualite>(
       `SELECT a.id, a.titre, a.source_nom, a.portee, a.categorie, a.statut, a.origine, a.a_la_une, a.publie_le,
         DATE_FORMAT(a.evenement_debut, '%Y-%m-%d') AS evenement_debut, DATE_FORMAT(a.evenement_fin, '%Y-%m-%d') AS evenement_fin, a.lieu,
@@ -49,6 +52,7 @@ export default async function PageAdminActualites({
               (SELECT COUNT(*) FROM actualites_likes) AS likes,
               (SELECT COUNT(*) FROM actualites_commentaires WHERE statut = 'publie') AS commentaires`,
     ),
+    query<SourceSociale>("SELECT * FROM sources_sociales ORDER BY actif DESC, plateforme, nom"),
   ]);
   const b = bilan[0];
   const ia = iaDisponible();
@@ -138,6 +142,8 @@ export default async function PageAdminActualites({
           </div>
         </div>
       </section>
+
+      <ReseauxSociauxAdmin sources={reseaux} />
 
       <section className="grid gap-12 lg:grid-cols-[1.2fr_1fr]">
         <div>

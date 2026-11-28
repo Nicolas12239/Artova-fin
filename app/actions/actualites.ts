@@ -13,6 +13,8 @@ import { collecterActualites } from "@/lib/actualites-collecte";
 import { estCategorie, estPortee, lireVideo } from "@/lib/actualites";
 import { estLangue, type Langue } from "@/lib/actualites-i18n";
 import { enqueterActualite } from "@/lib/actualites-recherche";
+import { collecterReseaux, importerLien } from "@/lib/actualites-social";
+import { identifiantChaine } from "@/lib/actualites-social-lecture";
 import { lirePersonnes } from "@/lib/actualites-commun";
 
 export type EtatActualite = { erreur?: string; succes?: string } | null;
@@ -161,15 +163,21 @@ export async function collecterMaintenant(
 ): Promise<EtatActualite> {
   await exigerAdmin();
   try {
-    const r = await collecterActualites({ budgetMs: 50_000 });
+    const [r, reseaux] = await Promise.all([
+      collecterActualites({ budgetMs: 50_000 }),
+      collecterReseaux({ budgetMs: 45_000 }).catch(() => null),
+    ]);
     rafraichir();
+    const social = reseaux
+      ? ` Réseaux : ${reseaux.publiees} publication(s) reprise(s) sur ${reseaux.lues} lue(s)${reseaux.enAttente ? `, ${reseaux.enAttente} compte(s) en attente de la connexion Meta` : ""}${reseaux.erreurs.length ? `, ${reseaux.erreurs.length} en erreur` : ""}.`
+      : " Réseaux : collecte impossible.";
     const ia =
       r.ia === "active" ? "tri par l'IA" : r.ia === "en_panne" ? "IA indisponible, tri par mots-clés" : "sans IA, tri par mots-clés";
     const erreurs = r.erreurs.length
       ? ` ${r.erreurs.length} source(s) en erreur : ${r.erreurs.map((e) => e.source).slice(0, 4).join(", ")}.`
       : "";
     return {
-      succes: `${r.publiees} publiée(s) sur ${r.nouvelles} nouveauté(s) repérée(s) dans ${r.lues} publications (${ia}, ${Math.round(r.duree_ms / 1000)} s).${r.reportees ? ` ${r.reportees} reportée(s) à la prochaine collecte.` : ""}${erreurs}`,
+      succes: `${r.publiees} publiée(s) sur ${r.nouvelles} nouveauté(s) repérée(s) dans ${r.lues} publications (${ia}, ${Math.round(r.duree_ms / 1000)} s).${r.reportees ? ` ${r.reportees} reportée(s) à la prochaine collecte.` : ""}${erreurs}${social}`,
     };
   } catch (erreur) {
     console.error("[ArTova] Collecte des actualités :", erreur);
@@ -423,4 +431,87 @@ export async function supprimerSource(id: number): Promise<void> {
   await exigerAdmin();
   await execute("DELETE FROM sources_actualites WHERE id = ?", [id]);
   rafraichir();
+}
+
+// ─── Réseaux sociaux ─────────────────────────────────────────────────────────
+
+const PLATEFORMES_SUIVIES = ["instagram", "instagram_hashtag", "facebook", "youtube"] as const;
+
+export async function ajouterSourceSociale(_prev: EtatActualite, formData: FormData): Promise<EtatActualite> {
+  await exigerAdmin();
+  const plateforme = PLATEFORMES_SUIVIES.find((p) => p === formData.get("plateforme"));
+  const saisie = String(formData.get("identifiant") ?? "").trim();
+  const nomSaisi = nettoyerHtml(String(formData.get("nom") ?? "")).slice(0, 120);
+  const portee = String(formData.get("portee") ?? "togo");
+  if (!plateforme || !saisie || !estPortee(portee)) return { erreur: "Choisissez le réseau et indiquez le compte." };
+
+  let identifiant: string | null = null;
+  if (plateforme === "instagram") {
+    identifiant = /^(?:https?:\/\/(?:www\.)?instagram\.com\/)?@?([A-Za-z0-9._]{2,30})\/?(?:\?.*)?$/.exec(saisie)?.[1] ?? null;
+  } else if (plateforme === "instagram_hashtag") {
+    identifiant = /^#?([\p{L}\p{N}_]{2,80})$/u.exec(saisie)?.[1]?.toLowerCase() ?? null;
+  } else if (plateforme === "facebook") {
+    identifiant = /^(?:https?:\/\/(?:www\.|web\.|m\.)?facebook\.com\/)?([A-Za-z0-9.\-]{2,80})\/?(?:\?.*)?$/.exec(saisie)?.[1] ?? null;
+  } else {
+    identifiant = await identifiantChaine(saisie);
+  }
+  if (!identifiant) {
+    return {
+      erreur:
+        plateforme === "youtube"
+          ? "Chaîne introuvable : collez l'adresse de la chaîne (youtube.com/@nom ou /channel/UC…)."
+          : "Compte non reconnu : collez son adresse ou son nom exact.",
+    };
+  }
+  const nom = nomSaisi || (plateforme === "instagram" ? `@${identifiant}` : plateforme === "instagram_hashtag" ? `#${identifiant}` : identifiant);
+  const r = await execute(
+    "INSERT IGNORE INTO sources_sociales (plateforme, identifiant, nom, portee, filtrer) VALUES (?, ?, ?, ?, ?)",
+    [plateforme, identifiant, nom, portee, formData.get("filtrer") === "1" ? 1 : 0],
+  );
+  revalidatePath("/admin/actualites");
+  return r.affectedRows > 0 ? { succes: `${nom} est maintenant suivi.` } : { erreur: "Ce compte est déjà suivi." };
+}
+
+export async function basculerSourceSociale(id: number): Promise<void> {
+  await exigerAdmin();
+  await execute("UPDATE sources_sociales SET actif = 1 - actif, derniere_erreur = NULL WHERE id = ?", [id]);
+  revalidatePath("/admin/actualites");
+}
+
+export async function supprimerSourceSociale(id: number): Promise<void> {
+  await exigerAdmin();
+  await execute("DELETE FROM sources_sociales WHERE id = ?", [id]);
+  revalidatePath("/admin/actualites");
+}
+
+// Publie des publications à partir de leurs liens (un par ligne). Le texte facultatif
+// sert de légende quand la plateforme ne la fournit pas (Instagram, Facebook).
+export async function importerPublications(_prev: EtatActualite, formData: FormData): Promise<EtatActualite> {
+  await exigerAdmin();
+  const brut = String(formData.get("liens") ?? "");
+  // Le partage d'un téléphone mêle souvent texte et adresse : on extrait les adresses.
+  const liens = [...new Set(brut.match(/https:\/\/[^\s<>"']+/g) ?? [])].slice(0, 8);
+  if (liens.length === 0) return { erreur: "Collez au moins un lien commençant par https://." };
+  const texte = String(formData.get("texte") ?? "").trim().slice(0, 5000);
+  const portee = String(formData.get("portee") ?? "togo");
+  const lignes: string[] = [];
+  let publiees = 0;
+  for (const lien of liens) {
+    try {
+      const r = await importerLien(lien, { texte: liens.length === 1 ? texte : "", portee: estPortee(portee) ? portee : "togo" });
+      if (r.statut === "publie") publiees++;
+      lignes.push(
+        r.statut === "publie"
+          ? `Publiée : « ${r.titre} »`
+          : r.statut === "existe"
+            ? `Déjà publiée : « ${r.titre} »`
+            : `Lien non reconnu : ${lien.slice(0, 80)} (publication Instagram, Facebook, TikTok ou YouTube attendue)`,
+      );
+    } catch (erreur) {
+      console.error("[ArTova] Import d'une publication :", erreur);
+      lignes.push(`Échec : ${lien.slice(0, 80)}`);
+    }
+  }
+  rafraichir();
+  return publiees > 0 ? { succes: lignes.join(" · ") } : { erreur: lignes.join(" · ") };
 }

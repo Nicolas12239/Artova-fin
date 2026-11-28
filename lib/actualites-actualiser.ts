@@ -2,14 +2,21 @@ import { collecterActualites } from "./actualites-collecte";
 import { reserverCollecte, reserverEnquete } from "./actualites-actualisation";
 import { iaDisponible } from "./actualites-ia";
 import { candidatsEnquete, enqueterActualite, reclamerEnquete } from "./actualites-recherche";
+import { collecterReseaux } from "./actualites-social";
 
 // À appeler depuis `after()` d'une page publique : lance la collecte si la dernière
 // date de plus de 30 minutes. Ne lève jamais d'erreur (le lecteur n'est pas concerné).
 export async function actualiserSiBesoin(): Promise<void> {
   try {
     if (await reserverCollecte()) {
-      const r = await collecterActualites({ budgetMs: 55_000 });
-      if (r.publiees > 0) console.info(`[ArTova] Actualités : ${r.publiees} nouvelle(s) publication(s).`);
+      // Presse et réseaux sociaux en même temps : l'un en panne n'arrête pas l'autre.
+      const [presse, reseaux] = await Promise.allSettled([
+        collecterActualites({ budgetMs: 52_000 }),
+        collecterReseaux({ budgetMs: 45_000 }),
+      ]);
+      const n = (presse.status === "fulfilled" ? presse.value.publiees : 0) + (reseaux.status === "fulfilled" ? reseaux.value.publiees : 0);
+      if (n > 0) console.info(`[ArTova] Actualités : ${n} nouvelle(s) publication(s).`);
+      for (const r of [presse, reseaux]) if (r.status === "rejected") console.error("[ArTova] Collecte :", r.reason);
     }
   } catch (erreur) {
     console.error("[ArTova] Actualisation automatique des actualités :", erreur);

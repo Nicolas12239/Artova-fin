@@ -3,7 +3,7 @@ import { TitreSection } from "./TitreSection";
 import { lireVideos } from "@/lib/actualites-commun";
 import { TEXTES, fmt, type Langue } from "@/lib/actualites-i18n";
 
-const NOMS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube" } as const;
+const NOMS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook" } as const;
 const LIRE = { fr: "Lire la vidéo", en: "Play video", de: "Video abspielen" } as const;
 
 // Vidéos intégrées (TikTok, Instagram, YouTube) : vignette, lecteur au clic, et un
